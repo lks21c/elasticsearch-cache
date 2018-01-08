@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.creamsugardonut</groupId>
-	<artifactId>kibana-proxy</artifactId>
+	<artifactId>elasticsearch-cache</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>kibana-proxy</name>
+	<name>elasticsearch-cache</name>
 	<description></description>
 
 	<parent>
