@@ -4,6 +4,7 @@ import com.creamsugardonut.kibanaproxy.conts.CacheMode;
 import com.creamsugardonut.kibanaproxy.repository.CacheRepository;
 import com.creamsugardonut.kibanaproxy.util.IndexNameUtil;
 import com.creamsugardonut.kibanaproxy.util.JsonUtil;
+import com.creamsugardonut.kibanaproxy.vo.CachePlan;
 import com.creamsugardonut.kibanaproxy.vo.DateHistogramBucket;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.http.HttpResponse;
@@ -94,10 +95,6 @@ public class CacheService {
         // Get aggs
         Map<String, Object> aggs = (Map<String, Object>) qMap.get("aggs");
 
-
-        List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), startDt, endDt);
-        logger.info("dhbList = " + JsonUtil.convertAsString(dhbList));
-
         // Parse 1 depth aggregation
         // Get aggs
         String interval = null;
@@ -114,12 +111,17 @@ public class CacheService {
             }
         }
 
-        // TODO: This ignores ESC's policy, transparency.
-        if ("1m".equals(interval)) {
-            startDt = startDt.withMillisOfSecond(0);
-            startDt = startDt.withSecondOfMinute(0);
-            logger.info("manipulated startDt = " + startDt);
-        }
+        CachePlan plan = checkCachePlan(interval, startDt, endDt);
+        logger.info("cachePlan = " + plan.getPreStartDt());
+        logger.info("cachePlan = " + plan.getPreEndDt());
+        logger.info("cachePlan = " + plan.getStartDt());
+        logger.info("cachePlan = " + plan.getEndDt());
+        logger.info("cachePlan = " + plan.getPostStartDt());
+        logger.info("cachePlan = " + plan.getPostEndDt());
+
+        List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), startDt, endDt);
+        logger.info("dhbList = " + JsonUtil.convertAsString(dhbList));
+
 
         String cacheMode = checkCacheMode(interval, startDt, endDt, dhbList);
         logger.info("cacheMode = " + cacheMode + " cache size : " + dhbList.size());
@@ -179,38 +181,101 @@ public class CacheService {
             logger.info("original body = " + body);
 
             // Cacheable
-            if (((interval.contains("d") && startDt.getSecondOfDay() == 0)
-                    || (interval.contains("h") && startDt.getMinuteOfHour() == 0 && startDt.getSecondOfMinute() == 0)
-                    || (interval.contains("m") && startDt.getSecondOfMinute() == 0))) {
-                logger.info("cacheable " + JsonUtil.convertAsString(aggs));
-                cacheRepository.putCache(body, indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), interval);
+            if (interval != null) {
+                if ((interval.contains("d") && startDt.getSecondOfDay() == 0)
+                        || (interval.contains("h") && startDt.getMinuteOfHour() == 0 && startDt.getSecondOfMinute() == 0)
+                        || (interval.contains("m") && startDt.getSecondOfMinute() == 0)) {
+                    logger.info("cacheable " + JsonUtil.convertAsString(aggs));
+                    cacheRepository.putCache(body, indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), interval);
+                }
             }
-
             return body;
         }
+    }
+
+    public CachePlan checkCachePlan(String interval, DateTime startDt, DateTime endDt) {
+        CachePlan cachePlan = new CachePlan();
+        if (interval != null) {
+            if (interval.contains("d")) {
+                if (startDt.getMillisOfDay() == 0) { //pre range doesn't exist
+                    cachePlan.setStartDt(startDt);
+                } else { //pre range exists
+                    DateTime newStartDt = startDt.plusDays(1).withTimeAtStartOfDay();
+                    DateTime preStartDt = startDt;
+                    DateTime preEndDt = newStartDt.minusMillis(1);
+                    cachePlan.setPreStartDt(preStartDt);
+                    cachePlan.setPreEndDt(preEndDt);
+                    cachePlan.setStartDt(newStartDt);
+                }
+
+                if (endDt.getMillisOfDay() == new DateTime().withTimeAtStartOfDay().minusMillis(1).getMillisOfDay()) { //end range doesn't exist
+                    cachePlan.setEndDt(endDt);
+                } else { //end range exists
+                    DateTime newEndDt = endDt.withTimeAtStartOfDay().minusMillis(1);
+                    DateTime postStartDt = endDt.withTimeAtStartOfDay();
+                    DateTime postEndDt = endDt;
+                    cachePlan.setPostStartDt(postStartDt);
+                    cachePlan.setPostEndDt(postEndDt);
+                    cachePlan.setEndDt(newEndDt);
+                }
+            } else if (interval.contains("m")) {
+                if (startDt.getMillisOfSecond() == 0) { //pre range doesn't exist
+                    cachePlan.setStartDt(startDt);
+                } else { //pre range exists
+                    DateTime newStartDt = startDt.plusMinutes(1).withMillisOfSecond(0);
+                    DateTime preStartDt = startDt;
+                    DateTime preEndDt = newStartDt.minusMillis(1);
+                    cachePlan.setPreStartDt(preStartDt);
+                    cachePlan.setPreEndDt(preEndDt);
+                    cachePlan.setStartDt(newStartDt);
+                }
+
+                if (endDt.getSecondOfMinute() == 59
+                        && endDt.getMillisOfSecond() == new DateTime().withTimeAtStartOfDay().minusMillis(1).getMillisOfSecond()) { //end range doesn't exist
+                    cachePlan.setEndDt(endDt);
+                } else { //end range exists
+                    DateTime newEndDt = endDt.withSecondOfMinute(0).withMillisOfSecond(0).minusMillis(1);
+                    DateTime postStartDt = endDt.withSecondOfMinute(0).withMillisOfSecond(0);
+                    DateTime postEndDt = endDt;
+                    cachePlan.setPostStartDt(postStartDt);
+                    cachePlan.setPostEndDt(postEndDt);
+                    cachePlan.setEndDt(newEndDt);
+                }
+            }
+        }
+        return cachePlan;
     }
 
     private String checkCacheMode(String interval, DateTime startDt, DateTime endDt, List<DateHistogramBucket> dhbList) {
         int startTimeFirstCacheGap = -1;
 
-        if ("1d".equals(interval)) {
-            if (dhbList.size() > 0) {
-                startTimeFirstCacheGap = Days.daysBetween(startDt, dhbList.get(0).getDate()).getDays();
+        if (interval != null) {
+            int intervalNum = -1;
+            if (interval.contains("d")) {
+                intervalNum = Integer.parseInt(interval.replace("d", ""));
+            } else if (interval.contains("m")) {
+                intervalNum = Integer.parseInt(interval.replace("m", ""));
             }
-            if (startTimeFirstCacheGap == 0) {
-                // 86399 means 23:59:59.999
-                if (Days.daysBetween(startDt, endDt).getDays() + 1 == dhbList.size() && endDt.getSecondOfDay() == 86399) {
-                    return CacheMode.ALL;
-                } else if (dhbList.size() > 0) {
-                    return CacheMode.PARTIAL;
+
+            if ("1d".equals(interval)) {
+                if (dhbList.size() > 0) {
+                    startTimeFirstCacheGap = Days.daysBetween(startDt, dhbList.get(0).getDate()).getDays();
                 }
-            }
-        } else if ("1m".equals(interval)) {
-            if (dhbList.size() > 0) {
-                if (Minutes.minutesBetween(startDt, endDt).getMinutes() == dhbList.size()) {
-                    return CacheMode.ALL;
-                } else if (dhbList.size() > 0) {
-                    return CacheMode.PARTIAL;
+                if (startTimeFirstCacheGap == 0) {
+                    // 86399 means 23:59:59.999
+                    if (Days.daysBetween(startDt, endDt).getDays() + 1 == dhbList.size() && endDt.getSecondOfDay() == 86399) {
+                        return CacheMode.ALL;
+                    } else if (dhbList.size() > 0) {
+                        return CacheMode.PARTIAL;
+                    }
+                }
+            } else if ("1m".equals(interval)) {
+                if (dhbList.size() > 0) {
+                    if (Minutes.minutesBetween(startDt, endDt).getMinutes() == dhbList.size()) {
+                        return CacheMode.ALL;
+                    } else if (dhbList.size() > 0) {
+                        return CacheMode.PARTIAL;
+                    }
                 }
             }
         }
