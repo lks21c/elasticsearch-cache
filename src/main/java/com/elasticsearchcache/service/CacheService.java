@@ -199,6 +199,7 @@ public class CacheService {
     public CachePlan checkCachePlan(String interval, DateTime startDt, DateTime endDt) {
         CachePlan cachePlan = new CachePlan();
         if (interval != null) {
+            int periodUnit = getPeriodUnit(interval, parseIntervalNum(interval));
             if (interval.contains("d")) { //day
                 if (startDt.getMillisOfDay() == 0) { //pre range doesn't exist
                     cachePlan.setStartDt(startDt);
@@ -279,32 +280,16 @@ public class CacheService {
 
     private CachePlan checkCacheMode(String interval, CachePlan plan, List<DateHistogramBucket> dhbList) {
         if (interval != null) {
-            int intervalNum = -1;
-            if (interval.contains("d")) {
-                intervalNum = Integer.parseInt(interval.replace("d", ""));
-            } else if (interval.contains("m")) {
-                intervalNum = Integer.parseInt(interval.replace("m", ""));
-            }
+            int intervalNum = parseIntervalNum(interval);
+            int periodUnit = getPeriodUnit(interval, intervalNum);
 
-            int periodUnit = -1;
-            int periodBetween = -1;
-            if (interval.contains("d")) {
-                periodUnit = intervalNum * PeriodUtil.MILLS_DAY;
-                periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
-            } else if (interval.contains("h")) {
-                periodUnit = intervalNum * PeriodUtil.MILLS_HOUR;
-                periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
-            } else if (interval.contains("m")) {
-                periodUnit = intervalNum * PeriodUtil.MILLS_MINUTE;
-                periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
-            }
-            logger.info(periodBetween);
-            logger.info("periodBetween = " + periodBetween);
-
-            if(periodUnit == -1) {
+            if (periodUnit == -1) {
                 plan.setCacheMode(CacheMode.NOCACHE);
                 return plan;
             }
+
+            int periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
+            logger.info("periodBetween = " + periodBetween);
 
             if (periodBetween + 1 == dhbList.size()
                     && plan.getPreStartDt() == null
@@ -345,5 +330,29 @@ public class CacheService {
         }
         plan.setCacheMode(CacheMode.NOCACHE);
         return plan;
+    }
+
+    private int getPeriodUnit(String interval, int intervalNum) {
+        int periodUnit = -1;
+        if (interval.contains("d")) {
+            periodUnit = intervalNum * PeriodUtil.MILLS_DAY;
+        } else if (interval.contains("h")) {
+            periodUnit = intervalNum * PeriodUtil.MILLS_HOUR;
+        } else if (interval.contains("m")) {
+            periodUnit = intervalNum * PeriodUtil.MILLS_MINUTE;
+        }
+        return periodUnit;
+    }
+
+    private int parseIntervalNum(String interval) {
+        int intervalNum = -1;
+        if (interval.contains("d")) {
+            intervalNum = Integer.parseInt(interval.replace("d", ""));
+        } else if (interval.contains("h")) {
+            intervalNum = Integer.parseInt(interval.replace("h", ""));
+        } else if (interval.contains("m")) {
+            intervalNum = Integer.parseInt(interval.replace("m", ""));
+        }
+        return intervalNum;
     }
 }
