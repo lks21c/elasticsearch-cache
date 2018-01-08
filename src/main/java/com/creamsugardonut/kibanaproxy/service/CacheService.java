@@ -112,12 +112,12 @@ public class CacheService {
         }
 
         CachePlan plan = checkCachePlan(interval, startDt, endDt);
-        logger.info("cachePlan = " + plan.getPreStartDt());
-        logger.info("cachePlan = " + plan.getPreEndDt());
-        logger.info("cachePlan = " + plan.getStartDt());
-        logger.info("cachePlan = " + plan.getEndDt());
-        logger.info("cachePlan = " + plan.getPostStartDt());
-        logger.info("cachePlan = " + plan.getPostEndDt());
+        logger.info("cachePlan getPreStartDt = " + plan.getPreStartDt());
+        logger.info("cachePlan getPreEndDt = " + plan.getPreEndDt());
+        logger.info("cachePlan getStartDt = " + plan.getStartDt());
+        logger.info("cachePlan getEndDt = " + plan.getEndDt());
+        logger.info("cachePlan getPostStartDt = " + plan.getPostStartDt());
+        logger.info("cachePlan getPostEndDt = " + plan.getPostEndDt());
 
         List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
         logger.info("dhbList = " + JsonUtil.convertAsString(dhbList));
