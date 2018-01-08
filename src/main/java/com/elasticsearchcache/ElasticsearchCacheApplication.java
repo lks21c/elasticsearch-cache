@@ -1,4 +1,4 @@
-package com.creamsugardonut.kibanaproxy;
+package com.elasticsearchcache;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,10 +9,10 @@ import org.springframework.context.annotation.Configuration;
 @SpringBootApplication
 @EnableZuulProxy
 @Configuration
-public class KibanaProxyApplication {
+public class ElasticsearchCacheApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(KibanaProxyApplication.class, args);
+		SpringApplication.run(ElasticsearchCacheApplication.class, args);
 	}
 
     @Bean

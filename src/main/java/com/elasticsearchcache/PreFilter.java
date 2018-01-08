@@ -1,9 +1,9 @@
-package com.creamsugardonut.kibanaproxy;
+package com.elasticsearchcache;
 
-import com.creamsugardonut.kibanaproxy.service.CacheService;
-import com.creamsugardonut.kibanaproxy.service.ElasticSearchService;
-import com.creamsugardonut.kibanaproxy.service.NativeParsingServiceImpl;
-import com.creamsugardonut.kibanaproxy.util.JsonUtil;
+import com.elasticsearchcache.service.CacheService;
+import com.elasticsearchcache.service.ElasticSearchService;
+import com.elasticsearchcache.service.NativeParsingServiceImpl;
+import com.elasticsearchcache.util.JsonUtil;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import org.apache.commons.lang.StringUtils;
