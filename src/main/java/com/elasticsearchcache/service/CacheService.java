@@ -288,6 +288,10 @@ public class CacheService {
             }
 
             if (interval.contains("d")) {
+
+                int diffCnt = (int) ((plan.getEndDt().getMillis() - plan.getStartDt().getMillis()) / (3600 * 24 * 1000));
+                logger.info(diffCnt);
+                logger.info(Days.daysBetween(plan.getStartDt(), plan.getEndDt()).getDays());
                 if (Days.daysBetween(plan.getStartDt(), plan.getEndDt()).getDays() + 1 == dhbList.size()
                         && plan.getPreStartDt() == null
                         && plan.getPreEndDt() == null
