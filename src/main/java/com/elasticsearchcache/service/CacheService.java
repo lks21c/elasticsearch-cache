@@ -287,7 +287,7 @@ public class CacheService {
                 intervalNum = Integer.parseInt(interval.replace("m", ""));
             }
 
-            if ("1d".equals(interval)) {
+            if (interval.contains("d")) {
                 if (Days.daysBetween(plan.getStartDt(), plan.getEndDt()).getDays() + 1 == dhbList.size()
                         && plan.getPreStartDt() == null
                         && plan.getPreEndDt() == null
@@ -309,18 +309,23 @@ public class CacheService {
 
                     logger.info("isSuccessive = " + isSuccessive);
                     if (isSuccessive) {
-                        plan.setPreStartDt(plan.getStartDt());
-                        plan.setStartDt(dhbList.get(0).getDate());
-                        plan.setPreEndDt(dhbList.get(0).getDate().minusMillis(1));
+                        if (Days.daysBetween(dhbList.get(0).getDate(), plan.getStartDt()).getDays() != 0) {
+                            plan.setPreStartDt(plan.getStartDt());
+                            plan.setStartDt(dhbList.get(0).getDate());
+                            plan.setPreEndDt(dhbList.get(0).getDate().minusMillis(1));
+                        }
 
-                        plan.setPostStartDt(dhbList.get(dhbList.size()-1).getDate().plusDays(1));
-                        plan.setPostEndDt(plan.getEndDt());
-                        plan.setEndDt(dhbList.get(dhbList.size()-1).getDate().plusDays(1).minusMillis(1));
+                        if (Days.daysBetween(dhbList.get(dhbList.size() - 1).getDate(), plan.getEndDt()).getDays() != 0) {
+                            plan.setPostStartDt(dhbList.get(dhbList.size() - 1).getDate().plusDays(1));
+                            plan.setPostEndDt(plan.getEndDt());
+                            plan.setEndDt(dhbList.get(dhbList.size() - 1).getDate().plusDays(1).minusMillis(1));
+                        }
                         plan.setCacheMode(CacheMode.PARTIAL);
                         return plan;
                     }
                 }
-            } else if ("1m".equals(interval)) {
+            } else if (interval.contains("m")) {
+                /*
                 if (dhbList.size() > 0) {
                     if (Minutes.minutesBetween(plan.getStartDt(), plan.getEndDt()).getMinutes() == dhbList.size()
                             && plan.getPreStartDt() == null
@@ -348,13 +353,14 @@ public class CacheService {
                             plan.setStartDt(dhbList.get(0).getDate());
 
                             plan.setPostEndDt(plan.getEndDt());
-                            plan.setPostStartDt(dhbList.get(dhbList.size()-1).getDate().plusMinutes(1));
-                            plan.setEndDt(dhbList.get(dhbList.size()-1).getDate().plusMinutes(1).minusMillis(1));
+                            plan.setPostStartDt(dhbList.get(dhbList.size() - 1).getDate().plusMinutes(1));
+                            plan.setEndDt(dhbList.get(dhbList.size() - 1).getDate().plusMinutes(1).minusMillis(1));
                             plan.setCacheMode(CacheMode.PARTIAL);
                             return plan;
                         }
                     }
                 }
+                */
             }
         }
         plan.setCacheMode(CacheMode.NOCACHE);
