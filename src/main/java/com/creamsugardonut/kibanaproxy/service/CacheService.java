@@ -119,9 +119,8 @@ public class CacheService {
         logger.info("cachePlan = " + plan.getPostStartDt());
         logger.info("cachePlan = " + plan.getPostEndDt());
 
-        List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), startDt, endDt);
+        List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
         logger.info("dhbList = " + JsonUtil.convertAsString(dhbList));
-
 
         String cacheMode = checkCacheMode(interval, startDt, endDt, dhbList);
         logger.info("cacheMode = " + cacheMode + " cache size : " + dhbList.size());
