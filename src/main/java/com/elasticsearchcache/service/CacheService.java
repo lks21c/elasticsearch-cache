@@ -167,7 +167,15 @@ public class CacheService {
             logger.info("final res = " + res);
 
             return res;
-        } else {
+        }
+
+        // partial 처리
+        // 이전 쿼리가 존재하면 호출
+        // 현재 캐시 호출
+        // 이후 쿼리 존재하면 호출
+        // responses merge, 같은 key끼리 데이터 sum
+
+        else {
             logger.info("else, so original request invoked " + startDt.getSecondOfDay());
 
             HttpResponse res = esService.executeQuery(esUrl + "/_msearch", info);
@@ -184,16 +192,24 @@ public class CacheService {
             logger.info("original body = " + body);
 
             // Cacheable
-            if (interval != null) {
-                if ((interval.contains("d") && startDt.getSecondOfDay() == 0)
-                        || (interval.contains("h") && startDt.getMinuteOfHour() == 0 && startDt.getSecondOfMinute() == 0)
-                        || (interval.contains("m") && startDt.getSecondOfMinute() == 0)) {
-                    logger.info("cacheable " + JsonUtil.convertAsString(aggs));
-                    cacheRepository.putCache(body, indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), interval);
-                }
+            if (checkCacheable(interval, startDt)) {
+                logger.info("cacheable " + JsonUtil.convertAsString(aggs));
+                cacheRepository.putCache(body, indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), interval);
             }
             return body;
         }
+
+    }
+
+    private boolean checkCacheable(String interval, DateTime startDt) {
+        if (interval != null) {
+            if ((interval.contains("d") && startDt.getSecondOfDay() == 0)
+                    || (interval.contains("h") && startDt.getMinuteOfHour() == 0 && startDt.getSecondOfMinute() == 0)
+                    || (interval.contains("m") && startDt.getSecondOfMinute() == 0)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public CachePlan checkCachePlan(String interval, DateTime startDt, DateTime endDt) {
