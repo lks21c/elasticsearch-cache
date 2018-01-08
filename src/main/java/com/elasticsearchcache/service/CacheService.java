@@ -325,7 +325,6 @@ public class CacheService {
                     }
                 }
             } else if (interval.contains("m")) {
-                /*
                 if (dhbList.size() > 0) {
                     if (Minutes.minutesBetween(plan.getStartDt(), plan.getEndDt()).getMinutes() == dhbList.size()
                             && plan.getPreStartDt() == null
@@ -348,19 +347,22 @@ public class CacheService {
 
                         logger.info("isSuccessive = " + isSuccessive);
                         if (isSuccessive) {
-                            plan.setPreStartDt(plan.getStartDt());
-                            plan.setPreEndDt(dhbList.get(0).getDate().minusMillis(1));
-                            plan.setStartDt(dhbList.get(0).getDate());
+                            if (Minutes.minutesBetween(dhbList.get(0).getDate(), plan.getStartDt()).getMinutes() != 0) {
+                                plan.setPreStartDt(plan.getStartDt());
+                                plan.setPreEndDt(dhbList.get(0).getDate().minusMillis(1));
+                                plan.setStartDt(dhbList.get(0).getDate());
+                            }
 
-                            plan.setPostEndDt(plan.getEndDt());
-                            plan.setPostStartDt(dhbList.get(dhbList.size() - 1).getDate().plusMinutes(1));
-                            plan.setEndDt(dhbList.get(dhbList.size() - 1).getDate().plusMinutes(1).minusMillis(1));
+                            if (Minutes.minutesBetween(dhbList.get(dhbList.size() - 1).getDate(), plan.getEndDt()).getMinutes() != 0) {
+                                plan.setPostEndDt(plan.getEndDt());
+                                plan.setPostStartDt(dhbList.get(dhbList.size() - 1).getDate().plusMinutes(1));
+                                plan.setEndDt(dhbList.get(dhbList.size() - 1).getDate().plusMinutes(1).minusMillis(1));
+                            }
                             plan.setCacheMode(CacheMode.PARTIAL);
                             return plan;
                         }
                     }
                 }
-                */
             }
         }
         plan.setCacheMode(CacheMode.NOCACHE);
