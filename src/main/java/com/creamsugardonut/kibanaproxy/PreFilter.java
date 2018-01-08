@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,11 +101,11 @@ public class PreFilter extends ZuulFilter {
                 logger.info("reqBody = " + reqBody);
 
                 if (request.getRequestURI().contains("/_msearch")) {
-//                    Enumeration<String> headers = request.getHeaderNames();
-//                    while (headers.hasMoreElements()) {
-//                        String header = headers.nextElement();
-//                        System.out.println("header = " + header + " " + request.getHeader(header));
-//                    }
+                    Enumeration<String> headers = request.getHeaderNames();
+                    while (headers.hasMoreElements()) {
+                        String header = headers.nextElement();
+                        System.out.println("header = " + header + " " + request.getHeader(header));
+                    }
 
                     String[] reqs = reqBody.split("\n");
 
