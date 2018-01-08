@@ -124,6 +124,12 @@ public class CacheService {
 
         plan = checkCacheMode(interval, plan, dhbList);
         logger.info("cacheMode = " + plan.getCacheMode() + " cache size : " + dhbList.size());
+        logger.info("after cachePlan getPreStartDt = " + plan.getPreStartDt());
+        logger.info("after cachePlan getPreEndDt = " + plan.getPreEndDt());
+        logger.info("after cachePlan getStartDt = " + plan.getStartDt());
+        logger.info("after cachePlan getEndDt = " + plan.getEndDt());
+        logger.info("after cachePlan getPostStartDt = " + plan.getPostStartDt());
+        logger.info("after cachePlan getPostEndDt = " + plan.getPostEndDt());
 
         if (CacheMode.ALL.equals(plan.getCacheMode())) {
             String res = "{\n" +
@@ -288,13 +294,31 @@ public class CacheService {
                         && plan.getPostStartDt() == null
                         && plan.getPostEndDt() == null) {
                     plan.setCacheMode(CacheMode.ALL);
+                    return plan;
                 } else if (dhbList.size() > 0) {
-
+                    DateTime preDateTime = null;
+                    boolean isSuccessive = false;
                     for (DateHistogramBucket dhb : dhbList) {
-
+                        if (preDateTime != null && Days.daysBetween(preDateTime, dhb.getDate()).getDays() == 1) {
+                            isSuccessive = true;
+                        } else {
+                            isSuccessive = false;
+                        }
+                        preDateTime = dhb.getDate();
                     }
 
-                    plan.setCacheMode(CacheMode.PARTIAL);
+                    logger.info("isSuccessive = " + isSuccessive);
+                    if (isSuccessive) {
+                        plan.setPreStartDt(plan.getStartDt());
+                        plan.setStartDt(dhbList.get(0).getDate());
+                        plan.setPreEndDt(dhbList.get(0).getDate().minusMillis(1));
+
+                        plan.setPostStartDt(dhbList.get(dhbList.size()-1).getDate().plusDays(1));
+                        plan.setPostEndDt(plan.getEndDt());
+                        plan.setEndDt(dhbList.get(dhbList.size()-1).getDate().plusDays(1).minusMillis(1));
+                        plan.setCacheMode(CacheMode.PARTIAL);
+                        return plan;
+                    }
                 }
             } else if ("1m".equals(interval)) {
                 if (dhbList.size() > 0) {
@@ -304,8 +328,31 @@ public class CacheService {
                             && plan.getPostStartDt() == null
                             && plan.getPostEndDt() == null) {
                         plan.setCacheMode(CacheMode.ALL);
+                        return plan;
                     } else if (dhbList.size() > 0) {
-                        plan.setCacheMode(CacheMode.PARTIAL);
+                        DateTime preDateTime = null;
+                        boolean isSuccessive = false;
+                        for (DateHistogramBucket dhb : dhbList) {
+                            if (preDateTime != null && Minutes.minutesBetween(preDateTime, dhb.getDate()).getMinutes() == 1) {
+                                isSuccessive = true;
+                            } else {
+                                isSuccessive = false;
+                            }
+                            preDateTime = dhb.getDate();
+                        }
+
+                        logger.info("isSuccessive = " + isSuccessive);
+                        if (isSuccessive) {
+                            plan.setPreStartDt(plan.getStartDt());
+                            plan.setPreEndDt(dhbList.get(0).getDate().minusMillis(1));
+                            plan.setStartDt(dhbList.get(0).getDate());
+
+                            plan.setPostEndDt(plan.getEndDt());
+                            plan.setPostStartDt(dhbList.get(dhbList.size()-1).getDate().plusMinutes(1));
+                            plan.setEndDt(dhbList.get(dhbList.size()-1).getDate().plusMinutes(1).minusMillis(1));
+                            plan.setCacheMode(CacheMode.PARTIAL);
+                            return plan;
+                        }
                     }
                 }
             }
