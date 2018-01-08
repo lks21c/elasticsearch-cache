@@ -196,7 +196,7 @@ public class CacheService {
     public CachePlan checkCachePlan(String interval, DateTime startDt, DateTime endDt) {
         CachePlan cachePlan = new CachePlan();
         if (interval != null) {
-            if (interval.contains("d")) {
+            if (interval.contains("d")) { //day
                 if (startDt.getMillisOfDay() == 0) { //pre range doesn't exist
                     cachePlan.setStartDt(startDt);
                 } else { //pre range exists
@@ -211,18 +211,46 @@ public class CacheService {
                 if (endDt.getMillisOfDay() == new DateTime().withTimeAtStartOfDay().minusMillis(1).getMillisOfDay()) { //end range doesn't exist
                     cachePlan.setEndDt(endDt);
                 } else { //end range exists
-                    DateTime newEndDt = endDt.withTimeAtStartOfDay().minusMillis(1);
                     DateTime postStartDt = endDt.withTimeAtStartOfDay();
                     DateTime postEndDt = endDt;
+                    DateTime newEndDt = postStartDt.minusMillis(1);
                     cachePlan.setPostStartDt(postStartDt);
                     cachePlan.setPostEndDt(postEndDt);
                     cachePlan.setEndDt(newEndDt);
                 }
-            } else if (interval.contains("m")) {
-                if (startDt.getMillisOfSecond() == 0) { //pre range doesn't exist
+            }
+            if (interval.contains("h")) { //hour
+                if (startDt.getMinuteOfHour() == 0
+                        && startDt.getSecondOfMinute() == 0
+                        && startDt.getMillisOfSecond() == 0) { //pre range doesn't exist
                     cachePlan.setStartDt(startDt);
                 } else { //pre range exists
-                    DateTime newStartDt = startDt.plusMinutes(1).withMillisOfSecond(0);
+                    DateTime newStartDt = startDt.plusHours(1).withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0);
+                    DateTime preStartDt = startDt;
+                    DateTime preEndDt = newStartDt.minusMillis(1);
+                    cachePlan.setPreStartDt(preStartDt);
+                    cachePlan.setPreEndDt(preEndDt);
+                    cachePlan.setStartDt(newStartDt);
+                }
+
+                if (endDt.getMinuteOfHour() == 59
+                        && endDt.getSecondOfMinute() == 59
+                        && endDt.getMillisOfSecond() == new DateTime().withTimeAtStartOfDay().minusMillis(1).getMillisOfDay()) { //end range doesn't exist
+                    cachePlan.setEndDt(endDt);
+                } else { //end range exists
+                    DateTime postStartDt = endDt.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0);
+                    DateTime postEndDt = endDt;
+                    DateTime newEndDt = postStartDt.minusMillis(1);
+                    cachePlan.setPostStartDt(postStartDt);
+                    cachePlan.setPostEndDt(postEndDt);
+                    cachePlan.setEndDt(newEndDt);
+                }
+            } else if (interval.contains("m")) { //minute
+                if (startDt.getSecondOfMinute() == 0
+                        && startDt.getMillisOfSecond() == 0) { //pre range doesn't exist
+                    cachePlan.setStartDt(startDt);
+                } else { //pre range exists
+                    DateTime newStartDt = startDt.plusMinutes(1).withSecondOfMinute(0).withMillisOfSecond(0);
                     DateTime preStartDt = startDt;
                     DateTime preEndDt = newStartDt.minusMillis(1);
                     cachePlan.setPreStartDt(preStartDt);
@@ -234,9 +262,9 @@ public class CacheService {
                         && endDt.getMillisOfSecond() == new DateTime().withTimeAtStartOfDay().minusMillis(1).getMillisOfSecond()) { //end range doesn't exist
                     cachePlan.setEndDt(endDt);
                 } else { //end range exists
-                    DateTime newEndDt = endDt.withSecondOfMinute(0).withMillisOfSecond(0).minusMillis(1);
                     DateTime postStartDt = endDt.withSecondOfMinute(0).withMillisOfSecond(0);
                     DateTime postEndDt = endDt;
+                    DateTime newEndDt = postStartDt.minusMillis(1);
                     cachePlan.setPostStartDt(postStartDt);
                     cachePlan.setPostEndDt(postEndDt);
                     cachePlan.setEndDt(newEndDt);
