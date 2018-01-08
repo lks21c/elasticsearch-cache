@@ -122,10 +122,10 @@ public class CacheService {
         List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
         logger.info("dhbList = " + JsonUtil.convertAsString(dhbList));
 
-        String cacheMode = checkCacheMode(interval, startDt, endDt, dhbList);
-        logger.info("cacheMode = " + cacheMode + " cache size : " + dhbList.size());
+        plan = checkCacheMode(interval, plan, dhbList);
+        logger.info("cacheMode = " + plan.getCacheMode() + " cache size : " + dhbList.size());
 
-        if (CacheMode.ALL.equals(cacheMode)) {
+        if (CacheMode.ALL.equals(plan.getCacheMode())) {
             String res = "{\n" +
                     "  \"responses\": [\n" +
                     "    {\n" +
@@ -272,9 +272,7 @@ public class CacheService {
         return cachePlan;
     }
 
-    private String checkCacheMode(String interval, DateTime startDt, DateTime endDt, List<DateHistogramBucket> dhbList) {
-        int startTimeFirstCacheGap = -1;
-
+    private CachePlan checkCacheMode(String interval, CachePlan plan, List<DateHistogramBucket> dhbList) {
         if (interval != null) {
             int intervalNum = -1;
             if (interval.contains("d")) {
@@ -284,27 +282,30 @@ public class CacheService {
             }
 
             if ("1d".equals(interval)) {
-                if (dhbList.size() > 0) {
-                    startTimeFirstCacheGap = Days.daysBetween(startDt, dhbList.get(0).getDate()).getDays();
-                }
-                if (startTimeFirstCacheGap == 0) {
-                    // 86399 means 23:59:59.999
-                    if (Days.daysBetween(startDt, endDt).getDays() + 1 == dhbList.size() && endDt.getSecondOfDay() == 86399) {
-                        return CacheMode.ALL;
-                    } else if (dhbList.size() > 0) {
-                        return CacheMode.PARTIAL;
-                    }
+                if (Days.daysBetween(plan.getStartDt(), plan.getEndDt()).getDays() + 1 == dhbList.size()
+                        && plan.getPreStartDt() == null
+                        && plan.getPreEndDt() == null
+                        && plan.getPostStartDt() == null
+                        && plan.getPostEndDt() == null) {
+                    plan.setCacheMode(CacheMode.ALL);
+                } else if (dhbList.size() > 0) {
+                    plan.setCacheMode(CacheMode.PARTIAL);
                 }
             } else if ("1m".equals(interval)) {
                 if (dhbList.size() > 0) {
-                    if (Minutes.minutesBetween(startDt, endDt).getMinutes() == dhbList.size()) {
-                        return CacheMode.ALL;
+                    if (Minutes.minutesBetween(plan.getStartDt(), plan.getEndDt()).getMinutes() == dhbList.size()
+                            && plan.getPreStartDt() == null
+                            && plan.getPreEndDt() == null
+                            && plan.getPostStartDt() == null
+                            && plan.getPostEndDt() == null) {
+                        plan.setCacheMode(CacheMode.ALL);
                     } else if (dhbList.size() > 0) {
-                        return CacheMode.PARTIAL;
+                        plan.setCacheMode(CacheMode.PARTIAL);
                     }
                 }
             }
         }
-        return CacheMode.NOCACHE;
+        plan.setCacheMode(CacheMode.NOCACHE);
+        return plan;
     }
 }
