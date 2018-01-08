@@ -14,8 +14,6 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
-import org.joda.time.Days;
-import org.joda.time.Minutes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -293,12 +291,21 @@ public class CacheService {
             if (interval.contains("d")) {
                 periodUnit = intervalNum * PeriodUtil.MILLS_DAY;
                 periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
+            } else if (interval.contains("h")) {
+                periodUnit = intervalNum * PeriodUtil.MILLS_HOUR;
+                periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
             } else if (interval.contains("m")) {
                 periodUnit = intervalNum * PeriodUtil.MILLS_MINUTE;
                 periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
             }
             logger.info(periodBetween);
             logger.info("periodBetween = " + periodBetween);
+
+            if(periodUnit == -1) {
+                plan.setCacheMode(CacheMode.NOCACHE);
+                return plan;
+            }
+
             if (periodBetween + 1 == dhbList.size()
                     && plan.getPreStartDt() == null
                     && plan.getPreEndDt() == null
@@ -320,16 +327,16 @@ public class CacheService {
 
                 logger.info("isSuccessive = " + isSuccessive);
                 if (isSuccessive) {
-                    if (Days.daysBetween(dhbList.get(0).getDate(), plan.getStartDt()).getDays() != 0) {
+                    if (PeriodUtil.periodBetween(dhbList.get(0).getDate(), plan.getStartDt(), periodUnit) != 0) {
                         plan.setPreStartDt(plan.getStartDt());
                         plan.setStartDt(dhbList.get(0).getDate());
                         plan.setPreEndDt(dhbList.get(0).getDate().minusMillis(1));
                     }
 
-                    if (Days.daysBetween(dhbList.get(dhbList.size() - 1).getDate(), plan.getEndDt()).getDays() != 0) {
-                        plan.setPostStartDt(dhbList.get(dhbList.size() - 1).getDate().plusDays(1));
+                    if (PeriodUtil.periodBetween(dhbList.get(dhbList.size() - 1).getDate(), plan.getEndDt(), periodUnit) != 0) {
+                        plan.setPostStartDt(dhbList.get(dhbList.size() - 1).getDate().plus(periodUnit));
                         plan.setPostEndDt(plan.getEndDt());
-                        plan.setEndDt(dhbList.get(dhbList.size() - 1).getDate().plusDays(1).minusMillis(1));
+                        plan.setEndDt(dhbList.get(dhbList.size() - 1).getDate().plus(periodUnit).minusMillis(1));
                     }
                     plan.setCacheMode(CacheMode.PARTIAL);
                     return plan;
