@@ -145,7 +145,6 @@ public class CacheService {
                     "        \"2\": {\n" +
                     "          \"buckets\": \n";
 
-
             List<Map<String, Object>> buckets = new ArrayList<>();
             for (DateHistogramBucket bucket : dhbList) {
                 buckets.add(bucket.getBucket());
