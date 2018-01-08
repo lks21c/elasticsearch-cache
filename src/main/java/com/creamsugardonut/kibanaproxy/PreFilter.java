@@ -1,7 +1,7 @@
 package com.creamsugardonut.kibanaproxy;
 
 import com.creamsugardonut.kibanaproxy.service.CacheService;
-import com.creamsugardonut.kibanaproxy.service.ElasticSearchServiceService;
+import com.creamsugardonut.kibanaproxy.service.ElasticSearchService;
 import com.creamsugardonut.kibanaproxy.service.NativeParsingServiceImpl;
 import com.creamsugardonut.kibanaproxy.util.JsonUtil;
 import com.netflix.zuul.ZuulFilter;
@@ -10,7 +10,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.util.EntityUtils;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +33,7 @@ public class PreFilter extends ZuulFilter {
     private static Logger logger = LoggerFactory.getLogger(PreFilter.class);
 
     @Autowired
-    ElasticSearchServiceService esService;
+    ElasticSearchService esService;
 
     @Autowired
     NativeParsingServiceImpl parsingService;

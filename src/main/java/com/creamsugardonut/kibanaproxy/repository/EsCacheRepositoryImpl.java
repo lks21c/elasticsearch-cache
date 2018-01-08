@@ -5,8 +5,6 @@ import com.creamsugardonut.kibanaproxy.util.JsonUtil;
 import com.creamsugardonut.kibanaproxy.vo.DateHistogramBucket;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
-import org.apache.http.HttpResponse;
-import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -30,7 +28,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -88,7 +85,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
         String key = indexName + query + agg;
         Map<String, Object> resMap = null;
         try {
-            logger.info("before res map");
+            logger.info("before res map " + res);
             resMap = parsingService.parseXContent(res);
             logger.info("resMap = " + JsonUtil.convertAsString(resMap));
         } catch (Exception e) {
@@ -100,11 +97,13 @@ public class EsCacheRepositoryImpl implements CacheRepository {
         for (Map<String, Object> resp : respes) {
             List<DateHistogramBucket> dhbList = new ArrayList<>();
             BulkRequest br = new BulkRequest();
+
             Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
+
             for (String aggKey : aggrs.keySet()) {
                 logger.info("aggKey = " + aggrs.get(aggKey));
 
-                LinkedHashMap<String, Object> buckets = (LinkedHashMap<String, Object>) aggrs.get(aggKey);
+                HashMap<String, Object> buckets = (HashMap<String, Object>) aggrs.get(aggKey);
 
                 for (String bucketsKey : buckets.keySet()) {
                     List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);

@@ -32,7 +32,7 @@ public class CacheService {
     private static final Logger logger = LogManager.getLogger(CacheService.class);
 
     @Autowired
-    private ElasticSearchServiceService esService;
+    private ElasticSearchService esService;
 
     @Autowired
     private ParsingService parsingService;
@@ -182,7 +182,7 @@ public class CacheService {
             if (((interval.contains("d") && startDt.getSecondOfDay() == 0)
                     || (interval.contains("h") && startDt.getMinuteOfHour() == 0 && startDt.getSecondOfMinute() == 0)
                     || (interval.contains("m") && startDt.getSecondOfMinute() == 0))) {
-                logger.info("cacheable");
+                logger.info("cacheable " + JsonUtil.convertAsString(aggs));
                 cacheRepository.putCache(body, indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), interval);
             }
 

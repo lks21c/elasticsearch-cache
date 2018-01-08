@@ -11,15 +11,14 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
 @Service
-public class ElasticSearchServiceService {
-    private static final Logger logger = LogManager.getLogger(ElasticSearchServiceService.class);
+public class ElasticSearchService {
+    private static final Logger logger = LogManager.getLogger(ElasticSearchService.class);
 
     public HttpResponse executeHttpRequest(HttpMethod requestType, String url, StringEntity entity) throws IOException, MethodNotSupportedException {
         CloseableHttpClient client = HttpClientBuilder.create().build();
