@@ -55,6 +55,7 @@ public class InMemoryCacheRepositoryImpl implements CacheRepository {
 
     @Override
     public void putCache(String indexName, String query, String agg, List<DateHistogramBucket> dhbList) throws IOException {
+        logger.info("cache list = " + JsonUtil.convertAsString(dhbList));
 //        String key = indexName + query + agg;
 //        Map<String, Object> resMap = null;
 //        try {

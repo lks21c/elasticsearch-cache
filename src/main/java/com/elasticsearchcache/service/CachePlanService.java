@@ -18,9 +18,11 @@ import java.util.List;
 public class CachePlanService {
     private static final Logger logger = LogManager.getLogger(CacheService.class);
 
-    public boolean checkCacheable(String interval, DateTime startDt) {
+    public boolean checkCacheable(String interval, DateTime targetDt, DateTime startDt, DateTime endDt) {
+        CachePlan plan = checkCachePlan(interval, startDt, endDt);
         if (interval != null) {
-            if (PeriodUtil.getRestMills(startDt, PeriodUtil.getPeriodUnit(interval)) == 0) {
+            if (targetDt.getMillis() >= plan.getStartDt().getMillis()
+                    && targetDt.getMillis() < plan.getEndDt().getMillis()) {
                 return true;
             }
         }
