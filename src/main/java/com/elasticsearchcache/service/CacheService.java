@@ -199,6 +199,7 @@ public class CacheService {
                 for (DateHistogramBucket dhb : cacheDhbCandiate) {
                     if (dhb.getDate().getMillis() >= plan.getStartDt().getMillis()
                             || dhb.getDate().getMillis() <= plan.getEndDt().getMillis()) {
+                        logger.info("cacheable");
                         cacheRepository.putCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), cacheDhbCandiate);
                     }
                 }
