@@ -220,6 +220,7 @@ public class CacheService {
         CachePlan cachePlan = new CachePlan();
         if (interval != null) {
             int periodUnit = getPeriodUnit(interval, parseIntervalNum(interval));
+            logger.info("periodUnit = " + periodUnit);
             if (PeriodUtil.getRestMills(startDt, periodUnit) == 0) { //pre range doesn't exist
                 cachePlan.setStartDt(startDt);
             } else { //pre range exists

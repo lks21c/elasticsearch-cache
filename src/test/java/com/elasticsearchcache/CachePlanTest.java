@@ -84,4 +84,45 @@ public class CachePlanTest {
         logger.info("after cachePlan getPostStartDt = " + plan.getPostStartDt());
         logger.info("after cachePlan getPostEndDt = " + plan.getPostEndDt());
     }
+
+    @Test
+    public void testExactRangeHour() {
+        DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 1, 0);
+        DateTime endDt = DateUtil.getDateTime(2018, 1, 1, 10, 0).minusMillis(1);
+        CachePlan plan = cacheService.checkCachePlan("1h", startDt, endDt);
+        assertNull(plan.getPreStartDt());
+        assertNull(plan.getPreEndDt());
+        assertEquals(startDt, plan.getStartDt());
+        assertEquals(endDt, plan.getEndDt());
+        assertNull(plan.getPostStartDt());
+        assertNull(plan.getPostStartDt());
+
+        logger.info("after cachePlan getPreStartDt = " + plan.getPreStartDt());
+        logger.info("after cachePlan getPreEndDt = " + plan.getPreEndDt());
+        logger.info("after cachePlan getStartDt = " + plan.getStartDt());
+        logger.info("after cachePlan getEndDt = " + plan.getEndDt());
+        logger.info("after cachePlan getPostStartDt = " + plan.getPostStartDt());
+        logger.info("after cachePlan getPostEndDt = " + plan.getPostStartDt());
+    }
+
+    @Test
+    public void testPreRangeHour() {
+        DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 1, 10);
+        DateTime endDt = DateUtil.getDateTime(2018, 1, 1, 10, 0).minusMillis(1);
+        CachePlan plan = cacheService.checkCachePlan("1h", startDt, endDt);
+
+        assertEquals(startDt, plan.getPreStartDt());
+        assertEquals(DateUtil.getDateTime(2018, 1, 1, 2, 0).minusMillis(1), plan.getPreEndDt());
+        assertEquals(DateUtil.getDateTime(2018, 1, 1, 2, 0), plan.getStartDt());
+        assertEquals(endDt, plan.getEndDt());
+        assertNull(plan.getPostStartDt());
+        assertNull(plan.getPostStartDt());
+
+        logger.info("after cachePlan getPreStartDt = " + plan.getPreStartDt());
+        logger.info("after cachePlan getPreEndDt = " + plan.getPreEndDt());
+        logger.info("after cachePlan getStartDt = " + plan.getStartDt());
+        logger.info("after cachePlan getEndDt = " + plan.getEndDt());
+        logger.info("after cachePlan getPostStartDt = " + plan.getPostStartDt());
+        logger.info("after cachePlan getPostEndDt = " + plan.getPostEndDt());
+    }
 }

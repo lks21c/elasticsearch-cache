@@ -1,5 +1,8 @@
 package com.elasticsearchcache.util;
 
+import com.elasticsearchcache.service.CacheService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 
 import java.util.Calendar;
@@ -8,6 +11,7 @@ import java.util.Calendar;
  * @author lks21c
  */
 public class PeriodUtil {
+    private static final Logger logger = LogManager.getLogger(PeriodUtil.class);
 
     public static final int MILLS_DAY = 3600 * 24 * 1000;
 
@@ -24,12 +28,13 @@ public class PeriodUtil {
         long localHourDiff = getLocalTimeDiff() * PeriodUtil.MILLS_HOUR;
         long modifiedMills = dt.getMillis() + localHourDiff;
         long restMills = (modifiedMills) % periodUnit;
+        logger.info("restMills = " + restMills);
         return restMills;
     }
 
     public static DateTime getNewStartDt(DateTime dt, int periodUnit) {
         long restMills = getRestMills(dt, periodUnit);
-        return dt.plus(PeriodUtil.MILLS_DAY - restMills);
+        return dt.plus(periodUnit - restMills);
     }
 
     public static int getLocalTimeDiff() {
