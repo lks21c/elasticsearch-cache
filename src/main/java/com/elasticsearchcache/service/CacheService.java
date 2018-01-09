@@ -126,6 +126,7 @@ public class CacheService {
         logger.info("after cachePlan getPostEndDt = " + plan.getPostEndDt());
 
         QueryPlan queryPlan = new QueryPlan();
+        queryPlan.setCacheMode(plan.getCacheMode());
         if (CacheMode.ALL.equals(plan.getCacheMode())) {
             queryPlan.setDhbList(dhbList);
             return queryPlan;
@@ -160,7 +161,7 @@ public class CacheService {
         }
     }
 
-    private String generateRes(List<DateHistogramBucket> dhbList) {
+    public String generateRes(List<DateHistogramBucket> dhbList) {
         //TODO: manipulates took and so on.
         String res = "{\n" +
                 "  \"responses\": [\n" +

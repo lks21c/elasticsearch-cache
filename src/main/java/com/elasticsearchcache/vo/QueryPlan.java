@@ -1,5 +1,7 @@
 package com.elasticsearchcache.vo;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.util.List;
 
 public class QueryPlan {
@@ -10,6 +12,8 @@ public class QueryPlan {
     private String postQuery;
 
     private List<DateHistogramBucket> dhbList;
+
+    private String cacheMode;
 
     public String getPreQuery() {
         return preQuery;
@@ -41,5 +45,27 @@ public class QueryPlan {
 
     public void setDhbList(List<DateHistogramBucket> dhbList) {
         this.dhbList = dhbList;
+    }
+
+    public String getCacheMode() {
+        return cacheMode;
+    }
+
+    public void setCacheMode(String cacheMode) {
+        this.cacheMode = cacheMode;
+    }
+
+    public int getTotalQueryCnt() {
+        int queryCnt = 0;
+        if (!StringUtils.isEmpty(preQuery)) {
+            queryCnt++;
+        }
+        if (!StringUtils.isEmpty(query)) {
+            queryCnt++;
+        }
+        if (!StringUtils.isEmpty(postQuery)) {
+            queryCnt++;
+        }
+        return queryCnt;
     }
 }

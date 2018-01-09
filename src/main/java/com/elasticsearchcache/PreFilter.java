@@ -1,9 +1,12 @@
 package com.elasticsearchcache;
 
+import com.elasticsearchcache.conts.CacheMode;
 import com.elasticsearchcache.service.CacheService;
 import com.elasticsearchcache.service.ElasticSearchService;
 import com.elasticsearchcache.service.NativeParsingServiceImpl;
 import com.elasticsearchcache.util.JsonUtil;
+import com.elasticsearchcache.vo.CachePlan;
+import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.elasticsearchcache.vo.QueryPlan;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
@@ -141,9 +144,31 @@ public class PreFilter extends ZuulFilter {
                         Map<String, Object> resMap = parsingService.parseXContent(bulkRes);
                         List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
 
-                        int queryPlanOffset = 0;
-                        for (Map<String, Object> response : respes) {
+                        int responseCnt = 0;
+                        for (int i = 0; i < queryPlanList.size(); i++) {
+                            if (CacheMode.ALL.equals(queryPlanList.get(i).getCacheMode())) {
+                                String body = cacheService.generateRes(queryPlanList.get(i).getDhbList());
+                            } else if (CacheMode.PARTIAL.equals(queryPlanList.get(i).getCacheMode())) {
+                                List<DateHistogramBucket> mergedDhbList = new ArrayList<>();
+                                List<DateHistogramBucket> preDhbList;
+                                if (!StringUtils.isEmpty(queryPlanList.get(i).getPreQuery())) {
+                                    preDhbList = cacheService.getDhbList(JsonUtil.convertAsString(respes.get(responseCnt++)));
+                                    mergedDhbList.addAll(preDhbList);
+                                }
 
+                                mergedDhbList.addAll(queryPlanList.get(i).getDhbList());
+
+                                List<DateHistogramBucket> postDhbList;
+                                if (!StringUtils.isEmpty(queryPlanList.get(i).getPostQuery())) {
+                                    postDhbList = cacheService.getDhbList(JsonUtil.convertAsString(respes.get(responseCnt++)));
+                                    mergedDhbList.addAll(postDhbList);
+                                }
+                                String body = cacheService.generateRes(mergedDhbList);
+                            } else {
+                                if (!StringUtils.isEmpty(queryPlanList.get(i).getQuery())) {
+                                    respes.get(responseCnt++);
+                                }
+                            }
                         }
 
                         //responses parsing
