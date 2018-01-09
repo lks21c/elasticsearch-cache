@@ -111,8 +111,12 @@ public class CacheService {
         logger.info("cachePlan getPostStartDt = " + plan.getPostStartDt());
         logger.info("cachePlan getPostEndDt = " + plan.getPostEndDt());
 
+        DateTime beforeCacheMills = new DateTime();
         List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
+        long afterCacheMills = new DateTime().getMillis() - beforeCacheMills.getMillis();
+
         logger.info("dhbList = " + JsonUtil.convertAsString(dhbList));
+        logger.info("afterCacheMills = " + afterCacheMills);
 
         plan = cachePlanService.checkCacheMode(interval, plan, dhbList);
         logger.info("cacheMode = " + plan.getCacheMode() + " cache size : " + dhbList.size());
@@ -155,6 +159,7 @@ public class CacheService {
             // execute post query
             if (plan.getPostStartDt() != null && plan.getPostEndDt() != null) {
                 Map<String, Object> postQmap = getManipulateQuery(qMap, plan.getPostStartDt(), plan.getPostEndDt());
+                logger.info("post query = " + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(postQmap) + "\n");
                 String body = esService.getRequestBody(esUrl + "/_msearch", JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(postQmap) + "\n");
                 List<DateHistogramBucket> postDhbList = getDhbList(body);
                 for (DateHistogramBucket dhb : postDhbList) {
