@@ -66,7 +66,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
 
         logger.info("srch = " + sb.toString());
         SearchResponse sr = restClient.search(srch);
-        logger.info("sr = " + sr.toString());
+//        logger.info("sr = " + sr.toString());
 
         List<DateHistogramBucket> dhbList = new ArrayList<>();
         for (SearchHit hit : sr.getHits().getHits()) {

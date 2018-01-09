@@ -93,7 +93,7 @@ public class CacheService {
             obj.remove("range");
         }
         logger.info("queryWithoutRange = " + queryWithoutRange);
-        logger.info("query = " + query);
+//        logger.info("query = " + query);
 
         logger.info("invoked here");
 
@@ -141,7 +141,6 @@ public class CacheService {
             if (plan.getPreStartDt() != null && plan.getPreEndDt() != null) {
                 Map<String, Object> preQmap = getManipulateQuery(qMap, plan.getPreStartDt(), plan.getPreEndDt());
                 String body = esService.getRequestBody(esUrl + "/_msearch", JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(preQmap) + "\n");
-                logger.info("pre body = " + body);
                 List<DateHistogramBucket> preDhbList = getDhbList(body);
                 for (DateHistogramBucket dhb : preDhbList) {
                     if (dhb.getBucket() != null) {
@@ -174,7 +173,7 @@ public class CacheService {
 
             // 최종 response 생성
             String res = generateRes(mergedDhb);
-            logger.info("final res = " + res);
+//            logger.info("final res = " + res);
 
             return res;
         } else {
@@ -296,7 +295,7 @@ public class CacheService {
             Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
 
             for (String aggKey : aggrs.keySet()) {
-                logger.info("aggKey = " + aggrs.get(aggKey));
+//                logger.info("aggKey = " + aggrs.get(aggKey));
 
                 HashMap<String, Object> buckets = (HashMap<String, Object>) aggrs.get(aggKey);
 

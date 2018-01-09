@@ -136,7 +136,7 @@ public class PreFilter extends ZuulFilter {
 
                     if (sb.length() > 0) {
                         logger.info("sc ok ");
-                        logger.info("resBody = " + sb.toString());
+//                        logger.info("resBody = " + sb.toString());
                         ctx.addZuulResponseHeader(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8");
                         ctx.addZuulResponseHeader(HttpHeaders.VARY, "Accept-Encoding");
                         ctx.addZuulResponseHeader(HttpHeaders.CONNECTION, "Keep-Alive");
