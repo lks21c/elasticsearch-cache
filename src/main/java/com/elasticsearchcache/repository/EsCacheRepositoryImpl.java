@@ -34,7 +34,7 @@ import java.util.Map;
 /**
  * @author lks21c
  */
-@Service
+@Service("EsCacheRepositoryImpl")
 public class EsCacheRepositoryImpl implements CacheRepository {
     private static final Logger logger = LogManager.getLogger(EsCacheRepositoryImpl.class);
 

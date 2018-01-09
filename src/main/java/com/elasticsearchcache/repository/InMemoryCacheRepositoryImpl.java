@@ -9,6 +9,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.Map;
  *
  * @author lks21c
  */
+@Service("InMemoryCacheRepositoryImpl")
 public class InMemoryCacheRepositoryImpl implements CacheRepository {
     private Logger logger = LogManager.getLogger(InMemoryCacheRepositoryImpl.class);
 
