@@ -4,7 +4,6 @@ import com.elasticsearchcache.conts.CacheMode;
 import com.elasticsearchcache.repository.CacheRepository;
 import com.elasticsearchcache.util.IndexNameUtil;
 import com.elasticsearchcache.util.JsonUtil;
-import com.elasticsearchcache.util.PeriodUtil;
 import com.elasticsearchcache.vo.CachePlan;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -199,7 +198,7 @@ public class CacheService {
                 List<DateHistogramBucket> originalDhbList = getDhbList(body);
                 List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
                 for (DateHistogramBucket dhb : originalDhbList) {
-                    if (cachePlanService.checkCacheable(interval,dhb.getDate(),startDt,endDt)) {
+                    if (cachePlanService.checkCacheable(interval, dhb.getDate(), startDt, endDt)) {
                         cacheDhbList.add(dhb);
                     }
                 }
