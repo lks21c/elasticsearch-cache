@@ -4,7 +4,6 @@ import com.elasticsearchcache.conts.CacheMode;
 import com.elasticsearchcache.repository.CacheRepository;
 import com.elasticsearchcache.util.IndexNameUtil;
 import com.elasticsearchcache.util.JsonUtil;
-import com.elasticsearchcache.util.PeriodUtil;
 import com.elasticsearchcache.vo.CachePlan;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import org.apache.commons.lang.SerializationUtils;
@@ -37,6 +36,9 @@ public class CacheService {
 
     @Autowired
     private ParsingService parsingService;
+
+    @Autowired
+    private CachePlanService cachePlanService;
 
     @Autowired
     @Qualifier("EsCacheRepositoryImpl")
@@ -98,7 +100,7 @@ public class CacheService {
         // Parse Interval
         String interval = parseInterval(aggs);
 
-        CachePlan plan = checkCachePlan(interval, startDt, endDt);
+        CachePlan plan = cachePlanService.checkCachePlan(interval, startDt, endDt);
         logger.info("cachePlan getPreStartDt = " + plan.getPreStartDt());
         logger.info("cachePlan getPreEndDt = " + plan.getPreEndDt());
         logger.info("cachePlan getStartDt = " + plan.getStartDt());
@@ -109,7 +111,7 @@ public class CacheService {
         List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
         logger.info("dhbList = " + JsonUtil.convertAsString(dhbList));
 
-        plan = checkCacheMode(interval, plan, dhbList);
+        plan = cachePlanService.checkCacheMode(interval, plan, dhbList);
         logger.info("cacheMode = " + plan.getCacheMode() + " cache size : " + dhbList.size());
         logger.info("after cachePlan getPreStartDt = " + plan.getPreStartDt());
         logger.info("after cachePlan getPreEndDt = " + plan.getPreEndDt());
@@ -181,13 +183,12 @@ public class CacheService {
             logger.info("original body = " + body);
 
             // Cacheable
-            if (checkCacheable(interval, startDt)) {
+            if (cachePlanService.checkCacheable(interval, startDt)) {
                 logger.info("cacheable " + JsonUtil.convertAsString(aggs));
                 cacheRepository.putCache(body, indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), interval);
             }
             return body;
         }
-
     }
 
     private String parseInterval(Map<String, Object> aggs) {
@@ -205,98 +206,5 @@ public class CacheService {
             }
         }
         return interval;
-    }
-
-    private boolean checkCacheable(String interval, DateTime startDt) {
-        if (interval != null) {
-            if (PeriodUtil.getRestMills(startDt, PeriodUtil.getPeriodUnit(interval)) == 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public CachePlan checkCachePlan(String interval, DateTime startDt, DateTime endDt) {
-        CachePlan cachePlan = new CachePlan();
-        if (interval != null) {
-            int periodUnit = PeriodUtil.getPeriodUnit(interval);
-            logger.info("periodUnit = " + periodUnit);
-            if (PeriodUtil.getRestMills(startDt, periodUnit) == 0) { //pre range doesn't exist
-                cachePlan.setStartDt(startDt);
-            } else { //pre range exists
-                DateTime newStartDt = PeriodUtil.getNewStartDt(startDt, periodUnit);
-                DateTime preStartDt = startDt;
-                DateTime preEndDt = newStartDt.minusMillis(1);
-                cachePlan.setPreStartDt(preStartDt);
-                cachePlan.setPreEndDt(preEndDt);
-                cachePlan.setStartDt(newStartDt);
-            }
-
-            if (PeriodUtil.getRestMills(endDt, periodUnit) == periodUnit - 1) { //end range doesn't exist
-                cachePlan.setEndDt(endDt);
-            } else { //end range exists
-                DateTime postEndDt = endDt;
-                DateTime postStartDt = endDt.minus(PeriodUtil.getRestMills(endDt, periodUnit));
-                DateTime newEndDt = postStartDt.minusMillis(1);
-                cachePlan.setPostStartDt(postStartDt);
-                cachePlan.setPostEndDt(postEndDt);
-                cachePlan.setEndDt(newEndDt);
-            }
-        }
-        return cachePlan;
-    }
-
-    private CachePlan checkCacheMode(String interval, CachePlan plan, List<DateHistogramBucket> dhbList) {
-        if (interval != null) {
-            int intervalNum = PeriodUtil.parseIntervalNum(interval);
-            int periodUnit = PeriodUtil.getPeriodUnit(interval);
-
-            if (periodUnit == -1) {
-                plan.setCacheMode(CacheMode.NOCACHE);
-                return plan;
-            }
-
-            int periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
-            logger.info("periodBetween = " + periodBetween);
-
-            if (periodBetween + 1 == dhbList.size()
-                    && plan.getPreStartDt() == null
-                    && plan.getPreEndDt() == null
-                    && plan.getPostStartDt() == null
-                    && plan.getPostEndDt() == null) {
-                plan.setCacheMode(CacheMode.ALL);
-                return plan;
-            } else if (dhbList.size() > 0) {
-                DateTime preDateTime = null;
-                boolean isSuccessive = false;
-                for (DateHistogramBucket dhb : dhbList) {
-                    if (preDateTime != null && PeriodUtil.periodBetween(preDateTime, dhb.getDate(), periodUnit) == 1) {
-                        isSuccessive = true;
-                    } else {
-                        isSuccessive = false;
-                    }
-                    preDateTime = dhb.getDate();
-                }
-
-                logger.info("isSuccessive = " + isSuccessive);
-                if (isSuccessive) {
-                    if (PeriodUtil.periodBetween(dhbList.get(0).getDate(), plan.getStartDt(), periodUnit) != 0) {
-                        plan.setPreStartDt(plan.getStartDt());
-                        plan.setStartDt(dhbList.get(0).getDate());
-                        plan.setPreEndDt(dhbList.get(0).getDate().minusMillis(1));
-                    }
-
-                    if (PeriodUtil.periodBetween(dhbList.get(dhbList.size() - 1).getDate(), plan.getEndDt(), periodUnit) != 0) {
-                        plan.setPostStartDt(dhbList.get(dhbList.size() - 1).getDate().plus(periodUnit));
-                        plan.setPostEndDt(plan.getEndDt());
-                        plan.setEndDt(dhbList.get(dhbList.size() - 1).getDate().plus(periodUnit).minusMillis(1));
-                    }
-                    plan.setCacheMode(CacheMode.PARTIAL);
-                    return plan;
-                }
-            }
-        }
-        plan.setCacheMode(CacheMode.NOCACHE);
-        return plan;
     }
 }
