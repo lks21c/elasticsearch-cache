@@ -135,10 +135,18 @@ public class PreFilter extends ZuulFilter {
                         }
 
                         HttpResponse res = esService.executeQuery(targetUrl, qb.toString());
-                        logger.info("refactor res = " + EntityUtils.toString(res.getEntity()));
+                        String bulkRes = EntityUtils.toString(res.getEntity());
+                        logger.info("refactor res = " + bulkRes);
+
+                        Map<String, Object> resMap = parsingService.parseXContent(bulkRes);
+                        List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
+
+                        int queryPlanOffset = 0;
+                        for (Map<String, Object> response : respes) {
+
+                        }
 
                         //responses parsing
-
                         Map<String, Object> mergedRes = new HashMap<>();
                         mergedRes.put("responses", rb);
                         sb.append(JsonUtil.convertAsString(mergedRes));
