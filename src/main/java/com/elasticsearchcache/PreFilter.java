@@ -110,7 +110,8 @@ public class PreFilter extends ZuulFilter {
                     String[] reqs = reqBody.split("\n");
 
                     StringBuilder sb = new StringBuilder();
-                    if(esCache && !reqBody.contains(".kibana")) {
+                    if (esCache && !reqBody.contains(".kibana")) {
+                        long beforeQueries = System.currentTimeMillis();
                         List<Map<String, Object>> rb = new ArrayList<>();
                         // Handles multi search
                         if (reqs.length > 2) {
@@ -129,6 +130,8 @@ public class PreFilter extends ZuulFilter {
                                 sb.append(body + "\n");
                             }
                         }
+                        long afterQueries = System.currentTimeMillis() - beforeQueries;
+                        logger.info("afterQueries = " + afterQueries);
                     } else {
                         HttpResponse res = esService.executeQuery(targetUrl, reqBody);
                         sb.append(EntityUtils.toString(res.getEntity()));
