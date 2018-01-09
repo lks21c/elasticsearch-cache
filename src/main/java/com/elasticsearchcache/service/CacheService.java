@@ -209,7 +209,7 @@ public class CacheService {
 
     private boolean checkCacheable(String interval, DateTime startDt) {
         if (interval != null) {
-            if (PeriodUtil.getRestMills(startDt, getPeriodUnit(interval, parseIntervalNum(interval))) == 0) {
+            if (PeriodUtil.getRestMills(startDt, PeriodUtil.getPeriodUnit(interval)) == 0) {
                 return true;
             }
         }
@@ -219,7 +219,7 @@ public class CacheService {
     public CachePlan checkCachePlan(String interval, DateTime startDt, DateTime endDt) {
         CachePlan cachePlan = new CachePlan();
         if (interval != null) {
-            int periodUnit = getPeriodUnit(interval, parseIntervalNum(interval));
+            int periodUnit = PeriodUtil.getPeriodUnit(interval);
             logger.info("periodUnit = " + periodUnit);
             if (PeriodUtil.getRestMills(startDt, periodUnit) == 0) { //pre range doesn't exist
                 cachePlan.setStartDt(startDt);
@@ -248,8 +248,8 @@ public class CacheService {
 
     private CachePlan checkCacheMode(String interval, CachePlan plan, List<DateHistogramBucket> dhbList) {
         if (interval != null) {
-            int intervalNum = parseIntervalNum(interval);
-            int periodUnit = getPeriodUnit(interval, intervalNum);
+            int intervalNum = PeriodUtil.parseIntervalNum(interval);
+            int periodUnit = PeriodUtil.getPeriodUnit(interval);
 
             if (periodUnit == -1) {
                 plan.setCacheMode(CacheMode.NOCACHE);
@@ -298,29 +298,5 @@ public class CacheService {
         }
         plan.setCacheMode(CacheMode.NOCACHE);
         return plan;
-    }
-
-    private int getPeriodUnit(String interval, int intervalNum) {
-        int periodUnit = -1;
-        if (interval.contains("d")) {
-            periodUnit = intervalNum * PeriodUtil.MILLS_DAY;
-        } else if (interval.contains("h")) {
-            periodUnit = intervalNum * PeriodUtil.MILLS_HOUR;
-        } else if (interval.contains("m")) {
-            periodUnit = intervalNum * PeriodUtil.MILLS_MINUTE;
-        }
-        return periodUnit;
-    }
-
-    private int parseIntervalNum(String interval) {
-        int intervalNum = -1;
-        if (interval.contains("d")) {
-            intervalNum = Integer.parseInt(interval.replace("d", ""));
-        } else if (interval.contains("h")) {
-            intervalNum = Integer.parseInt(interval.replace("h", ""));
-        } else if (interval.contains("m")) {
-            intervalNum = Integer.parseInt(interval.replace("m", ""));
-        }
-        return intervalNum;
     }
 }
