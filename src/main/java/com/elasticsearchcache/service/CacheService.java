@@ -95,21 +95,8 @@ public class CacheService {
         // Get aggs
         Map<String, Object> aggs = (Map<String, Object>) qMap.get("aggs");
 
-        // Parse 1 depth aggregation
-        // Get aggs
-        String interval = null;
-        if (aggs.size() == 1) {
-            for (String aggsKey : aggs.keySet()) {
-                Map<String, Object> firstDepthAggs = (Map<String, Object>) aggs.get(aggsKey);
-
-                Map<String, Object> date_histogram = (Map<String, Object>) firstDepthAggs.get("date_histogram");
-
-                if (date_histogram != null) {
-                    interval = (String) date_histogram.get("interval");
-                    logger.info("interval = " + interval);
-                }
-            }
-        }
+        // Parse Interval
+        String interval = parseInterval(aggs);
 
         CachePlan plan = checkCachePlan(interval, startDt, endDt);
         logger.info("cachePlan getPreStartDt = " + plan.getPreStartDt());
@@ -199,6 +186,23 @@ public class CacheService {
             return body;
         }
 
+    }
+
+    private String parseInterval(Map<String, Object> aggs) {
+        String interval = null;
+        if (aggs.size() == 1) {
+            for (String aggsKey : aggs.keySet()) {
+                Map<String, Object> firstDepthAggs = (Map<String, Object>) aggs.get(aggsKey);
+
+                Map<String, Object> date_histogram = (Map<String, Object>) firstDepthAggs.get("date_histogram");
+
+                if (date_histogram != null) {
+                    interval = (String) date_histogram.get("interval");
+                    logger.info("interval = " + interval);
+                }
+            }
+        }
+        return interval;
     }
 
     private boolean checkCacheable(String interval, DateTime startDt) {
