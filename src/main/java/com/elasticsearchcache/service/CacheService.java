@@ -119,6 +119,8 @@ public class CacheService {
         logger.info("after cachePlan getPostEndDt = " + plan.getPostEndDt());
 
         if (CacheMode.ALL.equals(plan.getCacheMode())) {
+
+            //TODO: manipulates took and so on.
             String res = "{\n" +
                     "  \"responses\": [\n" +
                     "    {\n" +
