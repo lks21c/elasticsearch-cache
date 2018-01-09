@@ -125,7 +125,6 @@ public class CacheService {
 
         if (CacheMode.ALL.equals(plan.getCacheMode())) {
 
-            //TODO: manipulates took and so on.
             String res = generateRes(dhbList);
 
             logger.info("final res = " + res);
@@ -140,7 +139,7 @@ public class CacheService {
                 String body = esService.getRequestBody(esUrl + "/_msearch", JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(preQmap) + "\n");
                 logger.info("pre body = " + body);
                 List<DateHistogramBucket> preDhbList = getDhbList(body);
-                for (DateHistogramBucket dhb : preDhbList){
+                for (DateHistogramBucket dhb : preDhbList) {
                     if (dhb.getBucket() != null) {
                         mergedDhb.add(dhb);
                     }
@@ -158,7 +157,7 @@ public class CacheService {
                 Map<String, Object> postQmap = getManipulateQuery(qMap, plan.getPostStartDt(), plan.getPostEndDt());
                 String body = esService.getRequestBody(esUrl + "/_msearch", JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(postQmap) + "\n");
                 List<DateHistogramBucket> postDhbList = getDhbList(body);
-                for (DateHistogramBucket dhb : postDhbList){
+                for (DateHistogramBucket dhb : postDhbList) {
                     if (dhb.getBucket() != null) {
                         mergedDhb.add(dhb);
                     }
@@ -199,6 +198,7 @@ public class CacheService {
     }
 
     private String generateRes(List<DateHistogramBucket> dhbList) {
+        //TODO: manipulates took and so on.
         String res = "{\n" +
                 "  \"responses\": [\n" +
                 "    {\n" +
