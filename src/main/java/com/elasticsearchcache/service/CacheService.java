@@ -6,11 +6,10 @@ import com.elasticsearchcache.util.IndexNameUtil;
 import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.vo.CachePlan;
 import com.elasticsearchcache.vo.DateHistogramBucket;
+import com.elasticsearchcache.vo.QueryPlan;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang.SerializationUtils;
-import org.apache.http.HttpResponse;
 import org.apache.http.MethodNotSupportedException;
-import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -49,7 +48,7 @@ public class CacheService {
     @Value("${zuul.routes.proxy.url}")
     private String esUrl;
 
-    public String manipulateQuery(String info) throws IOException, MethodNotSupportedException {
+    public QueryPlan manipulateQuery(String info) throws IOException, MethodNotSupportedException {
         logger.info("info = " + info);
 
         String[] arr = info.split("\n");
@@ -126,84 +125,38 @@ public class CacheService {
         logger.info("after cachePlan getPostStartDt = " + plan.getPostStartDt());
         logger.info("after cachePlan getPostEndDt = " + plan.getPostEndDt());
 
+        QueryPlan queryPlan = new QueryPlan();
         if (CacheMode.ALL.equals(plan.getCacheMode())) {
-
-            String res = generateRes(dhbList);
-
-//            logger.info("final res = " + res);
-            return res;
+            queryPlan.setDhbList(dhbList);
+            return queryPlan;
         } else if (CacheMode.PARTIAL.equals(plan.getCacheMode())) {
-            List<DateHistogramBucket> mergedDhb = new ArrayList<>();
-
             DateTime measureDt = new DateTime();
             // execute pre query
             if (plan.getPreStartDt() != null && plan.getPreEndDt() != null) {
                 Map<String, Object> preQmap = getManipulateQuery(qMap, plan.getPreStartDt(), plan.getPreEndDt());
-                String body = esService.getRequestBody(esUrl + "/_msearch", JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(preQmap) + "\n");
-                List<DateHistogramBucket> preDhbList = getDhbList(body);
-                for (DateHistogramBucket dhb : preDhbList) {
-                    if (dhb.getBucket() != null) {
-                        mergedDhb.add(dhb);
-                    }
-                }
+                queryPlan.setPreQuery(JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(preQmap) + "\n");
             }
 
             long afterPreQueryMills = new DateTime().getMillis() - measureDt.getMillis();
             logger.info("after pre query = " + afterPreQueryMills);
 
             //dhbList
-            mergedDhb.addAll(dhbList);
+            queryPlan.setDhbList(dhbList);
 
             // execute post query
             if (plan.getPostStartDt() != null && plan.getPostEndDt() != null) {
                 Map<String, Object> postQmap = getManipulateQuery(qMap, plan.getPostStartDt(), plan.getPostEndDt());
-                logger.info("post query = " + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(postQmap) + "\n");
-                String body = esService.getRequestBody(esUrl + "/_msearch", JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(postQmap) + "\n");
-                List<DateHistogramBucket> postDhbList = getDhbList(body);
-                for (DateHistogramBucket dhb : postDhbList) {
-                    if (dhb.getBucket() != null) {
-                        mergedDhb.add(dhb);
-                    }
-                }
+                queryPlan.setPostQuery(JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(postQmap) + "\n");
             }
 
             long afterPostQueryMills = new DateTime().getMillis() - measureDt.getMillis();
             logger.info("after post query = " + afterPostQueryMills);
 
-            // 최종 response 생성
-            String res = generateRes(mergedDhb);
-//            logger.info("final res = " + res);
-
-            return res;
+            return queryPlan;
         } else {
             logger.info("else, so original request invoked " + startDt.getSecondOfDay());
-
-            HttpResponse res = esService.executeQuery(esUrl + "/_msearch", info);
-
-            String body = null;
-            try {
-                body = EntityUtils.toString(res.getEntity());
-            } catch (Exception e) {
-                logger.info("exception occurred");
-                e.printStackTrace();
-            }
-
-//            body = body.replace("\"timed_out\":false,", "");
-//            logger.info("original body = " + body);
-
-            // Cacheable
-            if (interval != null) {
-                List<DateHistogramBucket> originalDhbList = getDhbList(body);
-                List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
-                for (DateHistogramBucket dhb : originalDhbList) {
-                    if (cachePlanService.checkCacheable(interval, dhb.getDate(), startDt, endDt)) {
-                        cacheDhbList.add(dhb);
-                    }
-                }
-                cacheRepository.putCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), cacheDhbList);
-            }
-
-            return body;
+            queryPlan.setQuery(info);
+            return queryPlan;
         }
     }
 

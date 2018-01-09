@@ -4,6 +4,7 @@ import com.elasticsearchcache.service.CacheService;
 import com.elasticsearchcache.service.ElasticSearchService;
 import com.elasticsearchcache.service.NativeParsingServiceImpl;
 import com.elasticsearchcache.util.JsonUtil;
+import com.elasticsearchcache.vo.QueryPlan;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import org.apache.commons.lang.StringUtils;
@@ -113,25 +114,41 @@ public class PreFilter extends ZuulFilter {
                     if (esCache && !reqBody.contains(".kibana")) {
                         long beforeQueries = System.currentTimeMillis();
                         List<Map<String, Object>> rb = new ArrayList<>();
-                        // Handles multi search
-                        if (reqs.length > 2) {
-                            for (int i = 0; i < reqs.length; i = i + 2) {
-                                String body = cacheService.manipulateQuery(reqs[i] + "\n" + reqs[i + 1] + "\n");
-                                Map<String, Object> resMap = parsingService.parseXContent(body);
-                                List<Map<String, Object>> responses = (List<Map<String, Object>>) resMap.get("responses");
-                                rb.add(responses.get(0));
+                        List<QueryPlan> queryPlanList = new ArrayList<>();
+                        for (int i = 0; i < reqs.length; i = i + 2) {
+                            QueryPlan queryPlan = cacheService.manipulateQuery(reqs[i] + "\n" + reqs[i + 1] + "\n");
+                            logger.info("queryPlan = " + JsonUtil.convertAsString(queryPlan));
+                            queryPlanList.add(queryPlan);
+                        }
+
+                        StringBuilder qb = new StringBuilder();
+                        for (QueryPlan qp : queryPlanList) {
+                            if (!StringUtils.isEmpty(qp.getPreQuery())) {
+                                qb.append(qp.getPreQuery());
                             }
-                            Map<String, Object> mergedRes = new HashMap<>();
-                            mergedRes.put("responses", rb);
-                            sb.append(JsonUtil.convertAsString(mergedRes));
-                        } else {
-                            for (int i = 0; i < reqs.length; i = i + 2) {
-                                String body = cacheService.manipulateQuery(reqs[i] + "\n" + reqs[i + 1] + "\n");
-                                sb.append(body + "\n");
+                            if (!StringUtils.isEmpty(qp.getQuery())) {
+                                qb.append(qp.getQuery());
+                            }
+                            if (!StringUtils.isEmpty(qp.getPostQuery())) {
+                                qb.append(qp.getPostQuery());
                             }
                         }
+
+                        HttpResponse res = esService.executeQuery(targetUrl, qb.toString());
+                        logger.info("refactor res = " + EntityUtils.toString(res.getEntity()));
+
+                        //responses parsing
+
+                        Map<String, Object> mergedRes = new HashMap<>();
+                        mergedRes.put("responses", rb);
+                        sb.append(JsonUtil.convertAsString(mergedRes));
+
                         long afterQueries = System.currentTimeMillis() - beforeQueries;
                         logger.info("afterQueries = " + afterQueries);
+
+                        res = esService.executeQuery(targetUrl, reqBody);
+                        sb = new StringBuilder();
+                        sb.append(EntityUtils.toString(res.getEntity()));
                     } else {
                         HttpResponse res = esService.executeQuery(targetUrl, reqBody);
                         sb.append(EntityUtils.toString(res.getEntity()));
@@ -161,3 +178,47 @@ public class PreFilter extends ZuulFilter {
         return request.getReader().lines().collect(Collectors.joining(System.lineSeparator())) + "\n";
     }
 }
+
+//    Map<String, Object> resMap = parsingService.parseXContent(body);
+//    List<Map<String, Object>> responses = (List<Map<String, Object>>) resMap.get("responses");
+//                            rb.add(responses.get(0));
+
+//
+//// Cacheable
+//            if (interval != null) {
+//                    List<DateHistogramBucket> originalDhbList = getDhbList(body);
+//        List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
+//        for (DateHistogramBucket dhb : originalDhbList) {
+//        if (cachePlanService.checkCacheable(interval, dhb.getDate(), startDt, endDt)) {
+//        cacheDhbList.add(dhb);
+//        }
+//        }
+//        cacheRepository.putCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), cacheDhbList);
+//        }
+//
+//
+//        // execute pre query
+//        if (plan.getPreStartDt() != null && plan.getPreEndDt() != null) {
+//        Map<String, Object> preQmap = getManipulateQuery(qMap, plan.getPreStartDt(), plan.getPreEndDt());
+//        String body = esService.getRequestBody(esUrl + "/_msearch", JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(preQmap) + "\n");
+//        List<DateHistogramBucket> preDhbList = getDhbList(body);
+//        for (DateHistogramBucket dhb : preDhbList) {
+//        if (dhb.getBucket() != null) {
+//        mergedDhb.add(dhb);
+//        }
+//        }
+//        }
+//
+//
+//        // execute post query
+//        if (plan.getPostStartDt() != null && plan.getPostEndDt() != null) {
+//        Map<String, Object> postQmap = getManipulateQuery(qMap, plan.getPostStartDt(), plan.getPostEndDt());
+//        logger.info("post query = " + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(postQmap) + "\n");
+//        String body = esService.getRequestBody(esUrl + "/_msearch", JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(postQmap) + "\n");
+//        List<DateHistogramBucket> postDhbList = getDhbList(body);
+//        for (DateHistogramBucket dhb : postDhbList) {
+//        if (dhb.getBucket() != null) {
+//        mergedDhb.add(dhb);
+//        }
+//        }
+//        }
