@@ -97,6 +97,7 @@ public class PreFilter extends ZuulFilter {
             String targetUrl = esUrl + url;
             logger.info("request = " + targetUrl);
 
+            StringBuilder sb = new StringBuilder();
             if ("POST".equals(request.getMethod())) {
                 String reqBody = getRequestBody(request);
 
@@ -113,10 +114,8 @@ public class PreFilter extends ZuulFilter {
 
                     String[] reqs = reqBody.split("\n");
 
-                    StringBuilder sb = new StringBuilder();
                     if (esCache && !reqBody.contains(".kibana")) {
                         long beforeQueries = System.currentTimeMillis();
-                        List<Map<String, Object>> rb = new ArrayList<>();
                         List<QueryPlan> queryPlanList = new ArrayList<>();
                         for (int i = 0; i < reqs.length; i = i + 2) {
                             QueryPlan queryPlan = cacheService.manipulateQuery(reqs[i] + "\n" + reqs[i + 1] + "\n");
@@ -137,17 +136,28 @@ public class PreFilter extends ZuulFilter {
                             }
                         }
 
+                        long beforeManipulateBulkQuery = System.currentTimeMillis();
                         HttpResponse res = esService.executeQuery(targetUrl, qb.toString());
+                        long afterManipulateBulkQuery = System.currentTimeMillis() - beforeManipulateBulkQuery;
+                        logger.info("afterManipulateBulkQuery = " + afterManipulateBulkQuery);
                         String bulkRes = EntityUtils.toString(res.getEntity());
                         logger.info("refactor res = " + bulkRes);
 
                         Map<String, Object> resMap = parsingService.parseXContent(bulkRes);
                         List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
 
+                        StringBuilder mergedRes = new StringBuilder();
+                        mergedRes.append("{");
+                        mergedRes.append("\"responses\":[");
                         int responseCnt = 0;
                         for (int i = 0; i < queryPlanList.size(); i++) {
+                            logger.info("query plan cache mode = " + queryPlanList.get(i).getCacheMode());
                             if (CacheMode.ALL.equals(queryPlanList.get(i).getCacheMode())) {
-                                String body = cacheService.generateRes(queryPlanList.get(i).getDhbList());
+                                String resBody = cacheService.generateRes(queryPlanList.get(i).getDhbList());
+                                if(i != 0){
+                                    mergedRes.append(",");
+                                }
+                                mergedRes.append(resBody);
                             } else if (CacheMode.PARTIAL.equals(queryPlanList.get(i).getCacheMode())) {
                                 List<DateHistogramBucket> mergedDhbList = new ArrayList<>();
                                 List<DateHistogramBucket> preDhbList;
@@ -163,25 +173,32 @@ public class PreFilter extends ZuulFilter {
                                     postDhbList = cacheService.getDhbList(JsonUtil.convertAsString(respes.get(responseCnt++)));
                                     mergedDhbList.addAll(postDhbList);
                                 }
-                                String body = cacheService.generateRes(mergedDhbList);
+                                String resBody = cacheService.generateRes(mergedDhbList);
+
+                                if(i != 0){
+                                    mergedRes.append(",");
+                                }
+                                mergedRes.append(resBody);
                             } else {
                                 if (!StringUtils.isEmpty(queryPlanList.get(i).getQuery())) {
-                                    respes.get(responseCnt++);
+
+                                    if(i != 0){
+                                        mergedRes.append(",");
+                                    }
+                                    mergedRes.append(respes.get(responseCnt++));
                                 }
                             }
                         }
+                        mergedRes.append("]");
+                        mergedRes.append("}");
 
-                        //responses parsing
-                        Map<String, Object> mergedRes = new HashMap<>();
-                        mergedRes.put("responses", rb);
-                        sb.append(JsonUtil.convertAsString(mergedRes));
+//                        logger.info("merged res = " + mergedRes.toString());
 
                         long afterQueries = System.currentTimeMillis() - beforeQueries;
                         logger.info("afterQueries = " + afterQueries);
 
-                        res = esService.executeQuery(targetUrl, reqBody);
-                        sb = new StringBuilder();
-                        sb.append(EntityUtils.toString(res.getEntity()));
+//                        res = esService.executeQuery(targetUrl, reqBody);
+                        sb.append(mergedRes.toString());
                     } else {
                         HttpResponse res = esService.executeQuery(targetUrl, reqBody);
                         sb.append(EntityUtils.toString(res.getEntity()));

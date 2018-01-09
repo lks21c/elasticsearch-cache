@@ -12,7 +12,6 @@ import org.apache.commons.lang.SerializationUtils;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.action.bulk.BulkRequest;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -163,8 +162,7 @@ public class CacheService {
 
     public String generateRes(List<DateHistogramBucket> dhbList) {
         //TODO: manipulates took and so on.
-        String res = "{\n" +
-                "  \"responses\": [\n" +
+        String res = "" +
                 "    {\n" +
                 "      \"took\": 3,\n" +
                 "      \"timed_out\": false,\n" +
@@ -196,9 +194,7 @@ public class CacheService {
                 "        }\n" +
                 "      },\n" +
                 "      \"status\": 200\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}";
+                "    }\n";
 
         return res;
     }
@@ -240,28 +236,24 @@ public class CacheService {
 
     public List<DateHistogramBucket> getDhbList(String resBody) {
         List<DateHistogramBucket> dhbList = new ArrayList<>();
-        Map<String, Object> resMap = parsingService.parseXContent(resBody);
-        List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
-        for (Map<String, Object> resp : respes) {
-            BulkRequest br = new BulkRequest();
+        Map<String, Object> resp = parsingService.parseXContent(resBody);
 
-            Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
+        Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
 
-            for (String aggKey : aggrs.keySet()) {
+        for (String aggKey : aggrs.keySet()) {
 //                logger.info("aggKey = " + aggrs.get(aggKey));
 
-                HashMap<String, Object> buckets = (HashMap<String, Object>) aggrs.get(aggKey);
+            HashMap<String, Object> buckets = (HashMap<String, Object>) aggrs.get(aggKey);
 
-                for (String bucketsKey : buckets.keySet()) {
-                    List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
-                    for (Map<String, Object> bucket : bucketList) {
-                        String key_as_string = (String) bucket.get("key_as_string");
-                        Long ts = (Long) bucket.get("key");
-                        logger.info("for key_as_string = " + key_as_string);
+            for (String bucketsKey : buckets.keySet()) {
+                List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
+                for (Map<String, Object> bucket : bucketList) {
+                    String key_as_string = (String) bucket.get("key_as_string");
+                    Long ts = (Long) bucket.get("key");
+                    logger.info("for key_as_string = " + key_as_string);
 
-                        DateHistogramBucket dhb = new DateHistogramBucket(new DateTime(ts), bucket);
-                        dhbList.add(dhb);
-                    }
+                    DateHistogramBucket dhb = new DateHistogramBucket(new DateTime(ts), bucket);
+                    dhbList.add(dhb);
                 }
             }
         }
