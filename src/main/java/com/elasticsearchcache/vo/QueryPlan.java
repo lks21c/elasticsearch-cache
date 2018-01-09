@@ -13,7 +13,15 @@ public class QueryPlan {
 
     private List<DateHistogramBucket> dhbList;
 
-    private String cacheMode;
+    private CachePlan cachePlan;
+
+    private String interval;
+
+    private String indexName;
+
+    private String queryWithoutRange;
+
+    private String aggs;
 
     public String getPreQuery() {
         return preQuery;
@@ -47,12 +55,44 @@ public class QueryPlan {
         this.dhbList = dhbList;
     }
 
-    public String getCacheMode() {
-        return cacheMode;
+    public CachePlan getCachePlan() {
+        return cachePlan;
     }
 
-    public void setCacheMode(String cacheMode) {
-        this.cacheMode = cacheMode;
+    public void setCachePlan(CachePlan cachePlan) {
+        this.cachePlan = cachePlan;
+    }
+
+    public String getInterval() {
+        return interval;
+    }
+
+    public void setInterval(String interval) {
+        this.interval = interval;
+    }
+
+    public String getIndexName() {
+        return indexName;
+    }
+
+    public void setIndexName(String indexName) {
+        this.indexName = indexName;
+    }
+
+    public String getQueryWithoutRange() {
+        return queryWithoutRange;
+    }
+
+    public void setQueryWithoutRange(String queryWithoutRange) {
+        this.queryWithoutRange = queryWithoutRange;
+    }
+
+    public String getAggs() {
+        return aggs;
+    }
+
+    public void setAggs(String aggs) {
+        this.aggs = aggs;
     }
 
     public int getTotalQueryCnt() {

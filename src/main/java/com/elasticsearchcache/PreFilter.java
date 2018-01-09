@@ -1,11 +1,12 @@
 package com.elasticsearchcache;
 
 import com.elasticsearchcache.conts.CacheMode;
+import com.elasticsearchcache.repository.CacheRepository;
+import com.elasticsearchcache.service.CachePlanService;
 import com.elasticsearchcache.service.CacheService;
 import com.elasticsearchcache.service.ElasticSearchService;
 import com.elasticsearchcache.service.NativeParsingServiceImpl;
 import com.elasticsearchcache.util.JsonUtil;
-import com.elasticsearchcache.vo.CachePlan;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.elasticsearchcache.vo.QueryPlan;
 import com.netflix.zuul.ZuulFilter;
@@ -17,6 +18,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,6 +46,13 @@ public class PreFilter extends ZuulFilter {
 
     @Autowired
     CacheService cacheService;
+
+    @Autowired
+    private CachePlanService cachePlanService;
+
+    @Autowired
+    @Qualifier("EsCacheRepositoryImpl")
+    private CacheRepository cacheRepository;
 
     @Value("${zuul.routes.proxy.url}")
     private String esUrl;
@@ -151,14 +159,27 @@ public class PreFilter extends ZuulFilter {
                         mergedRes.append("\"responses\":[");
                         int responseCnt = 0;
                         for (int i = 0; i < queryPlanList.size(); i++) {
-                            logger.info("query plan cache mode = " + queryPlanList.get(i).getCacheMode());
-                            if (CacheMode.ALL.equals(queryPlanList.get(i).getCacheMode())) {
+                            logger.info("query plan cache mode = " + queryPlanList.get(i).getCachePlan().getCacheMode());
+                            if (CacheMode.ALL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
                                 String resBody = cacheService.generateRes(queryPlanList.get(i).getDhbList());
-                                if(i != 0){
+                                if (i != 0) {
                                     mergedRes.append(",");
                                 }
                                 mergedRes.append(resBody);
-                            } else if (CacheMode.PARTIAL.equals(queryPlanList.get(i).getCacheMode())) {
+
+                                //// Cacheable
+                                if (queryPlanList.get(i).getInterval() != null) {
+                                    List<DateHistogramBucket> originalDhbList = cacheService.getDhbList(resBody);
+                                    List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
+                                    for (DateHistogramBucket dhb : originalDhbList) {
+                                        if (cachePlanService.checkCacheable(queryPlanList.get(i).getInterval(), dhb.getDate(), queryPlanList.get(i).getCachePlan().getStartDt(), queryPlanList.get(i).getCachePlan().getEndDt())) {
+                                            logger.info("cacheable");
+                                            cacheDhbList.add(dhb);
+                                        }
+                                    }
+                                    cacheRepository.putCache(queryPlanList.get(i).getIndexName(), queryPlanList.get(i).getQueryWithoutRange(), queryPlanList.get(i).getAggs(), cacheDhbList);
+                                }
+                            } else if (CacheMode.PARTIAL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
                                 List<DateHistogramBucket> mergedDhbList = new ArrayList<>();
                                 List<DateHistogramBucket> preDhbList;
                                 if (!StringUtils.isEmpty(queryPlanList.get(i).getPreQuery())) {
@@ -175,14 +196,14 @@ public class PreFilter extends ZuulFilter {
                                 }
                                 String resBody = cacheService.generateRes(mergedDhbList);
 
-                                if(i != 0){
+                                if (i != 0) {
                                     mergedRes.append(",");
                                 }
                                 mergedRes.append(resBody);
                             } else {
                                 if (!StringUtils.isEmpty(queryPlanList.get(i).getQuery())) {
 
-                                    if(i != 0){
+                                    if (i != 0) {
                                         mergedRes.append(",");
                                     }
                                     mergedRes.append(respes.get(responseCnt++));
@@ -192,7 +213,8 @@ public class PreFilter extends ZuulFilter {
                         mergedRes.append("]");
                         mergedRes.append("}");
 
-//                        logger.info("merged res = " + mergedRes.toString());
+
+                        logger.info("merged res = " + mergedRes.toString());
 
                         long afterQueries = System.currentTimeMillis() - beforeQueries;
                         logger.info("afterQueries = " + afterQueries);

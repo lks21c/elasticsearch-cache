@@ -108,6 +108,13 @@ public class CacheService {
         logger.info("cachePlan getPostStartDt = " + plan.getPostStartDt());
         logger.info("cachePlan getPostEndDt = " + plan.getPostEndDt());
 
+        QueryPlan queryPlan = new QueryPlan();
+        queryPlan.setCachePlan(plan);
+        queryPlan.setInterval(interval);
+        queryPlan.setIndexName(indexName);
+        queryPlan.setQueryWithoutRange(JsonUtil.convertAsString(queryWithoutRange));
+        queryPlan.setAggs(JsonUtil.convertAsString(aggs));
+
         DateTime beforeCacheMills = new DateTime();
         List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
         long afterCacheMills = new DateTime().getMillis() - beforeCacheMills.getMillis();
@@ -124,8 +131,6 @@ public class CacheService {
         logger.info("after cachePlan getPostStartDt = " + plan.getPostStartDt());
         logger.info("after cachePlan getPostEndDt = " + plan.getPostEndDt());
 
-        QueryPlan queryPlan = new QueryPlan();
-        queryPlan.setCacheMode(plan.getCacheMode());
         if (CacheMode.ALL.equals(plan.getCacheMode())) {
             queryPlan.setDhbList(dhbList);
             return queryPlan;
