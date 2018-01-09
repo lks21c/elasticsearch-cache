@@ -20,8 +20,6 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.DateTime;
-import org.joda.time.Days;
-import org.joda.time.Minutes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -81,84 +79,30 @@ public class EsCacheRepositoryImpl implements CacheRepository {
     }
 
     @Override
-    public void putCache(String res, String indexName, String query, String agg, String interval) throws JsonProcessingException {
+    public void putCache(String indexName, String query, String agg, List<DateHistogramBucket> dhbList) throws JsonProcessingException {
         String key = indexName + query + agg;
-        Map<String, Object> resMap = null;
-        try {
-            logger.info("before res map " + res);
-            resMap = parsingService.parseXContent(res);
-            logger.info("resMap = " + JsonUtil.convertAsString(resMap));
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.info("exception occurred");
+        BulkRequest br = new BulkRequest();
+        for (DateHistogramBucket dhb : dhbList) {
+            Map<String, Object> bucket = dhb.getBucket();
+            String key_as_string = (String) bucket.get("key_as_string");
+            logger.info("for key_as_string = " + key_as_string);
+            Long ts = (Long) bucket.get("key");
+            String str = key + "_" + ts;
+            MurmurHash3.Hash128 hash = MurmurHash3.hash128(str.getBytes(), 0, str.getBytes().length, 0, new MurmurHash3.Hash128());
+            String id = String.valueOf(hash.h1) + String.valueOf(hash.h2);
+            IndexRequest ir = new IndexRequest("cache", "info", id);
+            Map<String, Object> irMap = new HashMap<>();
+            irMap.put("value", JsonUtil.convertAsString(bucket));
+            irMap.put("key", key);
+            irMap.put("ts", ts);
+            ir.source(irMap);
+            br.add(ir);
         }
 
-        List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
-        for (Map<String, Object> resp : respes) {
-            List<DateHistogramBucket> dhbList = new ArrayList<>();
-            BulkRequest br = new BulkRequest();
-
-            Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
-
-            for (String aggKey : aggrs.keySet()) {
-                logger.info("aggKey = " + aggrs.get(aggKey));
-
-                HashMap<String, Object> buckets = (HashMap<String, Object>) aggrs.get(aggKey);
-
-                for (String bucketsKey : buckets.keySet()) {
-                    List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
-                    for (Map<String, Object> bucket : bucketList) {
-                        String key_as_string = (String) bucket.get("key_as_string");
-                        Long ts = (Long) bucket.get("key");
-                        logger.info("for key_as_string = " + key_as_string);
-
-                        if ("1d".equals(interval)) {
-                            if (Days.daysBetween(new DateTime(ts), new DateTime())
-                                    .isGreaterThan(Days.days(0))) { /* 과거 ~ 오늘전까지만 캐시 */
-
-                                DateHistogramBucket dhb = new DateHistogramBucket(new DateTime(ts), bucket);
-                                dhbList.add(dhb);
-
-                                logger.info("put cache " + key + "_" + ts);
-                                String str = key + "_" + ts;
-                                MurmurHash3.Hash128 hash = MurmurHash3.hash128(str.getBytes(), 0, str.getBytes().length, 0, new MurmurHash3.Hash128());
-                                String id = String.valueOf(hash.h1) + String.valueOf(hash.h2);
-                                IndexRequest ir = new IndexRequest("cache", "info", id);
-                                Map<String, Object> irMap = new HashMap<>();
-                                irMap.put("value", JsonUtil.convertAsString(bucket));
-                                irMap.put("key", key);
-                                irMap.put("ts", ts);
-                                ir.source(irMap);
-                                br.add(ir);
-                            }
-                        } else if ("1m".equals(interval)) {
-                            if (Minutes.minutesBetween(new DateTime(ts), new DateTime())
-                                    .isGreaterThan(Minutes.minutes(0))) { /* 과거 ~ 현재 시간 1분전까지만 캐시 */
-
-                                DateHistogramBucket dhb = new DateHistogramBucket(new DateTime(ts), bucket);
-                                dhbList.add(dhb);
-
-                                logger.info("put cache " + key + "_" + ts);
-                                String str = key + "_" + ts;
-                                MurmurHash3.Hash128 hash = MurmurHash3.hash128(str.getBytes(), 0, str.getBytes().length, 0, new MurmurHash3.Hash128());
-                                String id = String.valueOf(hash.h1) + String.valueOf(hash.h2);
-                                IndexRequest ir = new IndexRequest("cache", "info", id);
-                                Map<String, Object> irMap = new HashMap<>();
-                                irMap.put("value", JsonUtil.convertAsString(bucket));
-                                irMap.put("key", key);
-                                irMap.put("ts", ts);
-                                ir.source(irMap);
-                                br.add(ir);
-                            }
-                        }
-                    }
-                }
-            }
-            try {
-                restClient.bulk(br);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            restClient.bulk(br);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

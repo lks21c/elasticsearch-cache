@@ -194,10 +194,16 @@ public class CacheService {
             logger.info("original body = " + body);
 
             // Cacheable
-            if (cachePlanService.checkCacheable(interval, startDt)) {
-                logger.info("cacheable " + JsonUtil.convertAsString(aggs));
-                cacheRepository.putCache(body, indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), interval);
+            if (interval != null) {
+                List<DateHistogramBucket> cacheDhbCandiate = getDhbList(body);
+                for (DateHistogramBucket dhb : cacheDhbCandiate) {
+                    if (dhb.getDate().getMillis() >= plan.getStartDt().getMillis()
+                            || dhb.getDate().getMillis() <= plan.getEndDt().getMillis()) {
+                        cacheRepository.putCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), cacheDhbCandiate);
+                    }
+                }
             }
+
             return body;
         }
     }
