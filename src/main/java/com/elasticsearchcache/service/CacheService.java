@@ -48,7 +48,6 @@ public class CacheService {
 
     @Value("${zuul.routes.proxy.url}")
     private String esUrl;
-    private Map<String, Object> manipulateQuery;
 
     public String manipulateQuery(String info) throws IOException, MethodNotSupportedException {
         logger.info("info = " + info);
@@ -115,7 +114,7 @@ public class CacheService {
         List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
         long afterCacheMills = new DateTime().getMillis() - beforeCacheMills.getMillis();
 
-        logger.info("dhbList = " + JsonUtil.convertAsString(dhbList));
+//        logger.info("dhbList = " + JsonUtil.convertAsString(dhbList));
         logger.info("afterCacheMills = " + afterCacheMills);
 
         plan = cachePlanService.checkCacheMode(interval, plan, dhbList);
@@ -131,7 +130,7 @@ public class CacheService {
 
             String res = generateRes(dhbList);
 
-            logger.info("final res = " + res);
+//            logger.info("final res = " + res);
             return res;
         } else if (CacheMode.PARTIAL.equals(plan.getCacheMode())) {
             List<DateHistogramBucket> mergedDhb = new ArrayList<>();
@@ -190,7 +189,7 @@ public class CacheService {
             }
 
 //            body = body.replace("\"timed_out\":false,", "");
-            logger.info("original body = " + body);
+//            logger.info("original body = " + body);
 
             // Cacheable
             if (interval != null) {
