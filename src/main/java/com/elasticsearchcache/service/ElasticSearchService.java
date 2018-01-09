@@ -9,6 +9,7 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpMethod;
@@ -62,5 +63,18 @@ public class ElasticSearchService {
         HttpResponse res = executeHttpRequest(HttpMethod.POST, targetUrl, new ByteArrayEntity(reqBody.getBytes()));
 //        logger.info("res = " + EntityUtils.toString(res.getEntity()));
         return res;
+    }
+
+    public String getRequestBody(String targetUrl, String reqBody) throws IOException, MethodNotSupportedException {
+        HttpResponse res = executeQuery(targetUrl, reqBody);
+
+        String body = null;
+        try {
+            body = EntityUtils.toString(res.getEntity());
+        } catch (Exception e) {
+            logger.info("exception occurred");
+            e.printStackTrace();
+        }
+        return body;
     }
 }

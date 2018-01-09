@@ -6,12 +6,14 @@ import com.elasticsearchcache.util.IndexNameUtil;
 import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.vo.CachePlan;
 import com.elasticsearchcache.vo.DateHistogramBucket;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -46,6 +48,7 @@ public class CacheService {
 
     @Value("${zuul.routes.proxy.url}")
     private String esUrl;
+    private Map<String, Object> manipulateQuery;
 
     public String manipulateQuery(String info) throws IOException, MethodNotSupportedException {
         logger.info("info = " + info);
@@ -123,50 +126,54 @@ public class CacheService {
         if (CacheMode.ALL.equals(plan.getCacheMode())) {
 
             //TODO: manipulates took and so on.
-            String res = "{\n" +
-                    "  \"responses\": [\n" +
-                    "    {\n" +
-                    "      \"took\": 3,\n" +
-                    "      \"timed_out\": false,\n" +
-                    "      \"_shards\": {\n" +
-                    "        \"total\": 55,\n" +
-                    "        \"successful\": 55,\n" +
-                    "        \"failed\": 0\n" +
-                    "      },\n" +
-                    "      \"hits\": {\n" +
-                    "        \"total\": 2718971,\n" +
-                    "        \"max_score\": 0,\n" +
-                    "        \"hits\": []\n" +
-                    "      },\n" +
-                    "      \"aggregations\": {\n" +
-                    "        \"2\": {\n" +
-                    "          \"buckets\": \n";
-
-            List<Map<String, Object>> buckets = new ArrayList<>();
-            for (DateHistogramBucket bucket : dhbList) {
-                buckets.add(bucket.getBucket());
-            }
-            res += JsonUtil.convertAsString(buckets);
-
-            res += "            \n" +
-                    "        }\n" +
-                    "      },\n" +
-                    "      \"status\": 200\n" +
-                    "    }\n" +
-                    "  ]\n" +
-                    "}";
+            String res = generateRes(dhbList);
 
             logger.info("final res = " + res);
             return res;
-        }
+        } else if (CacheMode.PARTIAL.equals(plan.getCacheMode())) {
+            List<DateHistogramBucket> mergedDhb = new ArrayList<>();
 
-        // partial 처리
-        // 이전 쿼리가 존재하면 호출
-        // 현재 캐시 호출
-        // 이후 쿼리 존재하면 호출
-        // responses merge, 같은 key끼리 데이터 sum
+            DateTime measureDt = new DateTime();
+            // execute pre query
+            if (plan.getPreStartDt() != null && plan.getPreEndDt() != null) {
+                Map<String, Object> preQmap = getManipulateQuery(qMap, plan.getPreStartDt(), plan.getPreEndDt());
+                String body = esService.getRequestBody(esUrl + "/_msearch", JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(preQmap) + "\n");
+                logger.info("pre body = " + body);
+                List<DateHistogramBucket> preDhbList = getDhbList(body);
+                for (DateHistogramBucket dhb : preDhbList){
+                    if (dhb.getBucket() != null) {
+                        mergedDhb.add(dhb);
+                    }
+                }
+            }
 
-        else {
+            long afterPreQueryMills = new DateTime().getMillis() - measureDt.getMillis();
+            logger.info("after pre query = " + afterPreQueryMills);
+
+            //dhbList
+            mergedDhb.addAll(dhbList);
+
+            // execute post query
+            if (plan.getPostStartDt() != null && plan.getPostEndDt() != null) {
+                Map<String, Object> postQmap = getManipulateQuery(qMap, plan.getPostStartDt(), plan.getPostEndDt());
+                String body = esService.getRequestBody(esUrl + "/_msearch", JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(postQmap) + "\n");
+                List<DateHistogramBucket> postDhbList = getDhbList(body);
+                for (DateHistogramBucket dhb : postDhbList){
+                    if (dhb.getBucket() != null) {
+                        mergedDhb.add(dhb);
+                    }
+                }
+            }
+
+            long afterPostQueryMills = new DateTime().getMillis() - measureDt.getMillis();
+            logger.info("after post query = " + afterPostQueryMills);
+
+            // 최종 response 생성
+            String res = generateRes(mergedDhb);
+            logger.info("final res = " + res);
+
+            return res;
+        } else {
             logger.info("else, so original request invoked " + startDt.getSecondOfDay());
 
             HttpResponse res = esService.executeQuery(esUrl + "/_msearch", info);
@@ -191,6 +198,47 @@ public class CacheService {
         }
     }
 
+    private String generateRes(List<DateHistogramBucket> dhbList) {
+        String res = "{\n" +
+                "  \"responses\": [\n" +
+                "    {\n" +
+                "      \"took\": 3,\n" +
+                "      \"timed_out\": false,\n" +
+                "      \"_shards\": {\n" +
+                "        \"total\": 55,\n" +
+                "        \"successful\": 55,\n" +
+                "        \"failed\": 0\n" +
+                "      },\n" +
+                "      \"hits\": {\n" +
+                "        \"total\": 2718971,\n" +
+                "        \"max_score\": 0,\n" +
+                "        \"hits\": []\n" +
+                "      },\n" +
+                "      \"aggregations\": {\n" +
+                "        \"2\": {\n" +
+                "          \"buckets\": \n";
+
+        List<Map<String, Object>> buckets = new ArrayList<>();
+        for (DateHistogramBucket bucket : dhbList) {
+            buckets.add(bucket.getBucket());
+        }
+        try {
+            res += JsonUtil.convertAsString(buckets);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        res += "            \n" +
+                "        }\n" +
+                "      },\n" +
+                "      \"status\": 200\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+
+        return res;
+    }
+
     private String parseInterval(Map<String, Object> aggs) {
         String interval = null;
         if (aggs.size() == 1) {
@@ -207,4 +255,53 @@ public class CacheService {
         }
         return interval;
     }
+
+    public Map<String, Object> getManipulateQuery(Map<String, Object> qMap, DateTime startDt, DateTime endDt) {
+        Map<String, Object> map = (Map<String, Object>) SerializationUtils.clone((HashMap<String, Object>) qMap);
+        Map<String, Object> query = (Map<String, Object>) map.get("query");
+        Map<String, Object> bool = (Map<String, Object>) query.get("bool");
+        List<Map<String, Object>> must = (List<Map<String, Object>>) bool.get("must");
+        for (Map<String, Object> obj : must) {
+            Map<String, Object> range = (Map<String, Object>) obj.get("range");
+            if (range != null) {
+                Map<String, Object> ts = (Map<String, Object>) range.get("ts");
+                ts.put("gte", startDt.getMillis());
+                ts.put("lte", endDt.getMillis());
+//                logger.info("ts = " + JsonUtil.convertAsString(ts));
+            }
+        }
+        map.put("query", query);
+        return map;
+    }
+
+    public List<DateHistogramBucket> getDhbList(String resBody) {
+        List<DateHistogramBucket> dhbList = new ArrayList<>();
+        Map<String, Object> resMap = parsingService.parseXContent(resBody);
+        List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
+        for (Map<String, Object> resp : respes) {
+            BulkRequest br = new BulkRequest();
+
+            Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
+
+            for (String aggKey : aggrs.keySet()) {
+                logger.info("aggKey = " + aggrs.get(aggKey));
+
+                HashMap<String, Object> buckets = (HashMap<String, Object>) aggrs.get(aggKey);
+
+                for (String bucketsKey : buckets.keySet()) {
+                    List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
+                    for (Map<String, Object> bucket : bucketList) {
+                        String key_as_string = (String) bucket.get("key_as_string");
+                        Long ts = (Long) bucket.get("key");
+                        logger.info("for key_as_string = " + key_as_string);
+
+                        DateHistogramBucket dhb = new DateHistogramBucket(new DateTime(ts), bucket);
+                        dhbList.add(dhb);
+                    }
+                }
+            }
+        }
+        return dhbList;
+    }
+
 }

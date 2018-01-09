@@ -1,6 +1,6 @@
 package com.elasticsearchcache;
 
-import com.elasticsearchcache.service.CacheService;
+import com.elasticsearchcache.service.CachePlanService;
 import com.elasticsearchcache.util.DateUtil;
 import com.elasticsearchcache.vo.CachePlan;
 import org.apache.logging.log4j.LogManager;
@@ -21,13 +21,13 @@ public class CachePlanTest {
     private static final Logger logger = LogManager.getLogger(CachePlanTest.class);
 
     @Autowired
-    CacheService cacheService;
+    CachePlanService cachePlanService;
 
     @Test
     public void testExactRangeDay() {
         DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 0, 0);
         DateTime endDt = DateUtil.getDateTime(2018, 1, 7, 0, 0).minusMillis(1);
-        CachePlan plan = cacheService.checkCachePlan("1d", startDt, endDt);
+        CachePlan plan = cachePlanService.checkCachePlan("1d", startDt, endDt);
         assertNull(plan.getPreStartDt());
         assertNull(plan.getPreEndDt());
         assertEquals(startDt, plan.getStartDt());
@@ -47,7 +47,7 @@ public class CachePlanTest {
     public void testPreRangeDay() {
         DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 13, 0);
         DateTime endDt = DateUtil.getDateTime(2018, 1, 7, 0, 0).minusMillis(1);
-        CachePlan plan = cacheService.checkCachePlan("1d", startDt, endDt);
+        CachePlan plan = cachePlanService.checkCachePlan("1d", startDt, endDt);
 
         assertEquals(startDt, plan.getPreStartDt());
         assertEquals(DateUtil.getDateTime(2018, 1, 2, 0, 0).minusMillis(1), plan.getPreEndDt());
@@ -68,7 +68,7 @@ public class CachePlanTest {
     public void testAfterRangeDay() {
         DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 0, 0);
         DateTime endDt = DateUtil.getDateTime(2018, 1, 7, 0, 0).minusMillis(2000);
-        CachePlan plan = cacheService.checkCachePlan("1d", startDt, endDt);
+        CachePlan plan = cachePlanService.checkCachePlan("1d", startDt, endDt);
 
         assertNull(plan.getPreStartDt());
         assertNull(plan.getPreEndDt());
@@ -89,7 +89,7 @@ public class CachePlanTest {
     public void testExactRangeHour() {
         DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 1, 0);
         DateTime endDt = DateUtil.getDateTime(2018, 1, 1, 10, 0).minusMillis(1);
-        CachePlan plan = cacheService.checkCachePlan("1h", startDt, endDt);
+        CachePlan plan = cachePlanService.checkCachePlan("1h", startDt, endDt);
         assertNull(plan.getPreStartDt());
         assertNull(plan.getPreEndDt());
         assertEquals(startDt, plan.getStartDt());
@@ -109,7 +109,7 @@ public class CachePlanTest {
     public void testPreRangeHour() {
         DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 1, 10);
         DateTime endDt = DateUtil.getDateTime(2018, 1, 1, 10, 0).minusMillis(1);
-        CachePlan plan = cacheService.checkCachePlan("1h", startDt, endDt);
+        CachePlan plan = cachePlanService.checkCachePlan("1h", startDt, endDt);
 
         assertEquals(startDt, plan.getPreStartDt());
         assertEquals(DateUtil.getDateTime(2018, 1, 1, 2, 0).minusMillis(1), plan.getPreEndDt());
@@ -130,7 +130,7 @@ public class CachePlanTest {
     public void testAfterRangeHour() {
         DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 1, 0);
         DateTime endDt = DateUtil.getDateTime(2018, 1, 1, 10, 0).minusMillis(1000);
-        CachePlan plan = cacheService.checkCachePlan("1h", startDt, endDt);
+        CachePlan plan = cachePlanService.checkCachePlan("1h", startDt, endDt);
 
         assertNull(plan.getPreStartDt());
         assertNull(plan.getPreEndDt());
@@ -151,7 +151,7 @@ public class CachePlanTest {
     public void testExactRangeMinute() {
         DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 1, 10);
         DateTime endDt = DateUtil.getDateTime(2018, 1, 1, 1, 20).minusMillis(1);
-        CachePlan plan = cacheService.checkCachePlan("1m", startDt, endDt);
+        CachePlan plan = cachePlanService.checkCachePlan("1m", startDt, endDt);
         assertNull(plan.getPreStartDt());
         assertNull(plan.getPreEndDt());
         assertEquals(startDt, plan.getStartDt());
@@ -171,7 +171,7 @@ public class CachePlanTest {
     public void testPreRangeMinute() {
         DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 1, 10).plus(1000);
         DateTime endDt = DateUtil.getDateTime(2018, 1, 1, 1, 20).minusMillis(1);
-        CachePlan plan = cacheService.checkCachePlan("1m", startDt, endDt);
+        CachePlan plan = cachePlanService.checkCachePlan("1m", startDt, endDt);
 
         assertEquals(startDt, plan.getPreStartDt());
         assertEquals(DateUtil.getDateTime(2018, 1, 1, 1, 11).minusMillis(1), plan.getPreEndDt());
@@ -192,7 +192,7 @@ public class CachePlanTest {
     public void testAfterRangeMinute() {
         DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 1, 10);
         DateTime endDt = DateUtil.getDateTime(2018, 1, 1, 1, 20).minusMillis(1000);
-        CachePlan plan = cacheService.checkCachePlan("1m", startDt, endDt);
+        CachePlan plan = cachePlanService.checkCachePlan("1m", startDt, endDt);
 
         assertNull(plan.getPreStartDt());
         assertNull(plan.getPreEndDt());
