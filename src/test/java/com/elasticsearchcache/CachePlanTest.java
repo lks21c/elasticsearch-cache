@@ -146,4 +146,66 @@ public class CachePlanTest {
         logger.info("after cachePlan getPostStartDt = " + plan.getPostStartDt());
         logger.info("after cachePlan getPostEndDt = " + plan.getPostEndDt());
     }
+
+    @Test
+    public void testExactRangeMinute() {
+        DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 1, 10);
+        DateTime endDt = DateUtil.getDateTime(2018, 1, 1, 1, 20).minusMillis(1);
+        CachePlan plan = cacheService.checkCachePlan("1m", startDt, endDt);
+        assertNull(plan.getPreStartDt());
+        assertNull(plan.getPreEndDt());
+        assertEquals(startDt, plan.getStartDt());
+        assertEquals(endDt, plan.getEndDt());
+        assertNull(plan.getPostStartDt());
+        assertNull(plan.getPostStartDt());
+
+        logger.info("after cachePlan getPreStartDt = " + plan.getPreStartDt());
+        logger.info("after cachePlan getPreEndDt = " + plan.getPreEndDt());
+        logger.info("after cachePlan getStartDt = " + plan.getStartDt());
+        logger.info("after cachePlan getEndDt = " + plan.getEndDt());
+        logger.info("after cachePlan getPostStartDt = " + plan.getPostStartDt());
+        logger.info("after cachePlan getPostEndDt = " + plan.getPostStartDt());
+    }
+
+    @Test
+    public void testPreRangeMinute() {
+        DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 1, 10).plus(1000);
+        DateTime endDt = DateUtil.getDateTime(2018, 1, 1, 1, 20).minusMillis(1);
+        CachePlan plan = cacheService.checkCachePlan("1m", startDt, endDt);
+
+        assertEquals(startDt, plan.getPreStartDt());
+        assertEquals(DateUtil.getDateTime(2018, 1, 1, 1, 11).minusMillis(1), plan.getPreEndDt());
+        assertEquals(DateUtil.getDateTime(2018, 1, 1, 1, 11), plan.getStartDt());
+        assertEquals(endDt, plan.getEndDt());
+        assertNull(plan.getPostStartDt());
+        assertNull(plan.getPostStartDt());
+
+        logger.info("after cachePlan getPreStartDt = " + plan.getPreStartDt());
+        logger.info("after cachePlan getPreEndDt = " + plan.getPreEndDt());
+        logger.info("after cachePlan getStartDt = " + plan.getStartDt());
+        logger.info("after cachePlan getEndDt = " + plan.getEndDt());
+        logger.info("after cachePlan getPostStartDt = " + plan.getPostStartDt());
+        logger.info("after cachePlan getPostEndDt = " + plan.getPostEndDt());
+    }
+
+    @Test
+    public void testAfterRangeMinute() {
+        DateTime startDt = DateUtil.getDateTime(2018, 1, 1, 1, 10);
+        DateTime endDt = DateUtil.getDateTime(2018, 1, 1, 1, 20).minusMillis(1000);
+        CachePlan plan = cacheService.checkCachePlan("1m", startDt, endDt);
+
+        assertNull(plan.getPreStartDt());
+        assertNull(plan.getPreEndDt());
+        assertEquals(startDt, plan.getStartDt());
+        assertEquals(DateUtil.getDateTime(2018, 1, 1, 1, 19).minusMillis(1), plan.getEndDt());
+        assertEquals(DateUtil.getDateTime(2018, 1, 1, 1, 19), plan.getPostStartDt());
+        assertEquals(endDt, plan.getPostEndDt());
+
+        logger.info("after cachePlan getPreStartDt = " + plan.getPreStartDt());
+        logger.info("after cachePlan getPreEndDt = " + plan.getPreEndDt());
+        logger.info("after cachePlan getStartDt = " + plan.getStartDt());
+        logger.info("after cachePlan getEndDt = " + plan.getEndDt());
+        logger.info("after cachePlan getPostStartDt = " + plan.getPostStartDt());
+        logger.info("after cachePlan getPostEndDt = " + plan.getPostEndDt());
+    }
 }
