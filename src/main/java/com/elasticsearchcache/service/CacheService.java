@@ -235,8 +235,8 @@ public class CacheService {
             if (PeriodUtil.getRestMills(endDt, periodUnit) == periodUnit - 1) { //end range doesn't exist
                 cachePlan.setEndDt(endDt);
             } else { //end range exists
-                DateTime postStartDt = endDt.withTimeAtStartOfDay();
                 DateTime postEndDt = endDt;
+                DateTime postStartDt = endDt.minus(PeriodUtil.getRestMills(endDt, periodUnit));
                 DateTime newEndDt = postStartDt.minusMillis(1);
                 cachePlan.setPostStartDt(postStartDt);
                 cachePlan.setPostEndDt(postEndDt);
