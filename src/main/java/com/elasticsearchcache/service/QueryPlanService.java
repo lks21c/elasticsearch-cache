@@ -1,6 +1,5 @@
 package com.elasticsearchcache.service;
 
-import com.elasticsearchcache.PreFilter;
 import com.elasticsearchcache.conts.CacheMode;
 import com.elasticsearchcache.repository.CacheRepository;
 import com.elasticsearchcache.util.JsonUtil;
@@ -37,13 +36,6 @@ public class QueryPlanService {
 
     @Autowired
     CacheService cacheService;
-
-    @Autowired
-    private CachePlanService cachePlanService;
-
-    @Autowired
-    @Qualifier("EsCacheRepositoryImpl")
-    private CacheRepository cacheRepository;
 
     public String executeQuery(String targetUrl, List<QueryPlan> queryPlanList) {
         StringBuilder sb = new StringBuilder();
@@ -100,7 +92,10 @@ public class QueryPlanService {
                 List<DateHistogramBucket> preDhbList = null;
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getPreQuery())) {
                     try {
-                        preDhbList = cacheService.getDhbList(JsonUtil.convertAsString(respes.get(responseCnt++)));
+                        String preResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
+                        // put cache
+                        cacheService.putCache(preResBody, queryPlanList.get(i));
+                        preDhbList = cacheService.getDhbList(preResBody);
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();
                     }
@@ -112,7 +107,10 @@ public class QueryPlanService {
                 List<DateHistogramBucket> postDhbList = null;
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getPostQuery())) {
                     try {
-                        postDhbList = cacheService.getDhbList(JsonUtil.convertAsString(respes.get(responseCnt++)));
+                        String postResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
+                        // put cache
+                        cacheService.putCache(postResBody, queryPlanList.get(i));
+                        postDhbList = cacheService.getDhbList(postResBody);
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();
                     }
@@ -124,8 +122,6 @@ public class QueryPlanService {
                     mergedRes.append(",");
                 }
                 mergedRes.append(resBody);
-
-                // pre, post cache
             } else {
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getQuery())) {
 
@@ -136,8 +132,8 @@ public class QueryPlanService {
                         String resBody = JsonUtil.convertAsString(respes.get(responseCnt++));
                         mergedRes.append(resBody);
 
-                        // cache
-                        putCache(resBody,queryPlanList.get(i));
+                        // put cache
+                        cacheService.putCache(resBody, queryPlanList.get(i));
 
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();
@@ -148,7 +144,6 @@ public class QueryPlanService {
         mergedRes.append("]");
         mergedRes.append("}");
 
-
         logger.info("merged res = " + mergedRes.toString());
 
 //                        res = esService.executeQuery(targetUrl, reqBody);
@@ -156,21 +151,4 @@ public class QueryPlanService {
         return sb.toString();
     }
 
-    public void putCache(String resBody, QueryPlan queryPlan) {
-        List<DateHistogramBucket> dhbList = cacheService.getDhbList(resBody);
-        if (queryPlan.getInterval() != null) {
-            List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
-            for (DateHistogramBucket dhb : dhbList) {
-                if (cachePlanService.checkCacheable(queryPlan.getInterval(), dhb.getDate(), queryPlan.getCachePlan().getStartDt(), queryPlan.getCachePlan().getEndDt())) {
-                    logger.info("cacheable");
-                    cacheDhbList.add(dhb);
-                }
-            }
-            try {
-                cacheRepository.putCache(queryPlan.getIndexName(), queryPlan.getQueryWithoutRange(), queryPlan.getAggs(), cacheDhbList);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 }
