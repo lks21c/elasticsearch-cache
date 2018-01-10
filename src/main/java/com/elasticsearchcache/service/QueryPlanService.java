@@ -80,8 +80,13 @@ public class QueryPlanService {
         logger.info("refactor res = " + bulkRes);
 
         Map<String, Object> resMap = parsingService.parseXContent(bulkRes);
-
         List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
+
+        try {
+            logger.info("respes = " + JsonUtil.convertAsString(respes));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
         StringBuilder mergedRes = new StringBuilder();
         mergedRes.append("{");
