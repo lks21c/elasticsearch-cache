@@ -82,12 +82,6 @@ public class QueryPlanService {
         Map<String, Object> resMap = parsingService.parseXContent(bulkRes);
         List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
 
-        try {
-            logger.info("respes = " + JsonUtil.convertAsString(respes));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
         StringBuilder mergedRes = new StringBuilder();
         mergedRes.append("{");
         mergedRes.append("\"responses\":[");
@@ -101,22 +95,6 @@ public class QueryPlanService {
                 }
                 mergedRes.append(resBody);
 
-                //// Cacheable
-                if (queryPlanList.get(i).getInterval() != null) {
-                    List<DateHistogramBucket> originalDhbList = cacheService.getDhbList(resBody);
-                    List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
-                    for (DateHistogramBucket dhb : originalDhbList) {
-                        if (cachePlanService.checkCacheable(queryPlanList.get(i).getInterval(), dhb.getDate(), queryPlanList.get(i).getCachePlan().getStartDt(), queryPlanList.get(i).getCachePlan().getEndDt())) {
-                            logger.info("cacheable");
-                            cacheDhbList.add(dhb);
-                        }
-                    }
-                    try {
-                        cacheRepository.putCache(queryPlanList.get(i).getIndexName(), queryPlanList.get(i).getQueryWithoutRange(), queryPlanList.get(i).getAggs(), cacheDhbList);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
             } else if (CacheMode.PARTIAL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
                 List<DateHistogramBucket> mergedDhbList = new ArrayList<>();
                 List<DateHistogramBucket> preDhbList = null;
@@ -146,6 +124,8 @@ public class QueryPlanService {
                     mergedRes.append(",");
                 }
                 mergedRes.append(resBody);
+
+                // pre, post cache
             } else {
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getQuery())) {
 
@@ -153,7 +133,13 @@ public class QueryPlanService {
                         mergedRes.append(",");
                     }
                     try {
-                        mergedRes.append(JsonUtil.convertAsString(respes.get(responseCnt++)));
+                        String resBody = JsonUtil.convertAsString(respes.get(responseCnt++));
+                        mergedRes.append(resBody);
+
+                        // cache
+                        List<DateHistogramBucket> dhbList = cacheService.getDhbList(resBody);
+                        putCache(dhbList,queryPlanList.get(i));
+
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();
                     }
@@ -169,5 +155,22 @@ public class QueryPlanService {
 //                        res = esService.executeQuery(targetUrl, reqBody);
         sb.append(mergedRes.toString());
         return sb.toString();
+    }
+
+    public void putCache(List<DateHistogramBucket> originalDhbList, QueryPlan queryPlan) {
+        if (queryPlan.getInterval() != null) {
+            List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
+            for (DateHistogramBucket dhb : originalDhbList) {
+                if (cachePlanService.checkCacheable(queryPlan.getInterval(), dhb.getDate(), queryPlan.getCachePlan().getStartDt(), queryPlan.getCachePlan().getEndDt())) {
+                    logger.info("cacheable");
+                    cacheDhbList.add(dhb);
+                }
+            }
+            try {
+                cacheRepository.putCache(queryPlan.getIndexName(), queryPlan.getQueryWithoutRange(), queryPlan.getAggs(), cacheDhbList);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
