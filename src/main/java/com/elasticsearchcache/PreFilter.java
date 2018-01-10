@@ -116,7 +116,7 @@ public class PreFilter extends ZuulFilter {
                             queryPlanList.add(queryPlan);
                         }
                         sb.append(queryPlanService.executeQuery(targetUrl, queryPlanList));
-                        long afterQueries = System.currentTimeMillis();
+                        long afterQueries = System.currentTimeMillis() - beforeQueries;
                         logger.info("afterQueries = " + afterQueries);
                     } else {
                         HttpResponse res = esService.executeQuery(targetUrl, reqBody);
