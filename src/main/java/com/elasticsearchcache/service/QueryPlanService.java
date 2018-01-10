@@ -137,8 +137,7 @@ public class QueryPlanService {
                         mergedRes.append(resBody);
 
                         // cache
-                        List<DateHistogramBucket> dhbList = cacheService.getDhbList(resBody);
-                        putCache(dhbList,queryPlanList.get(i));
+                        putCache(resBody,queryPlanList.get(i));
 
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();
@@ -157,10 +156,11 @@ public class QueryPlanService {
         return sb.toString();
     }
 
-    public void putCache(List<DateHistogramBucket> originalDhbList, QueryPlan queryPlan) {
+    public void putCache(String resBody, QueryPlan queryPlan) {
+        List<DateHistogramBucket> dhbList = cacheService.getDhbList(resBody);
         if (queryPlan.getInterval() != null) {
             List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
-            for (DateHistogramBucket dhb : originalDhbList) {
+            for (DateHistogramBucket dhb : dhbList) {
                 if (cachePlanService.checkCacheable(queryPlan.getInterval(), dhb.getDate(), queryPlan.getCachePlan().getStartDt(), queryPlan.getCachePlan().getEndDt())) {
                     logger.info("cacheable");
                     cacheDhbList.add(dhb);
