@@ -121,7 +121,6 @@ public class PreFilter extends ZuulFilter {
                     if (sb.length() > 0) {
                         logger.info("sc ok ");
                         setZuulResponse(ctx, sb.toString());
-
                     } else {
                         logger.error("original request invoked.");
                     }
