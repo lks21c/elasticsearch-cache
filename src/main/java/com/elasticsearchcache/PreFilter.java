@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -100,11 +99,7 @@ public class PreFilter extends ZuulFilter {
                 logger.info("original reqBody = " + reqBody);
 
                 if (request.getRequestURI().contains(EsUrl.SUFFIX_MULTI_SEARCH)) {
-//                    Enumeration<String> headers = request.getHeaderNames();
-//                    while (headers.hasMoreElements()) {
-//                        String header = headers.nextElement();
-//                        System.out.println("header = " + header + " " + request.getHeader(header));
-//                    }
+                    handleRequestHeader(request);
 
                     String[] reqs = reqBody.split("\n");
                     if (esCache && !reqBody.contains(".kibana")) {
@@ -160,4 +155,14 @@ public class PreFilter extends ZuulFilter {
         ctx.setResponseBody(responseBody);
         ctx.setSendZuulResponse(false);
     }
+
+    private void handleRequestHeader(HttpServletRequest request) {
+        //                    Enumeration<String> headers = request.getHeaderNames();
+//                    while (headers.hasMoreElements()) {
+//                        String header = headers.nextElement();
+//                        System.out.println("header = " + header + " " + request.getHeader(header));
+//                    }
+
+    }
+
 }
