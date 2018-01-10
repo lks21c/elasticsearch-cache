@@ -80,6 +80,7 @@ public class QueryPlanService {
         logger.info("refactor res = " + bulkRes);
 
         Map<String, Object> resMap = parsingService.parseXContent(bulkRes);
+
         List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
 
         StringBuilder mergedRes = new StringBuilder();
@@ -146,7 +147,11 @@ public class QueryPlanService {
                     if (i != 0) {
                         mergedRes.append(",");
                     }
-                    mergedRes.append(respes.get(responseCnt++));
+                    try {
+                        mergedRes.append(JsonUtil.convertAsString(respes.get(responseCnt++)));
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
