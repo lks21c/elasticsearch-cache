@@ -276,7 +276,9 @@ public class CacheService {
                 }
             }
             try {
-                cacheRepository.putCache(queryPlan.getIndexName(), queryPlan.getQueryWithoutRange(), queryPlan.getAggs(), cacheDhbList);
+                if (cacheDhbList.size() > 0) {
+                    cacheRepository.putCache(queryPlan.getIndexName(), queryPlan.getQueryWithoutRange(), queryPlan.getAggs(), cacheDhbList);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
