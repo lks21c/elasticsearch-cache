@@ -38,7 +38,7 @@ public class CacheServiceTest {
 
     @Test
     public void testGenerateTermsRes() {
-        String newRes = cacheService.generateTermsRes("   {\n" +
+        String newRes = cacheService.generateTermsRes("{\n" +
                 "      \"took\": 3,\n" +
                 "      \"timed_out\": false,\n" +
                 "      \"_shards\": {\n" +
