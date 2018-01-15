@@ -47,6 +47,12 @@ public class CacheService {
     @Value("${zuul.routes.proxy.url}")
     private String esUrl;
 
+    @Value("${esc.cache.terms}")
+    private boolean enableTermsCache;
+
+    @Value("${interval.terms}")
+    private String intervalTerms;
+
     public QueryPlan manipulateQuery(String info) throws IOException, MethodNotSupportedException {
         logger.info("info = " + info);
 
@@ -98,7 +104,15 @@ public class CacheService {
         Map<String, Object> aggs = (Map<String, Object>) qMap.get("aggs");
 
         // Parse Interval
-        String interval = parseInterval(aggs);
+        Map<String, Object> rtnMap = parseIntervalAndAggsType(aggs);
+        String interval = (String) rtnMap.get("interval");
+        String aggsType = (String) rtnMap.get("aggsType");
+
+        // handle terms
+        if (enableTermsCache && "terms".equals(aggsType)) {
+            aggs = appendDateHistogram(aggs);
+            qMap.put("aggs", aggs);
+        }
 
         CachePlan plan = cachePlanService.checkCachePlan(interval, startDt, endDt);
         logger.info("cachePlan getPreStartDt = " + plan.getPreStartDt());
@@ -161,9 +175,30 @@ public class CacheService {
             return queryPlan;
         } else {
             logger.info("else, so original request invoked " + startDt.getSecondOfDay());
-            queryPlan.setQuery(info);
+            if ("terms".equals(aggsType)) {
+                queryPlan.setQuery(JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n");
+            } else {
+                queryPlan.setQuery(info);
+            }
             return queryPlan;
         }
+    }
+
+    private Map<String, Object> appendDateHistogram(Map<String, Object> aggs) {
+        HashMap<String, Object> hashMap = new HashMap<>(aggs);
+        HashMap<String, Object> newAggs = new HashMap<>();
+        Map<String, Object> clonedAggs = (Map<String, Object>) SerializationUtils.clone(hashMap);
+
+        HashMap<String, Object> dtEntry = new HashMap<>();
+        dtEntry.put("field", "ts");
+        dtEntry.put("interval", intervalTerms);
+
+        HashMap<String, Object> dtMap = new HashMap<>();
+        dtMap.put("date_histogram", dtEntry);
+        dtMap.put("aggs", clonedAggs);
+
+        newAggs.put("dates", dtMap);
+        return newAggs;
     }
 
     public String generateRes(List<DateHistogramBucket> dhbList) {
@@ -205,21 +240,31 @@ public class CacheService {
         return res;
     }
 
-    private String parseInterval(Map<String, Object> aggs) {
+    private Map<String, Object> parseIntervalAndAggsType(Map<String, Object> aggs) {
+        Map<String, Object> rtn = new HashMap<>();
         String interval = null;
+        String aggType = null;
         if (aggs.size() == 1) {
             for (String aggsKey : aggs.keySet()) {
                 Map<String, Object> firstDepthAggs = (Map<String, Object>) aggs.get(aggsKey);
-
                 Map<String, Object> date_histogram = (Map<String, Object>) firstDepthAggs.get("date_histogram");
+                Map<String, Object> terms = (Map<String, Object>) firstDepthAggs.get("terms");
 
                 if (date_histogram != null) {
                     interval = (String) date_histogram.get("interval");
+                    aggType = "date_histogram";
                     logger.info("interval = " + interval);
+                }
+
+                if (enableTermsCache && terms != null) {
+                    interval = intervalTerms;
+                    aggType = "terms";
                 }
             }
         }
-        return interval;
+        rtn.put("interval", interval);
+        rtn.put("aggsType", aggType);
+        return rtn;
     }
 
     public Map<String, Object> getManipulateQuery(Map<String, Object> qMap, DateTime startDt, DateTime endDt) {
