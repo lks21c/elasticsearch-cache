@@ -402,8 +402,15 @@ public class CacheService {
 
     private void recursive2(List<Map<String, Object>> mergedBucketList, List<Map<String, Object>> bucketList) {
         for (Map<String, Object> bucket : bucketList) {
+            boolean notExists = true;
             for (Map<String, Object> mergedBucket : mergedBucketList) {
-
+                if (bucket.get("key").toString().equals(mergedBucket.get("key").toString())) {
+                    notExists = false;
+                }
+            }
+            if (notExists) {
+                Map<String, Object> clonedBucket = (Map<String, Object>) SerializationUtils.clone(new HashMap<>(bucket));
+                mergedBucketList.add(clonedBucket);
             }
         }
     }
