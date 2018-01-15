@@ -1,6 +1,5 @@
 package com.elasticsearchcache.repository;
 
-import com.elasticsearchcache.service.ParsingService;
 import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,6 +22,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -41,8 +41,8 @@ public class EsCacheRepositoryImpl implements CacheRepository {
     @Autowired
     private RestHighLevelClient restClient;
 
-    @Autowired
-    private ParsingService parsingService;
+    @Value("${filedname.time}")
+    private String timeFiledName;
 
     @Override
     public List<DateHistogramBucket> getCache(String indexName, String query, String agg, DateTime startDt, DateTime endDt) throws IOException {
@@ -51,7 +51,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
 
         List<QueryBuilder> qbList = new ArrayList<>();
         qbList.add(QueryBuilders.termQuery("key", key));
-        qbList.add(QueryBuilders.rangeQuery("ts").from(startDt).to(endDt));
+        qbList.add(QueryBuilders.rangeQuery(timeFiledName).from(startDt).to(endDt));
 
         BoolQueryBuilder bq = QueryBuilders.boolQuery();
         bq.must().addAll(qbList);
@@ -59,7 +59,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
         SearchSourceBuilder sb = new SearchSourceBuilder();
         sb.query(bq);
         sb.size(10000);
-        sb.sort("ts", SortOrder.ASC);
+        sb.sort(timeFiledName, SortOrder.ASC);
 
         SearchRequest srch = new SearchRequest().indices("cache").types("info");
         srch.source(sb);
@@ -71,7 +71,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
         List<DateHistogramBucket> dhbList = new ArrayList<>();
         for (SearchHit hit : sr.getHits().getHits()) {
             Map<String, Object> source = hit.getSourceAsMap();
-            Long ts = (Long) source.get("ts");
+            Long ts = (Long) source.get(timeFiledName);
             String value = (String) source.get("value");
             Map<String, Object> bucket = new Gson().fromJson(value, HashMap.class);
             dhbList.add(new DateHistogramBucket(new DateTime(ts), bucket));
@@ -96,7 +96,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
             Map<String, Object> irMap = new HashMap<>();
             irMap.put("value", JsonUtil.convertAsString(bucket));
             irMap.put("key", key);
-            irMap.put("ts", ts);
+            irMap.put(timeFiledName, ts);
             ir.source(irMap);
             br.add(ir);
         }

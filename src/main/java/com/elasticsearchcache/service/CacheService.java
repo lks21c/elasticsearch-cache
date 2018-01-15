@@ -52,6 +52,9 @@ public class CacheService {
     @Value("${interval.terms}")
     private String intervalTerms;
 
+    @Value("${filedname.time}")
+    private String timeFiledName;
+
     public QueryPlan manipulateQuery(String info) throws IOException, MethodNotSupportedException {
         logger.info("info = " + info);
 
@@ -190,7 +193,7 @@ public class CacheService {
         Map<String, Object> clonedAggs = (Map<String, Object>) SerializationUtils.clone(hashMap);
 
         HashMap<String, Object> dtEntry = new HashMap<>();
-        dtEntry.put("field", "ts");
+        dtEntry.put("field", timeFiledName);
         dtEntry.put("interval", intervalTerms);
 
         HashMap<String, Object> dtMap = new HashMap<>();
@@ -271,7 +274,7 @@ public class CacheService {
         for (Map<String, Object> obj : must) {
             Map<String, Object> range = (Map<String, Object>) obj.get("range");
             if (range != null) {
-                Map<String, Object> ts = (Map<String, Object>) range.get("ts");
+                Map<String, Object> ts = (Map<String, Object>) range.get(timeFiledName);
                 ts.put("gte", startDt.getMillis());
                 ts.put("lte", endDt.getMillis());
 //                logger.info("ts = " + JsonUtil.convertAsString(ts));
