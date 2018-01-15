@@ -1,7 +1,6 @@
 package com.elasticsearchcache.service;
 
 import com.elasticsearchcache.conts.CacheMode;
-import com.elasticsearchcache.repository.CacheRepository;
 import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.elasticsearchcache.vo.QueryPlan;
@@ -13,7 +12,6 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -85,8 +83,10 @@ public class QueryPlanService {
                 if (i != 0) {
                     mergedRes.append(",");
                 }
+                if ("terms".equals(queryPlanList.get(i).getAggsType())) {
+                    resBody = cacheService.generateTermsRes(resBody);
+                }
                 mergedRes.append(resBody);
-
             } else if (CacheMode.PARTIAL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
                 List<DateHistogramBucket> mergedDhbList = new ArrayList<>();
                 List<DateHistogramBucket> preDhbList = null;
@@ -122,6 +122,10 @@ public class QueryPlanService {
                 if (i != 0) {
                     mergedRes.append(",");
                 }
+
+                if ("terms".equals(queryPlanList.get(i).getAggsType())) {
+                    resBody = cacheService.generateTermsRes(resBody);
+                }
                 mergedRes.append(resBody);
             } else {
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getQuery())) {
@@ -130,9 +134,12 @@ public class QueryPlanService {
                     }
                     try {
                         String resBody = JsonUtil.convertAsString(respes.get(responseCnt++));
-                        mergedRes.append(resBody);
                         // put cache
                         cacheService.putCache(resBody, queryPlanList.get(i));
+                        if ("terms".equals(queryPlanList.get(i).getAggsType())) {
+                            resBody = cacheService.generateTermsRes(resBody);
+                        }
+                        mergedRes.append(resBody);
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();
                     }
@@ -142,11 +149,11 @@ public class QueryPlanService {
         mergedRes.append("]");
         mergedRes.append("}");
 
+
         logger.info("merged res = " + mergedRes.toString());
 
 //                        res = esService.executeQuery(targetUrl, reqBody);
         sb.append(mergedRes.toString());
         return sb.toString();
     }
-
 }

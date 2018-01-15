@@ -24,6 +24,8 @@ public class QueryPlan implements Serializable {
 
     private String aggs;
 
+    private String aggsType;
+
     public String getPreQuery() {
         return preQuery;
     }
@@ -94,6 +96,14 @@ public class QueryPlan implements Serializable {
 
     public void setAggs(String aggs) {
         this.aggs = aggs;
+    }
+
+    public String getAggsType() {
+        return aggsType;
+    }
+
+    public void setAggsType(String aggsType) {
+        this.aggsType = aggsType;
     }
 
     public int getTotalQueryCnt() {

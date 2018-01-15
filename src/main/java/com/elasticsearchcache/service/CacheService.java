@@ -128,6 +128,7 @@ public class CacheService {
         queryPlan.setIndexName(indexName);
         queryPlan.setQueryWithoutRange(JsonUtil.convertAsString(queryWithoutRange));
         queryPlan.setAggs(JsonUtil.convertAsString(aggs));
+        queryPlan.setAggsType(aggsType);
 
         DateTime beforeCacheMills = new DateTime();
         List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
@@ -330,5 +331,10 @@ public class CacheService {
                 e.printStackTrace();
             }
         }
+    }
+
+    public String generateTermsRes(String resBody) {
+        logger.info("generateTermsRes");
+        return resBody;
     }
 }
