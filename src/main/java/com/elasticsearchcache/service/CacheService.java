@@ -334,6 +334,7 @@ public class CacheService {
 
         Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
 
+        Map<String, Object> mergedMap = new HashMap<>();
         List<Map<String, Object>> mergedBucket = new ArrayList<>();
         for (String aggKey : aggrs.keySet()) {
 //                logger.info("aggKey = " + aggrs.get(aggKey));
@@ -343,38 +344,67 @@ public class CacheService {
             for (String bucketsKey : buckets.keySet()) {
                 List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
                 for (Map<String, Object> dhBucket : bucketList) {
+                    Map<String, Object> termsMap = null;
                     List<Map<String, Object>> termsBuckets = null;
                     logger.info("loop");
                     for (String dhBucketKey : dhBucket.keySet()) {
                         if (!"doc_count".equals(dhBucketKey) && !"key_as_string".equals(dhBucketKey) && !"key".equals(dhBucketKey)) {
-                            Map<String, Object> termsMap = (Map<String, Object>) dhBucket.get(dhBucketKey);
+                            termsMap = (Map<String, Object>) dhBucket.get(dhBucketKey);
                             termsBuckets = (List<Map<String, Object>>) termsMap.get("buckets");
                         }
                     }
 
-                    if (mergedBucket.size() == 0) {
-                        mergedBucket = (List<Map<String, Object>>) SerializationUtils.clone(new ArrayList<>(termsBuckets));
-                    } else {
-                        for (Map<String, Object> bkt : termsBuckets) {
-                            String key = (String) bkt.get("key");
-                            double docCnt = (double) bkt.get("doc_count");
+                    calculateRecursively(mergedMap, termsMap);
+                    logger.info("mergedMap = " + JsonUtil.convertAsString(mergedMap));
 
-                            for (Map<String, Object> mBkt : mergedBucket) {
-                                String mKey = (String) mBkt.get("key");
-                                double mDocCnt = (double) mBkt.get("doc_count");
-                                if (mKey.equals(key)) {
-                                    mDocCnt += docCnt;
-                                    mBkt.put("doc_count", mDocCnt);
-                                }
-                            }
-                        }
-                    }
+//                    if (mergedBucket.size() == 0) {
+//                        mergedBucket = (List<Map<String, Object>>) SerializationUtils.clone(new ArrayList<>(termsBuckets));
+//                    } else {
+//                        for (Map<String, Object> bkt : termsBuckets) {
+//                            String key = (String) bkt.get("key");
+//                            double docCnt = (double) bkt.get("doc_count");
+//
+//                            for (Map<String, Object> mBkt : mergedBucket) {
+//                                String mKey = (String) mBkt.get("key");
+//                                double mDocCnt = (double) mBkt.get("doc_count");
+//                                if (mKey.equals(key)) {
+//                                    mDocCnt += docCnt;
+//                                    mBkt.put("doc_count", mDocCnt);
+//                                }
+//                            }
+//                        }
+//                    }
                 }
             }
         }
 
-        logger.info("mergedBucket = " + JsonUtil.convertAsString(mergedBucket));
+//        logger.info("mergedBucket = " + JsonUtil.convertAsString(mergedBucket));
 
         return resBody;
+    }
+
+    private void calculateRecursively(Map<String, Object> mergedMap, Map<String, Object> termsMap) {
+        for (String key : termsMap.keySet()) {
+            if (!mergedMap.containsKey(key)) {
+                mergedMap.put(key, termsMap.get(key));
+            } else {
+                if (termsMap.get(key) instanceof Double) {
+                    double newVal = Double.parseDouble(mergedMap.get(key).toString()) + Double.parseDouble(termsMap.get(key).toString());
+                    mergedMap.put(key, newVal);
+                } else if (termsMap.get(key) instanceof List) {
+                    List<Map<String, Object>> bucketList = (List<Map<String, Object>>) termsMap.get(key);
+                    List<Map<String, Object>> mergedBucketList = (List<Map<String, Object>>) mergedMap.get(key);
+                    recursive2(mergedBucketList, bucketList);
+                }
+            }
+        }
+    }
+
+    private void recursive2(List<Map<String, Object>> mergedBucketList, List<Map<String, Object>> bucketList) {
+        for (Map<String, Object> bucket : bucketList) {
+            for (Map<String, Object> mergedBucket : mergedBucketList) {
+
+            }
+        }
     }
 }
