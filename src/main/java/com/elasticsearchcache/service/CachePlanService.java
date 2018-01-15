@@ -92,7 +92,7 @@ public class CachePlanService {
                 }
 
                 logger.info("isSuccessive = " + isSuccessive);
-                if (isSuccessive) {
+                if (isSuccessive || dhbList.size() == 1) {
                     if (PeriodUtil.periodBetween(dhbList.get(0).getDate(), plan.getStartDt(), periodUnit) != 0) {
                         plan.setPreStartDt(plan.getStartDt());
                         plan.setStartDt(dhbList.get(0).getDate());
