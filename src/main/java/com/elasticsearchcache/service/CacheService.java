@@ -109,7 +109,7 @@ public class CacheService {
         logger.info("cachePlan getPostEndDt = " + plan.getPostEndDt());
 
         QueryPlan queryPlan = new QueryPlan();
-        queryPlan.setCachePlan(plan);
+        queryPlan.setCachePlan((CachePlan) SerializationUtils.clone(plan));
         queryPlan.setInterval(interval);
         queryPlan.setIndexName(indexName);
         queryPlan.setQueryWithoutRange(JsonUtil.convertAsString(queryWithoutRange));
@@ -123,6 +123,7 @@ public class CacheService {
         logger.info("afterCacheMills = " + afterCacheMills);
 
         plan = cachePlanService.checkCacheMode(interval, plan, dhbList);
+        queryPlan.getCachePlan().setCacheMode(plan.getCacheMode());
         logger.info("cacheMode = " + plan.getCacheMode() + " cache size : " + dhbList.size());
         logger.info("after cachePlan getPreStartDt = " + plan.getPreStartDt());
         logger.info("after cachePlan getPreEndDt = " + plan.getPreEndDt());
@@ -270,6 +271,7 @@ public class CacheService {
         if (queryPlan.getInterval() != null) {
             List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
             for (DateHistogramBucket dhb : dhbList) {
+                logger.info("cache candiate : " + dhb.getDate() + " " + queryPlan.getCachePlan().getStartDt() + " " + queryPlan.getCachePlan().getEndDt());
                 if (cachePlanService.checkCacheable(queryPlan.getInterval(), dhb.getDate(), queryPlan.getCachePlan().getStartDt(), queryPlan.getCachePlan().getEndDt())) {
                     logger.info("cacheable");
                     cacheDhbList.add(dhb);

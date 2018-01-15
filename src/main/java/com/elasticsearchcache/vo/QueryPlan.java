@@ -2,9 +2,10 @@ package com.elasticsearchcache.vo;
 
 import org.apache.commons.lang.StringUtils;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class QueryPlan {
+public class QueryPlan implements Serializable {
     private String preQuery;
 
     private String query;

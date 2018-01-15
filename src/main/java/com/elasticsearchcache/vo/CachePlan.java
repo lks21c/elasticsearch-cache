@@ -2,10 +2,12 @@ package com.elasticsearchcache.vo;
 
 import org.joda.time.DateTime;
 
+import java.io.Serializable;
+
 /**
  * @author lks21c
  */
-public class CachePlan {
+public class CachePlan implements Serializable {
     private String cacheMode;
 
     private DateTime preStartDt;

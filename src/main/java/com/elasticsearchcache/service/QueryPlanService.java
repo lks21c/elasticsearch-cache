@@ -109,6 +109,7 @@ public class QueryPlanService {
                     try {
                         String postResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
                         // put cache
+                        logger.info("try pre put cache");
                         cacheService.putCache(postResBody, queryPlanList.get(i));
                         postDhbList = cacheService.getDhbList(postResBody);
                     } catch (JsonProcessingException e) {
@@ -124,17 +125,14 @@ public class QueryPlanService {
                 mergedRes.append(resBody);
             } else {
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getQuery())) {
-
                     if (i != 0) {
                         mergedRes.append(",");
                     }
                     try {
                         String resBody = JsonUtil.convertAsString(respes.get(responseCnt++));
                         mergedRes.append(resBody);
-
                         // put cache
                         cacheService.putCache(resBody, queryPlanList.get(i));
-
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();
                     }
