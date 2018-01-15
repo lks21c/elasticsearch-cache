@@ -7,7 +7,6 @@ import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.vo.CachePlan;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.elasticsearchcache.vo.QueryPlan;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.logging.log4j.LogManager;
@@ -226,11 +225,7 @@ public class CacheService {
         for (DateHistogramBucket bucket : dhbList) {
             buckets.add(bucket.getBucket());
         }
-        try {
-            res += JsonUtil.convertAsString(buckets);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        res += JsonUtil.convertAsString(buckets);
 
         res += "            \n" +
                 "        }\n" +
@@ -334,7 +329,52 @@ public class CacheService {
     }
 
     public String generateTermsRes(String resBody) {
-        logger.info("generateTermsRes");
+        logger.info("generateTermsRes " + resBody);
+        Map<String, Object> resp = parsingService.parseXContent(resBody);
+
+        Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
+
+        List<Map<String, Object>> mergedBucket = new ArrayList<>();
+        for (String aggKey : aggrs.keySet()) {
+//                logger.info("aggKey = " + aggrs.get(aggKey));
+
+            HashMap<String, Object> buckets = (HashMap<String, Object>) aggrs.get(aggKey);
+
+            for (String bucketsKey : buckets.keySet()) {
+                List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
+                for (Map<String, Object> dhBucket : bucketList) {
+                    List<Map<String, Object>> termsBuckets = null;
+                    logger.info("loop");
+                    for (String dhBucketKey : dhBucket.keySet()) {
+                        if (!"doc_count".equals(dhBucketKey) && !"key_as_string".equals(dhBucketKey) && !"key".equals(dhBucketKey)) {
+                            Map<String, Object> termsMap = (Map<String, Object>) dhBucket.get(dhBucketKey);
+                            termsBuckets = (List<Map<String, Object>>) termsMap.get("buckets");
+                        }
+                    }
+
+                    if (mergedBucket.size() == 0) {
+                        mergedBucket = (List<Map<String, Object>>) SerializationUtils.clone(new ArrayList<>(termsBuckets));
+                    } else {
+                        for (Map<String, Object> bkt : termsBuckets) {
+                            String key = (String) bkt.get("key");
+                            double docCnt = (double) bkt.get("doc_count");
+
+                            for (Map<String, Object> mBkt : mergedBucket) {
+                                String mKey = (String) mBkt.get("key");
+                                double mDocCnt = (double) mBkt.get("doc_count");
+                                if (mKey.equals(key)) {
+                                    mDocCnt += docCnt;
+                                    mBkt.put("doc_count", mDocCnt);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        logger.info("mergedBucket = " + JsonUtil.convertAsString(mergedBucket));
+
         return resBody;
     }
 }

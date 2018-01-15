@@ -4,7 +4,6 @@ import com.elasticsearchcache.conts.CacheMode;
 import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.elasticsearchcache.vo.QueryPlan;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.MethodNotSupportedException;
@@ -91,14 +90,10 @@ public class QueryPlanService {
                 List<DateHistogramBucket> mergedDhbList = new ArrayList<>();
                 List<DateHistogramBucket> preDhbList = null;
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getPreQuery())) {
-                    try {
-                        String preResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
-                        // put cache
-                        cacheService.putCache(preResBody, queryPlanList.get(i));
-                        preDhbList = cacheService.getDhbList(preResBody);
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                    }
+                    String preResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
+                    // put cache
+                    cacheService.putCache(preResBody, queryPlanList.get(i));
+                    preDhbList = cacheService.getDhbList(preResBody);
                     mergedDhbList.addAll(preDhbList);
                 }
 
@@ -106,15 +101,11 @@ public class QueryPlanService {
 
                 List<DateHistogramBucket> postDhbList = null;
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getPostQuery())) {
-                    try {
-                        String postResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
-                        // put cache
-                        logger.info("try pre put cache");
-                        cacheService.putCache(postResBody, queryPlanList.get(i));
-                        postDhbList = cacheService.getDhbList(postResBody);
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                    }
+                    String postResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
+                    // put cache
+                    logger.info("try pre put cache");
+                    cacheService.putCache(postResBody, queryPlanList.get(i));
+                    postDhbList = cacheService.getDhbList(postResBody);
                     mergedDhbList.addAll(postDhbList);
                 }
                 String resBody = cacheService.generateRes(mergedDhbList);
@@ -132,17 +123,13 @@ public class QueryPlanService {
                     if (i != 0) {
                         mergedRes.append(",");
                     }
-                    try {
-                        String resBody = JsonUtil.convertAsString(respes.get(responseCnt++));
-                        // put cache
-                        cacheService.putCache(resBody, queryPlanList.get(i));
-                        if ("terms".equals(queryPlanList.get(i).getAggsType())) {
-                            resBody = cacheService.generateTermsRes(resBody);
-                        }
-                        mergedRes.append(resBody);
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
+                    String resBody = JsonUtil.convertAsString(respes.get(responseCnt++));
+                    // put cache
+                    cacheService.putCache(resBody, queryPlanList.get(i));
+                    if ("terms".equals(queryPlanList.get(i).getAggsType())) {
+                        resBody = cacheService.generateTermsRes(resBody);
                     }
+                    mergedRes.append(resBody);
                 }
             }
         }
