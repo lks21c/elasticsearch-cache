@@ -73,7 +73,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
             Map<String, Object> source = hit.getSourceAsMap();
             Long ts = (Long) source.get(timeFiledName);
             String value = (String) source.get("value");
-
+            logger.info("value = " + value);
             String val = new String(Base64.getDecoder().decode(value));
             logger.info("val = " + Base64.getDecoder().decode(val));
 
