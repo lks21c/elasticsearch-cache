@@ -390,6 +390,9 @@ public class CacheService {
         for (String key : termsMap.keySet()) {
             if (!mergedMap.containsKey(key)) {
                 mergedMap.put(key, termsMap.get(key));
+            } else if (termsMap.get(key) instanceof Map) {
+                //TODO: 좀더 고민할 것
+//                calculateRecursively((Map<String, Object>) mergedMap.get(key), (Map<String, Object>) termsMap.get(key));
             } else {
                 if (termsMap.get(key) instanceof Double) {
                     double newVal = Double.parseDouble(mergedMap.get(key).toString()) + Double.parseDouble(termsMap.get(key).toString());
@@ -409,7 +412,7 @@ public class CacheService {
             for (Map<String, Object> mergedBucket : mergedBucketList) {
                 if (bucket.get("key").toString().equals(mergedBucket.get("key").toString())) {
                     notExists = false;
-                    calculateRecursively(mergedBucket,bucket);
+                    calculateRecursively(mergedBucket, bucket);
                 }
             }
             if (notExists) {
