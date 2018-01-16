@@ -74,9 +74,9 @@ public class EsCacheRepositoryImpl implements CacheRepository {
             Map<String, Object> source = hit.getSourceAsMap();
             Long ts = (Long) source.get(timeFiledName);
             String value = (String) source.get("value");
-            logger.info("value = " + value);
+//            logger.info("value = " + value);
             String val = new String(Base64Utils.decode(value.getBytes()));
-            logger.info("val = " + val);
+//            logger.info("val = " + val);
 
             Map<String, Object> bucket = new Gson().fromJson(new String(val), HashMap.class);
             dhbList.add(new DateHistogramBucket(new DateTime(ts), bucket));
