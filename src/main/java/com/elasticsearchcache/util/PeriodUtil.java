@@ -50,6 +50,20 @@ public class PeriodUtil {
         return offset;
     }
 
+    public static String getTimeZone() {
+        int localTimeDiff = getLocalTimeDiff();
+        if (localTimeDiff > 0 && localTimeDiff < 10) {
+            return "+0" + localTimeDiff + ":00";
+        } else if (localTimeDiff > 10) {
+            return "+" + localTimeDiff + ":00";
+        } else if (localTimeDiff < 0 && localTimeDiff > -10) {
+            return "-0" + localTimeDiff + ":00";
+        } else if (localTimeDiff < -10) {
+            return "-" + localTimeDiff + ":00";
+        }
+        return "00:00";
+    }
+
     public static int getPeriodUnit(String interval) {
         int intervalNum = parseIntervalNum(interval);
         int periodUnit = -1;

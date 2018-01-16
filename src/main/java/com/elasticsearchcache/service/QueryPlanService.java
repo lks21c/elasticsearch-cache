@@ -90,6 +90,7 @@ public class QueryPlanService {
                 List<DateHistogramBucket> mergedDhbList = new ArrayList<>();
                 List<DateHistogramBucket> preDhbList = null;
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getPreQuery())) {
+                    logger.info("pre query executed");
                     String preResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
                     // put cache
                     cacheService.putCache(preResBody, queryPlanList.get(i));
@@ -97,13 +98,16 @@ public class QueryPlanService {
                     mergedDhbList.addAll(preDhbList);
                 }
 
+                logger.info("partial cache size = " + queryPlanList.get(i).getDhbList().size());
+                logger.info("partial cache size = " + JsonUtil.convertAsString(queryPlanList.get(i).getDhbList()));
                 mergedDhbList.addAll(queryPlanList.get(i).getDhbList());
 
                 List<DateHistogramBucket> postDhbList = null;
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getPostQuery())) {
+                    logger.info("post query executed");
                     String postResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
                     // put cache
-                    logger.info("try pre put cache");
+                    logger.info("try post put cache");
                     cacheService.putCache(postResBody, queryPlanList.get(i));
                     postDhbList = cacheService.getDhbList(postResBody);
                     mergedDhbList.addAll(postDhbList);

@@ -4,6 +4,7 @@ import com.elasticsearchcache.conts.CacheMode;
 import com.elasticsearchcache.repository.CacheRepository;
 import com.elasticsearchcache.util.IndexNameUtil;
 import com.elasticsearchcache.util.JsonUtil;
+import com.elasticsearchcache.util.PeriodUtil;
 import com.elasticsearchcache.vo.CachePlan;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.elasticsearchcache.vo.QueryPlan;
@@ -40,7 +41,7 @@ public class CacheService {
     private CachePlanService cachePlanService;
 
     @Autowired
-    @Qualifier("EsCacheRepositoryImpl")
+    @Qualifier("InMemoryCacheRepositoryImpl")
     private CacheRepository cacheRepository;
 
     @Value("${zuul.routes.proxy.url}")
@@ -195,6 +196,7 @@ public class CacheService {
         HashMap<String, Object> dtEntry = new HashMap<>();
         dtEntry.put("field", timeFiledName);
         dtEntry.put("interval", intervalTerms);
+        dtEntry.put("time_zone", PeriodUtil.getTimeZone());
 
         HashMap<String, Object> dtMap = new HashMap<>();
         dtMap.put("date_histogram", dtEntry);
