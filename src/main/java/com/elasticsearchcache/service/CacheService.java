@@ -332,40 +332,43 @@ public class CacheService {
     }
 
     public String generateTermsRes(String resBody) {
-        logger.info("generateTermsRes " + resBody);
+//        logger.info("generateTermsRes " + resBody);
         Map<String, Object> resp = parsingService.parseXContent(resBody);
 
         Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
 
         Map<String, Object> mergedMap = new HashMap<>();
-        List<Map<String, Object>> mergedBucket = new ArrayList<>();
+        String termsBucketKey = null;
         for (String aggKey : aggrs.keySet()) {
-//                logger.info("aggKey = " + aggrs.get(aggKey));
+//            logger.info("aggKey = " + aggKey);
 
             HashMap<String, Object> buckets = (HashMap<String, Object>) aggrs.get(aggKey);
 
             for (String bucketsKey : buckets.keySet()) {
+//                logger.info("bucketsKey = " + bucketsKey);
                 List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
                 for (Map<String, Object> dhBucket : bucketList) {
                     Map<String, Object> termsMap = null;
-                    List<Map<String, Object>> termsBuckets = null;
-                    logger.info("loop");
                     for (String dhBucketKey : dhBucket.keySet()) {
                         if (!"doc_count".equals(dhBucketKey) && !"key_as_string".equals(dhBucketKey) && !"key".equals(dhBucketKey)) {
+                            termsBucketKey = dhBucketKey;
                             termsMap = (Map<String, Object>) dhBucket.get(dhBucketKey);
-                            termsBuckets = (List<Map<String, Object>>) termsMap.get("buckets");
                         }
                     }
 
                     calculateRecursively(mergedMap, termsMap);
-                    logger.info("mergedMap = " + JsonUtil.convertAsString(mergedMap));
+//                    logger.info("mergedMap = " + JsonUtil.convertAsString(mergedMap));
                 }
             }
         }
 
 //        logger.info("mergedBucket = " + JsonUtil.convertAsString(mergedBucket));
 
-        return resBody;
+        aggrs = new HashMap<>();
+        aggrs.put(termsBucketKey, mergedMap);
+        resp.remove("aggregations");
+        resp.put("aggregations", aggrs);
+        return JsonUtil.convertAsString(resp);
     }
 
     private void calculateRecursively(Map<String, Object> mergedMap, Map<String, Object> termsMap) {
@@ -374,7 +377,10 @@ public class CacheService {
                 mergedMap.put(key, termsMap.get(key));
             } else if (termsMap.get(key) instanceof Map) {
                 //TODO: 좀더 고민할 것
-//                calculateRecursively((Map<String, Object>) mergedMap.get(key), (Map<String, Object>) termsMap.get(key));
+                if (!mergedMap.containsKey(key)) {
+                    mergedMap.put(key, new HashMap<String, Object>());
+                }
+                calculateRecursively((Map<String, Object>) mergedMap.get(key), (Map<String, Object>) termsMap.get(key));
             } else {
                 if (termsMap.get(key) instanceof Double) {
                     double newVal = Double.parseDouble(mergedMap.get(key).toString()) + Double.parseDouble(termsMap.get(key).toString());

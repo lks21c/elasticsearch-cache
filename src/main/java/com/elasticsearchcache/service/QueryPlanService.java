@@ -66,7 +66,7 @@ public class QueryPlanService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        logger.info("refactor res = " + bulkRes);
+//        logger.info("refactor res = " + bulkRes);
 
         Map<String, Object> resMap = parsingService.parseXContent(bulkRes);
         List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
@@ -137,7 +137,7 @@ public class QueryPlanService {
         mergedRes.append("}");
 
 
-        logger.info("merged res = " + mergedRes.toString());
+//        logger.info("merged res = " + mergedRes.toString());
 
 //                        res = esService.executeQuery(targetUrl, reqBody);
         sb.append(mergedRes.toString());

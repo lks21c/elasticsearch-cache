@@ -60,7 +60,7 @@ public class CacheServiceTest {
                 "      \"status\": 200\n" +
                 "    }\n" +
                 "";
-        System.out.println("resBody = " + resBody);
+//        System.out.println("resBody = " + resBody);
         String newRes = cacheService.generateTermsRes(resBody);
 
         System.out.println("newRes = " + newRes);
