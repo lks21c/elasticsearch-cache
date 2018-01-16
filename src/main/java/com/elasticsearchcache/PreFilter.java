@@ -107,7 +107,7 @@ public class PreFilter extends ZuulFilter {
                         List<QueryPlan> queryPlanList = new ArrayList<>();
                         for (int i = 0; i < reqs.length; i = i + 2) {
                             QueryPlan queryPlan = cacheService.manipulateQuery(reqs[i] + "\n" + reqs[i + 1] + "\n");
-                            logger.info("queryPlan = " + JsonUtil.convertAsString(queryPlan));
+//                            logger.info("queryPlan = " + JsonUtil.convertAsString(queryPlan));
                             queryPlanList.add(queryPlan);
                         }
                         sb.append(queryPlanService.executeQuery(targetUrl, queryPlanList));
