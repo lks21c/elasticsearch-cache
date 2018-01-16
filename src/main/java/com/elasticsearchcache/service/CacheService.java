@@ -317,22 +317,24 @@ public class CacheService {
     }
 
     public void putCache(String resBody, QueryPlan queryPlan) {
-        List<DateHistogramBucket> dhbList = getDhbList(resBody);
         if (queryPlan.getInterval() != null) {
-            List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
-            for (DateHistogramBucket dhb : dhbList) {
-                logger.info("cache candiate : " + dhb.getDate() + " " + queryPlan.getCachePlan().getStartDt() + " " + queryPlan.getCachePlan().getEndDt());
-                if (cachePlanService.checkCacheable(queryPlan.getInterval(), dhb.getDate(), queryPlan.getCachePlan().getStartDt(), queryPlan.getCachePlan().getEndDt())) {
-                    logger.info("cacheable");
-                    cacheDhbList.add(dhb);
+            List<DateHistogramBucket> dhbList = getDhbList(resBody);
+            if (queryPlan.getInterval() != null) {
+                List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
+                for (DateHistogramBucket dhb : dhbList) {
+                    logger.info("cache candiate : " + dhb.getDate() + " " + queryPlan.getCachePlan().getStartDt() + " " + queryPlan.getCachePlan().getEndDt());
+                    if (cachePlanService.checkCacheable(queryPlan.getInterval(), dhb.getDate(), queryPlan.getCachePlan().getStartDt(), queryPlan.getCachePlan().getEndDt())) {
+                        logger.info("cacheable");
+                        cacheDhbList.add(dhb);
+                    }
                 }
-            }
-            try {
-                if (cacheDhbList.size() > 0) {
-                    cacheRepository.putCache(queryPlan.getIndexName(), queryPlan.getQueryWithoutRange(), queryPlan.getAggs(), cacheDhbList);
+                try {
+                    if (cacheDhbList.size() > 0) {
+                        cacheRepository.putCache(queryPlan.getIndexName(), queryPlan.getQueryWithoutRange(), queryPlan.getAggs(), cacheDhbList);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
     }
