@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,9 @@ public class EsCacheRepositoryImpl implements CacheRepository {
 
     @Value("${filedname.time}")
     private String timeFiledName;
+
+    @Value("${esc.cache.index.name}")
+    private String escCacheIndexName;
 
     @Override
     public List<DateHistogramBucket> getCache(String indexName, String query, String agg, DateTime startDt, DateTime endDt) throws IOException {
@@ -61,7 +65,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
         sb.size(10000);
         sb.sort(timeFiledName, SortOrder.ASC);
 
-        SearchRequest srch = new SearchRequest().indices("cache").types("info");
+        SearchRequest srch = new SearchRequest().indices(escCacheIndexName).types("info");
         srch.source(sb);
 
 //        logger.info("srch = " + sb.toString());
@@ -73,7 +77,11 @@ public class EsCacheRepositoryImpl implements CacheRepository {
             Map<String, Object> source = hit.getSourceAsMap();
             Long ts = (Long) source.get(timeFiledName);
             String value = (String) source.get("value");
-            Map<String, Object> bucket = new Gson().fromJson(value, HashMap.class);
+
+            String val = new String(Base64.getDecoder().decode(value));
+            logger.info("val = " + Base64.getDecoder().decode(val));
+
+            Map<String, Object> bucket = new Gson().fromJson(new String(value), HashMap.class);
             dhbList.add(new DateHistogramBucket(new DateTime(ts), bucket));
         }
 
@@ -92,9 +100,9 @@ public class EsCacheRepositoryImpl implements CacheRepository {
             String str = key + "_" + ts;
             MurmurHash3.Hash128 hash = MurmurHash3.hash128(str.getBytes(), 0, str.getBytes().length, 0, new MurmurHash3.Hash128());
             String id = String.valueOf(hash.h1) + String.valueOf(hash.h2);
-            IndexRequest ir = new IndexRequest("cache", "info", id);
+            IndexRequest ir = new IndexRequest(escCacheIndexName, "info", id);
             Map<String, Object> irMap = new HashMap<>();
-            irMap.put("value", JsonUtil.convertAsString(bucket));
+            irMap.put("value", JsonUtil.convertAsString(bucket).getBytes());
             irMap.put("key", key);
             irMap.put(timeFiledName, ts);
             ir.source(irMap);
@@ -104,11 +112,12 @@ public class EsCacheRepositoryImpl implements CacheRepository {
         restClient.bulkAsync(br, new ActionListener<BulkResponse>() {
             @Override
             public void onResponse(BulkResponse bulkItemResponses) {
-
+                logger.info("bulk success");
             }
 
             @Override
             public void onFailure(Exception e) {
+                logger.info("bulk fail");
                 e.printStackTrace();
             }
         });

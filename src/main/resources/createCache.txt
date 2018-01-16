@@ -1,4 +1,4 @@
-PUT /cache?master_timeout=5m
+PUT /esc_cache?master_timeout=5m
 {
   "settings": {
     "number_of_shards": 3,
@@ -20,7 +20,7 @@ PUT /cache?master_timeout=5m
           "doc_values": true
         },
         "value": {
-          "type": "keyword",
+          "type": "binary",
           "store": false,
           "doc_values": false
         },
