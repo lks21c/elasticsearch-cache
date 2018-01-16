@@ -397,13 +397,13 @@ public class CacheService {
                 } else if (termsMap.get(key) instanceof List) {
                     List<Map<String, Object>> bucketList = (List<Map<String, Object>>) termsMap.get(key);
                     List<Map<String, Object>> mergedBucketList = (List<Map<String, Object>>) mergedMap.get(key);
-                    recursive2(mergedBucketList, bucketList);
+                    calculateList(mergedBucketList, bucketList);
                 }
             }
         }
     }
 
-    private void recursive2(List<Map<String, Object>> mergedBucketList, List<Map<String, Object>> bucketList) {
+    private void calculateList(List<Map<String, Object>> mergedBucketList, List<Map<String, Object>> bucketList) {
         for (Map<String, Object> bucket : bucketList) {
             boolean notExists = true;
             for (Map<String, Object> mergedBucket : mergedBucketList) {

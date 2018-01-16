@@ -68,7 +68,7 @@ public class CacheServiceTest {
 
     @Test
     public void testGenerateTermsRes2() {
-        String newRes = cacheService.generateTermsRes("{\n" +
+        String resBody = "{\n" +
                 "      \"took\": 3,\n" +
                 "      \"timed_out\": false,\n" +
                 "      \"_shards\": {\n" +
@@ -88,7 +88,9 @@ public class CacheServiceTest {
                 "        }\n" +
                 "      },\n" +
                 "      \"status\": 200\n" +
-                "    }");
+                "    }";
+        System.out.println("resBody = " + resBody);
+        String newRes = cacheService.generateTermsRes(resBody);
 
         System.out.println("newRes = " + newRes);
     }
