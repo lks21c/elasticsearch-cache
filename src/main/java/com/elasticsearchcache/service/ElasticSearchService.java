@@ -56,7 +56,7 @@ public class ElasticSearchService {
     public HttpResponse executeQuery(String targetUrl, String reqBody) throws IOException, MethodNotSupportedException {
         logger.info("executeQuery");
         logger.info(targetUrl);
-        logger.info(" reqBody = " + reqBody + "[]");
+//        logger.info(" reqBody = " + reqBody + "[]");
 
         logger.info("curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
 
