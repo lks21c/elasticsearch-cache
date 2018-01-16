@@ -2,7 +2,12 @@ package com.elasticsearchcache;
 
 import com.elasticsearchcache.service.ElasticSearchService;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.params.CoreConnectionPNames;
+import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,5 +30,16 @@ public class HttpClientTest {
         HttpResponse response = elasticSearchService.executeHttpRequest(HttpMethod.POST, "http://alyes.melon.com/_msearch", new ByteArrayEntity(requestBody.getBytes()));
 
         System.out.println(EntityUtils.toString(response.getEntity()));
+    }
+
+    @Test
+    public void test2() {
+        int timeout = 30;
+        RequestConfig config = RequestConfig.custom()
+                .setConnectTimeout(timeout * 1000)
+                .setConnectionRequestTimeout(timeout * 1000)
+                .setSocketTimeout(timeout * 1000).build();
+
+        CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
     }
 }

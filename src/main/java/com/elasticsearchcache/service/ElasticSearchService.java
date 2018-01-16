@@ -2,6 +2,7 @@ package com.elasticsearchcache.service;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.MethodNotSupportedException;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -12,6 +13,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +23,16 @@ import java.io.IOException;
 public class ElasticSearchService {
     private static final Logger logger = LogManager.getLogger(ElasticSearchService.class);
 
+    @Value("${httpclient.timeout}")
+    private int timeout;
+
+    private RequestConfig requestConfig = RequestConfig.custom()
+            .setConnectTimeout(timeout * 1000)
+            .setConnectionRequestTimeout(timeout * 1000)
+            .setSocketTimeout(timeout * 1000).build();
+
     public HttpResponse executeHttpRequest(HttpMethod requestType, String url, ByteArrayEntity entity) throws IOException, MethodNotSupportedException {
-        CloseableHttpClient client = HttpClientBuilder.create().build();
+        CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
         HttpResponse httpResponse = null;
 
         if (entity != null) {
