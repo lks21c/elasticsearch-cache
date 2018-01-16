@@ -334,7 +334,7 @@ public class CacheService {
     }
 
     public String generateTermsRes(String resBody) {
-//        logger.info("generateTermsRes " + resBody);
+        logger.info("generateTermsRes " + resBody);
         Map<String, Object> resp = parsingService.parseXContent(resBody);
 
         Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
@@ -370,6 +370,8 @@ public class CacheService {
         aggrs.put(termsBucketKey, mergedMap);
         resp.remove("aggregations");
         resp.put("aggregations", aggrs);
+        String rtnBody = JsonUtil.convertAsString(resp);
+        logger.info("rtnBody = " + rtnBody);
         return JsonUtil.convertAsString(resp);
     }
 

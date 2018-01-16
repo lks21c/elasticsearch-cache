@@ -131,6 +131,7 @@ public class QueryPlanService {
                     // put cache
                     cacheService.putCache(resBody, queryPlanList.get(i));
                     if ("terms".equals(queryPlanList.get(i).getAggsType())) {
+                        logger.info("terms nocache");
                         resBody = cacheService.generateTermsRes(resBody);
                     }
                     mergedRes.append(resBody);
