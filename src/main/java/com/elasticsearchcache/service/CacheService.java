@@ -359,24 +359,6 @@ public class CacheService {
 
                     calculateRecursively(mergedMap, termsMap);
                     logger.info("mergedMap = " + JsonUtil.convertAsString(mergedMap));
-
-//                    if (mergedBucket.size() == 0) {
-//                        mergedBucket = (List<Map<String, Object>>) SerializationUtils.clone(new ArrayList<>(termsBuckets));
-//                    } else {
-//                        for (Map<String, Object> bkt : termsBuckets) {
-//                            String key = (String) bkt.get("key");
-//                            double docCnt = (double) bkt.get("doc_count");
-//
-//                            for (Map<String, Object> mBkt : mergedBucket) {
-//                                String mKey = (String) mBkt.get("key");
-//                                double mDocCnt = (double) mBkt.get("doc_count");
-//                                if (mKey.equals(key)) {
-//                                    mDocCnt += docCnt;
-//                                    mBkt.put("doc_count", mDocCnt);
-//                                }
-//                            }
-//                        }
-//                    }
                 }
             }
         }
