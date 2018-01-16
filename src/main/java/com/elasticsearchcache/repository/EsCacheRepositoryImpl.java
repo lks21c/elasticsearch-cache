@@ -26,11 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author lks21c
@@ -81,7 +77,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
             String val = new String(Base64.getDecoder().decode(value));
             logger.info("val = " + Base64.getDecoder().decode(val));
 
-            Map<String, Object> bucket = new Gson().fromJson(new String(value), HashMap.class);
+            Map<String, Object> bucket = new Gson().fromJson(new String(val), HashMap.class);
             dhbList.add(new DateHistogramBucket(new DateTime(ts), bucket));
         }
 
@@ -102,7 +98,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
             String id = String.valueOf(hash.h1) + String.valueOf(hash.h2);
             IndexRequest ir = new IndexRequest(escCacheIndexName, "info", id);
             Map<String, Object> irMap = new HashMap<>();
-            irMap.put("value", JsonUtil.convertAsString(bucket).getBytes());
+            irMap.put("value", Base64.getEncoder().encode(JsonUtil.convertAsString(bucket).getBytes()));
             irMap.put("key", key);
             irMap.put(timeFiledName, ts);
             ir.source(irMap);
