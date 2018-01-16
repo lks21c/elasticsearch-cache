@@ -38,7 +38,7 @@ public class CacheServiceTest {
 
     @Test
     public void testGenerateTermsRes() {
-        String newRes = cacheService.generateTermsRes("{\n" +
+        String resBody = "{\n" +
                 "      \"took\": 3,\n" +
                 "      \"timed_out\": false,\n" +
                 "      \"_shards\": {\n" +
@@ -59,7 +59,9 @@ public class CacheServiceTest {
                 "      },\n" +
                 "      \"status\": 200\n" +
                 "    }\n" +
-                "");
+                "";
+        System.out.println("resBody = " + resBody);
+        String newRes = cacheService.generateTermsRes(resBody);
 
         System.out.println("newRes = " + newRes);
     }
@@ -93,7 +95,7 @@ public class CacheServiceTest {
 
     @Test
     public void testGenerateTermsRes3() {
-        StringBuilder sb =new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 //        String newRes = cacheService.generateTermsRes("{\n" +
 //                "  \"took\": 28704,\n" +
 //                "  \"timed_out\": false,\n" +
