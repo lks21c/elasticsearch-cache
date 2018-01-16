@@ -99,7 +99,6 @@ public class QueryPlanService {
                 }
 
                 logger.info("partial cache size = " + queryPlanList.get(i).getDhbList().size());
-                logger.info("partial cache size = " + JsonUtil.convertAsString(queryPlanList.get(i).getDhbList()));
                 mergedDhbList.addAll(queryPlanList.get(i).getDhbList());
 
                 List<DateHistogramBucket> postDhbList = null;

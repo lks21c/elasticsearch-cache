@@ -301,11 +301,15 @@ public class CacheService {
                 List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
                 for (Map<String, Object> bucket : bucketList) {
                     String key_as_string = (String) bucket.get("key_as_string");
-                    Long ts = (Long) bucket.get("key");
-                    logger.info("for key_as_string = " + key_as_string);
-
-                    DateHistogramBucket dhb = new DateHistogramBucket(new DateTime(ts), bucket);
-                    dhbList.add(dhb);
+                    logger.info("for key_as_string = " + key_as_string + " " + "key = " + bucket.get("key"));
+                    try {
+                        Long ts = (Long) bucket.get("key");
+                        DateHistogramBucket dhb = new DateHistogramBucket(new DateTime(ts), bucket);
+                        dhbList.add(dhb);
+                    } catch (ClassCastException e) {
+                        logger.info("debug info : " + resBody);
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -334,7 +338,7 @@ public class CacheService {
     }
 
     public String generateTermsRes(String resBody) {
-        logger.info("generateTermsRes " + resBody);
+//        logger.info("generateTermsRes " + resBody);
         Map<String, Object> resp = parsingService.parseXContent(resBody);
 
         Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
@@ -371,7 +375,7 @@ public class CacheService {
         resp.remove("aggregations");
         resp.put("aggregations", aggrs);
         String rtnBody = JsonUtil.convertAsString(resp);
-        logger.info("rtnBody = " + rtnBody);
+//        logger.info("rtnBody = " + rtnBody);
         return JsonUtil.convertAsString(resp);
     }
 
