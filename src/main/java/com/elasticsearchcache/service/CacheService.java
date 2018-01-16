@@ -41,7 +41,7 @@ public class CacheService {
     private CachePlanService cachePlanService;
 
     @Autowired
-    @Qualifier("InMemoryCacheRepositoryImpl")
+    @Qualifier("EsCacheRepositoryImpl")
     private CacheRepository cacheRepository;
 
     @Value("${zuul.routes.proxy.url}")
@@ -385,22 +385,22 @@ public class CacheService {
                 }
                 calculateRecursively((Map<String, Object>) mergedMap.get(key), (Map<String, Object>) termsMap.get(key));
             } else {
-                if (termsMap.get(key) instanceof Integer) {
+                if (mergedMap.get(key) instanceof Integer) {
                     int newVal = Integer.parseInt(mergedMap.get(key).toString()) + Integer.parseInt(termsMap.get(key).toString());
                     mergedMap.put(key, newVal);
-                } else if (termsMap.get(key) instanceof Long) {
+                } else if (mergedMap.get(key) instanceof Long) {
                     long newVal = Long.parseLong(mergedMap.get(key).toString()) + Long.parseLong(termsMap.get(key).toString());
                     mergedMap.put(key, newVal);
-                } else if (termsMap.get(key) instanceof Float) {
+                } else if (mergedMap.get(key) instanceof Float) {
                     float newVal = Float.parseFloat(mergedMap.get(key).toString()) + Float.parseFloat(termsMap.get(key).toString());
                     mergedMap.put(key, newVal);
-                } else if (termsMap.get(key) instanceof Double) {
+                } else if (mergedMap.get(key) instanceof Double) {
                     double newVal = Double.parseDouble(mergedMap.get(key).toString()) + Double.parseDouble(termsMap.get(key).toString());
                     mergedMap.put(key, newVal);
-                } else if (termsMap.get(key) instanceof Short) {
+                } else if (mergedMap.get(key) instanceof Short) {
                     int newVal = Short.parseShort(mergedMap.get(key).toString()) + Short.parseShort(termsMap.get(key).toString());
                     mergedMap.put(key, newVal);
-                } else if (termsMap.get(key) instanceof List) {
+                } else if (mergedMap.get(key) instanceof List) {
                     List<Map<String, Object>> bucketList = (List<Map<String, Object>>) termsMap.get(key);
                     List<Map<String, Object>> mergedBucketList = (List<Map<String, Object>>) mergedMap.get(key);
                     calculateList(mergedBucketList, bucketList);
