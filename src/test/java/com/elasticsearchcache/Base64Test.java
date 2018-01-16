@@ -2,6 +2,7 @@ package com.elasticsearchcache;
 
 import com.sun.jersey.core.util.Base64;
 import org.junit.Test;
+import org.springframework.util.Base64Utils;
 
 public class Base64Test {
 
