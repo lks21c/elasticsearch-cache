@@ -380,7 +380,6 @@ public class CacheService {
             if (!mergedMap.containsKey(key)) {
                 mergedMap.put(key, termsMap.get(key));
             } else if (termsMap.get(key) instanceof Map) {
-                //TODO: 좀더 고민할 것
                 if (!mergedMap.containsKey(key)) {
                     mergedMap.put(key, new HashMap<String, Object>());
                 }
