@@ -109,12 +109,12 @@ public class EsCacheRepositoryImpl implements CacheRepository {
         restClient.bulkAsync(br, new ActionListener<BulkResponse>() {
             @Override
             public void onResponse(BulkResponse bulkItemResponses) {
-                logger.info("bulk success");
+//                logger.info("bulk success");
             }
 
             @Override
             public void onFailure(Exception e) {
-                logger.info("bulk fail");
+//                logger.info("bulk fail");
                 e.printStackTrace();
             }
         });

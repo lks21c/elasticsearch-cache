@@ -391,17 +391,17 @@ public class CacheService {
                 }
                 calculateRecursively((Map<String, Object>) mergedMap.get(key), (Map<String, Object>) termsMap.get(key));
             } else {
-                if (mergedMap.get(key) instanceof Integer) {
-                    int newVal = Integer.parseInt(mergedMap.get(key).toString()) + Integer.parseInt(termsMap.get(key).toString());
-                    mergedMap.put(key, newVal);
-                } else if (mergedMap.get(key) instanceof Long) {
+                if (mergedMap.get(key) instanceof Long || termsMap.get(key) instanceof Long) {
                     long newVal = Long.parseLong(mergedMap.get(key).toString()) + Long.parseLong(termsMap.get(key).toString());
                     mergedMap.put(key, newVal);
-                } else if (mergedMap.get(key) instanceof Float) {
+                } else if (mergedMap.get(key) instanceof Float || termsMap.get(key) instanceof Float) {
                     float newVal = Float.parseFloat(mergedMap.get(key).toString()) + Float.parseFloat(termsMap.get(key).toString());
                     mergedMap.put(key, newVal);
-                } else if (mergedMap.get(key) instanceof Double) {
+                } else if (mergedMap.get(key) instanceof Double || termsMap.get(key) instanceof Double) {
                     double newVal = Double.parseDouble(mergedMap.get(key).toString()) + Double.parseDouble(termsMap.get(key).toString());
+                    mergedMap.put(key, newVal);
+                } else if (mergedMap.get(key) instanceof Integer) {
+                    int newVal = Integer.parseInt(mergedMap.get(key).toString()) + Integer.parseInt(termsMap.get(key).toString());
                     mergedMap.put(key, newVal);
                 } else if (mergedMap.get(key) instanceof Short) {
                     int newVal = Short.parseShort(mergedMap.get(key).toString()) + Short.parseShort(termsMap.get(key).toString());

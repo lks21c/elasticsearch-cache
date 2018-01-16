@@ -76,7 +76,7 @@ public class QueryPlanService {
         mergedRes.append("\"responses\":[");
         int responseCnt = 0;
         for (int i = 0; i < queryPlanList.size(); i++) {
-            logger.info("query plan cache mode = " + queryPlanList.get(i).getCachePlan().getCacheMode());
+            logger.info("query plan cache mode(" + i + ") = " + queryPlanList.get(i).getCachePlan().getCacheMode());
             if (CacheMode.ALL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
                 String resBody = cacheService.generateRes(queryPlanList.get(i).getDhbList());
                 if (i != 0) {
