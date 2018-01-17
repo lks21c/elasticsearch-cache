@@ -48,6 +48,7 @@ public class WarmUpService {
 
     @Scheduled(fixedDelay = 60000)
     public void warmUpMinuteQueries() {
+        logger.info("warmup invoked");
 
         SearchRequest sr = new SearchRequest(esProfileName).types("info");
         SearchSourceBuilder ssb = new SearchSourceBuilder();
@@ -61,7 +62,6 @@ public class WarmUpService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
 
         if (resp != null) {
             for (SearchHit hit : resp.getHits().getHits()) {
@@ -93,7 +93,5 @@ public class WarmUpService {
                 queryPlanService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
             }
         }
-
-        logger.info("warmup");
     }
 }
