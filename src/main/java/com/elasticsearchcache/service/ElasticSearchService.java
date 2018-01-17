@@ -74,17 +74,4 @@ public class ElasticSearchService {
 //        logger.info("res = " + EntityUtils.toString(res.getEntity()));
         return res;
     }
-
-    public String getRequestBody(String targetUrl, String reqBody) throws IOException, MethodNotSupportedException {
-        HttpResponse res = executeQuery(targetUrl, reqBody);
-
-        String body = null;
-        try {
-            body = EntityUtils.toString(res.getEntity());
-        } catch (Exception e) {
-            logger.info("exception occurred");
-            e.printStackTrace();
-        }
-        return body;
-    }
 }

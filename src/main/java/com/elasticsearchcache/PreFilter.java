@@ -95,7 +95,6 @@ public class PreFilter extends ZuulFilter {
                     String reqBody = getRequestBody(request);
 
                     logger.info("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
-                    logger.info("original reqBody = " + reqBody);
 
                     handleRequestHeader(request);
 
@@ -113,15 +112,15 @@ public class PreFilter extends ZuulFilter {
                             logger.info("esc cancelled.");
                             return null;
                         }
-                        sb.append(queryPlanService.executeQuery(targetUrl, queryPlanList));
+                        sb.append(body);
                         long afterQueries = System.currentTimeMillis() - beforeQueries;
-                        logger.info("afterQueries = " + afterQueries);
+                        logger.info("cache afterQueries = " + afterQueries);
                     } else {
                         long beforeQueries = System.currentTimeMillis();
                         HttpResponse res = esService.executeQuery(targetUrl, reqBody);
                         sb.append(EntityUtils.toString(res.getEntity()));
                         long afterQueries = System.currentTimeMillis() - beforeQueries;
-                        logger.info("afterQueries = " + afterQueries);
+                        logger.info("nocache afterQueries = " + afterQueries);
                     }
 
                     if (sb.length() > 0) {
