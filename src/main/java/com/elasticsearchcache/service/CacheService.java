@@ -320,7 +320,7 @@ public class CacheService {
             if (queryPlan.getInterval() != null) {
                 List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
                 for (DateHistogramBucket dhb : dhbList) {
-                    logger.info("cache candiate : " + dhb.getDate() + " " + queryPlan.getCachePlan().getStartDt() + " " + queryPlan.getCachePlan().getEndDt());
+                    logger.info("cache candiate : " + dhb.getDate() + " startDt : " + queryPlan.getCachePlan().getStartDt() + " endDt : " + queryPlan.getCachePlan().getEndDt());
                     if (cachePlanService.checkCacheable(queryPlan.getInterval(), dhb.getDate(), queryPlan.getCachePlan().getStartDt(), queryPlan.getCachePlan().getEndDt())) {
                         logger.info("cacheable");
                         cacheDhbList.add(dhb);
