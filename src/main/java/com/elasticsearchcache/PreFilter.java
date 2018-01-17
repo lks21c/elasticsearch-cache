@@ -118,7 +118,9 @@ public class PreFilter extends ZuulFilter {
                     } else {
                         long beforeQueries = System.currentTimeMillis();
                         HttpResponse res = esService.executeQuery(targetUrl, reqBody);
-                        sb.append(EntityUtils.toString(res.getEntity()));
+                        String resBody = EntityUtils.toString(res.getEntity());
+                        logger.info("resBody = " + resBody);
+                        sb.append(resBody);
                         long afterQueries = System.currentTimeMillis() - beforeQueries;
                         logger.info("nocache afterQueries = " + afterQueries);
                     }
