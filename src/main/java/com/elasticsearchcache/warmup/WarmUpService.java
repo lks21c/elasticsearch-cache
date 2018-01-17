@@ -1,6 +1,9 @@
 package com.elasticsearchcache.warmup;
 
+import com.elasticsearchcache.conts.EsUrl;
 import com.elasticsearchcache.service.CacheService;
+import com.elasticsearchcache.service.QueryPlanService;
+import com.elasticsearchcache.vo.QueryPlan;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,9 +17,12 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class WarmUpService {
@@ -28,6 +34,11 @@ public class WarmUpService {
     @Autowired
     private CacheService cacheService;
 
+    @Autowired
+    private QueryPlanService queryPlanService;
+
+    @Value("${zuul.routes.proxy.url}")
+    private String esUrl;
 
     @Value("${esc.profile.index.name}")
     private String esProfileName;
@@ -35,7 +46,7 @@ public class WarmUpService {
     @Value("${esc.profile.enabled}")
     private boolean enableProfile;
 
-    //    @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 60000)
     public void warmUpMinuteQueries() {
 
         SearchRequest sr = new SearchRequest(esProfileName).types("info");
@@ -51,6 +62,7 @@ public class WarmUpService {
             e.printStackTrace();
         }
 
+
         if (resp != null) {
             for (SearchHit hit : resp.getHits().getHits()) {
                 String value = (String) hit.getSourceAsMap().get("value");
@@ -60,6 +72,7 @@ public class WarmUpService {
                 startDt = startDt.withMillisOfSecond(0);
                 startDt = startDt.minusMinutes(10);
 
+                List<QueryPlan> queryPlanList = new ArrayList<>();
                 for (int i = 0; i < 9; i++) {
                     logger.info("warmup startdt = " + startDt);
                     DateTime endDt = startDt.plusMinutes(1).minusMillis(1);
@@ -67,7 +80,8 @@ public class WarmUpService {
                     value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
 
                     try {
-                        cacheService.manipulateQuery(value);
+                        QueryPlan qp = cacheService.manipulateQuery(value);
+                        queryPlanList.add(qp);
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (MethodNotSupportedException e) {
@@ -76,6 +90,7 @@ public class WarmUpService {
 
                     startDt = startDt.plusMinutes(1);
                 }
+                queryPlanService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
             }
         }
 
