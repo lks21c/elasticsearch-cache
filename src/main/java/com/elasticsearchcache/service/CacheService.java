@@ -13,6 +13,7 @@ import org.apache.http.MethodNotSupportedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
+import org.joda.time.Days;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,9 +50,6 @@ public class CacheService {
 
     @Value("${esc.cache.terms}")
     private boolean enableTermsCache;
-
-    @Value("${interval.terms}")
-    private String intervalTerms;
 
     @Value("${filedname.time}")
     private String timeFiledName;
@@ -107,13 +105,13 @@ public class CacheService {
         Map<String, Object> aggs = (Map<String, Object>) qMap.get("aggs");
 
         // Parse Interval
-        Map<String, Object> rtnMap = parseIntervalAndAggsType(aggs);
+        Map<String, Object> rtnMap = parseIntervalAndAggsType(aggs, getIntervalTerms(indexName, startDt, endDt));
         String interval = (String) rtnMap.get("interval");
         String aggsType = (String) rtnMap.get("aggsType");
 
         // handle terms
         if (enableTermsCache && "terms".equals(aggsType)) {
-            aggs = appendDateHistogram(aggs);
+            aggs = appendDateHistogram(aggs, getIntervalTerms(indexName, startDt, endDt));
             qMap.put("aggs", aggs);
         }
 
@@ -188,14 +186,14 @@ public class CacheService {
         }
     }
 
-    private Map<String, Object> appendDateHistogram(Map<String, Object> aggs) {
+    private Map<String, Object> appendDateHistogram(Map<String, Object> aggs, String interval) {
         HashMap<String, Object> hashMap = new HashMap<>(aggs);
         HashMap<String, Object> newAggs = new HashMap<>();
         Map<String, Object> clonedAggs = (Map<String, Object>) SerializationUtils.clone(hashMap);
 
         HashMap<String, Object> dtEntry = new HashMap<>();
         dtEntry.put("field", timeFiledName);
-        dtEntry.put("interval", intervalTerms);
+        dtEntry.put("interval", interval);
         dtEntry.put("time_zone", PeriodUtil.getTimeZone());
 
         HashMap<String, Object> dtMap = new HashMap<>();
@@ -241,7 +239,7 @@ public class CacheService {
         return res;
     }
 
-    private Map<String, Object> parseIntervalAndAggsType(Map<String, Object> aggs) {
+    private Map<String, Object> parseIntervalAndAggsType(Map<String, Object> aggs, String termInterval) {
         Map<String, Object> rtn = new HashMap<>();
         String interval = null;
         String aggType = null;
@@ -258,7 +256,7 @@ public class CacheService {
                 }
 
                 if (enableTermsCache && terms != null) {
-                    interval = intervalTerms;
+                    interval = termInterval;
                     aggType = "terms";
                 }
             }
@@ -428,6 +426,16 @@ public class CacheService {
                 Map<String, Object> clonedBucket = (Map<String, Object>) SerializationUtils.clone(new HashMap<>(bucket));
                 mergedBucketList.add(clonedBucket);
             }
+        }
+    }
+
+    private String getIntervalTerms(String indexName, DateTime startDt, DateTime endDt) {
+        if (indexName.contains("realtime")) {
+            return "1m";
+        } else if (Days.daysBetween(startDt, endDt).getDays() > 7) {
+            return "1d";
+        } else {
+            return "1h";
         }
     }
 }
