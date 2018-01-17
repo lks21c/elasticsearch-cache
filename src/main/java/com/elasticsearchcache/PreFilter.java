@@ -109,6 +109,11 @@ public class PreFilter extends ZuulFilter {
 //                            logger.info("queryPlan = " + JsonUtil.convertAsString(queryPlan));
                             queryPlanList.add(queryPlan);
                         }
+                        String body = queryPlanService.executeQuery(targetUrl, queryPlanList);
+                        if (StringUtils.isEmpty(body)) {
+                            logger.info("esc cancelled.");
+                            return null;
+                        }
                         sb.append(queryPlanService.executeQuery(targetUrl, queryPlanList));
                         long afterQueries = System.currentTimeMillis() - beforeQueries;
                         logger.info("afterQueries = " + afterQueries);

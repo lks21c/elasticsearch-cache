@@ -6,6 +6,7 @@ import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.elasticsearchcache.vo.QueryPlan;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -58,6 +59,12 @@ public class QueryPlanService {
         } catch (MethodNotSupportedException e) {
             e.printStackTrace();
         }
+
+        if (res.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+            logger.info("it's not ok code.");
+            return null;
+        }
+
         long afterManipulateBulkQuery = System.currentTimeMillis() - beforeManipulateBulkQuery;
         logger.info("afterManipulateBulkQuery = " + afterManipulateBulkQuery);
         String bulkRes = null;
