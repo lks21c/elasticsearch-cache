@@ -56,6 +56,8 @@ public class WarmUpService {
             for (SearchHit hit : resp.getHits().getHits()) {
                 String value = (String) hit.getSourceAsMap().get("value");
 
+                logger.info("value = " + value);
+
                 DateTime startDt = new DateTime();
                 startDt = startDt.withSecondOfMinute(0);
                 startDt = startDt.withMillisOfSecond(0);
