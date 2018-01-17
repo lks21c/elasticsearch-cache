@@ -46,8 +46,6 @@ public class ProfileService {
                     for (String rangeKey : range.keySet()) {
                         gte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("gte");
                         lte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("lte");
-                        ((Map<String, Object>) range.get(rangeKey)).put("gte", "$$gte$$");
-                        ((Map<String, Object>) range.get(rangeKey)).put("lte", "$$lte$$");
                     }
                 }
             }

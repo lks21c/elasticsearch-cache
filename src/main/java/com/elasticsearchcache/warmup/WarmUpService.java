@@ -14,7 +14,6 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -36,7 +35,7 @@ public class WarmUpService {
     @Value("${esc.profile.enabled}")
     private boolean enableProfile;
 
-//    @Scheduled(fixedDelay = 60000)
+    //    @Scheduled(fixedDelay = 60000)
     public void warmUpMinuteQueries() {
 
         SearchRequest sr = new SearchRequest(esProfileName).types("info");
@@ -56,27 +55,27 @@ public class WarmUpService {
             for (SearchHit hit : resp.getHits().getHits()) {
                 String value = (String) hit.getSourceAsMap().get("value");
 
-                logger.info("before value = " + value);
-
                 DateTime startDt = new DateTime();
                 startDt = startDt.withSecondOfMinute(0);
                 startDt = startDt.withMillisOfSecond(0);
                 startDt = startDt.minusMinutes(10);
 
-                DateTime endDt = startDt.plusMinutes(1).minusMillis(1);
-                value = value.replace("$$gte$$", String.valueOf(startDt.getMillis()));
-                value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
+                for (int i = 0; i < 9; i++) {
+                    logger.info("warmup startdt = " + startDt);
+                    DateTime endDt = startDt.plusMinutes(1).minusMillis(1);
+                    value = value.replace("$$gte$$", String.valueOf(startDt.getMillis()));
+                    value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
 
-                logger.info("after value = " + value);
+                    try {
+                        cacheService.manipulateQuery(value);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (MethodNotSupportedException e) {
+                        e.printStackTrace();
+                    }
 
-                try {
-                    cacheService.manipulateQuery(value);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (MethodNotSupportedException e) {
-                    e.printStackTrace();
+                    startDt = startDt.plusMinutes(1);
                 }
-                break;
             }
         }
 
