@@ -36,7 +36,7 @@ public class WarmUpService {
     @Value("${esc.profile.enabled}")
     private boolean enableProfile;
 
-    @Scheduled(fixedDelay = 60000)
+//    @Scheduled(fixedDelay = 60000)
     public void warmUpMinuteQueries() {
 
         SearchRequest sr = new SearchRequest(esProfileName).types("info");
