@@ -21,69 +21,79 @@ public class PostCreation {
     @Value("${zuul.routes.proxy.url}")
     private String esUrl;
 
+    @Value("${esc.cache.index.name}")
+    private String esCacheName;
+
+    @Value("${esc.profile.index.name}")
+    private String esProfileName;
+
     @Bean
     @PostConstruct
     public String createProfileIndex() {
-        String body =
-                "{\n" +
-                        "  \"settings\": {\n" +
-                        "    \"number_of_shards\": 3,\n" +
-                        "    \"number_of_replicas\": 1,\n" +
-                        "    \"refresh_interval\": \"10s\"\n" +
-                        "  },\n" +
-                        "  \"mappings\": {\n" +
-                        "    \"info\": {\n" +
-                        "      \"_all\": {\n" +
-                        "        \"enabled\": false\n" +
-                        "      },\n" +
-                        "      \"_source\": {\n" +
-                        "        \"enabled\": true\n" +
-                        "      },\n" +
-                        "      \"properties\": {\n" +
-                        "        \"key\": {\n" +
-                        "          \"type\": \"keyword\",\n" +
-                        "          \"store\": false,\n" +
-                        "          \"doc_values\": true\n" +
-                        "        },\n" +
-                        "        \"value\": {\n" +
-                        "          \"type\": \"keyword\",\n" +
-                        "          \"store\": false,\n" +
-                        "          \"doc_values\": false\n" +
-                        "        },\n" +
-                        "        \"ts\": {\n" +
-                        "          \"type\": \"date\",\n" +
-                        "          \"store\": false\n" +
-                        "        }\n" +
-                        "      },\n" +
-                        "      \"dynamic_templates\": [\n" +
-                        "        {\n" +
-                        "          \"unindexed_text\": {\n" +
-                        "            \"match_mapping_type\": \"text\",\n" +
-                        "            \"mapping\": {\n" +
-                        "              \"type\": \"keyword\",\n" +
-                        "              \"index\": true,\n" +
-                        "              \"doc_values\": true,\n" +
-                        "              \"store\": false\n" +
-                        "            }\n" +
-                        "          }\n" +
-                        "        },\n" +
-                        "        {\n" +
-                        "          \"unindexed_text\": {\n" +
-                        "            \"match_mapping_type\": \"string\",\n" +
-                        "            \"mapping\": {\n" +
-                        "              \"type\": \"keyword\",\n" +
-                        "              \"index\": true,\n" +
-                        "              \"doc_values\": true,\n" +
-                        "              \"store\": false\n" +
-                        "            }\n" +
-                        "          }\n" +
-                        "        }\n" +
-                        "      ]\n" +
-                        "    }\n" +
-                        "  }\n" +
-                        "}";
+        String body = "{\n" +
+                "  \"settings\": {\n" +
+                "    \"number_of_shards\": 3,\n" +
+                "    \"number_of_replicas\": 1,\n" +
+                "    \"refresh_interval\": \"10s\"\n" +
+                "  },\n" +
+                "  \"mappings\": {\n" +
+                "    \"info\": {\n" +
+                "      \"_all\": {\n" +
+                "        \"enabled\": false\n" +
+                "      },\n" +
+                "      \"_source\": {\n" +
+                "        \"enabled\": true\n" +
+                "      },\n" +
+                "      \"properties\": {\n" +
+                "        \"key\": {\n" +
+                "          \"type\": \"keyword\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": true\n" +
+                "        },\n" +
+                "        \"value\": {\n" +
+                "          \"type\": \"keyword\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": false\n" +
+                "        },\n" +
+                "        \"interval\": {\n" +
+                "          \"type\": \"keyword\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": false\n" +
+                "        },\n" +
+                "        \"ts\": {\n" +
+                "          \"type\": \"date\",\n" +
+                "          \"store\": false\n" +
+                "        }\n" +
+                "      },\n" +
+                "      \"dynamic_templates\": [\n" +
+                "        {\n" +
+                "          \"unindexed_text\": {\n" +
+                "            \"match_mapping_type\": \"text\",\n" +
+                "            \"mapping\": {\n" +
+                "              \"type\": \"keyword\",\n" +
+                "              \"index\": true,\n" +
+                "              \"doc_values\": true,\n" +
+                "              \"store\": false\n" +
+                "            }\n" +
+                "          }\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"unindexed_text\": {\n" +
+                "            \"match_mapping_type\": \"string\",\n" +
+                "            \"mapping\": {\n" +
+                "              \"type\": \"keyword\",\n" +
+                "              \"index\": true,\n" +
+                "              \"doc_values\": true,\n" +
+                "              \"store\": false\n" +
+                "            }\n" +
+                "          }\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
         try {
-            esService.executeHttpRequest(HttpMethod.PUT, esUrl + "/esc_profile", new ByteArrayEntity(body.getBytes()));
+            esService.executeHttpRequest(HttpMethod.PUT, esUrl + "/" + esProfileName, new ByteArrayEntity(body.getBytes()));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (MethodNotSupportedException e) {
@@ -154,7 +164,7 @@ public class PostCreation {
                         "  }\n" +
                         "}";
         try {
-            esService.executeHttpRequest(HttpMethod.PUT, esUrl + "/esc_cache", new ByteArrayEntity(body.getBytes()));
+            esService.executeHttpRequest(HttpMethod.PUT, esUrl + "/" + esCacheName, new ByteArrayEntity(body.getBytes()));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (MethodNotSupportedException e) {

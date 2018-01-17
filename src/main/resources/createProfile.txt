@@ -24,6 +24,11 @@ PUT /esc_profile?master_timeout=5m
           "store": false,
           "doc_values": false
         },
+        "interval": {
+          "type": "keyword",
+          "store": false,
+          "doc_values": false
+        },
         "ts": {
           "type": "date",
           "store": false

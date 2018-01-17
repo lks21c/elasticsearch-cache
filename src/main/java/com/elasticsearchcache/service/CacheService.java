@@ -1,6 +1,7 @@
 package com.elasticsearchcache.service;
 
 import com.elasticsearchcache.conts.CacheMode;
+import com.elasticsearchcache.profile.ProfileService;
 import com.elasticsearchcache.repository.CacheRepository;
 import com.elasticsearchcache.util.IndexNameUtil;
 import com.elasticsearchcache.util.JsonUtil;
@@ -33,9 +34,6 @@ public class CacheService {
     private static final Logger logger = LogManager.getLogger(CacheService.class);
 
     @Autowired
-    private ElasticSearchService esService;
-
-    @Autowired
     private ParsingService parsingService;
 
     @Autowired
@@ -44,6 +42,9 @@ public class CacheService {
     @Autowired
     @Qualifier("EsCacheRepositoryImpl")
     private CacheRepository cacheRepository;
+
+    @Autowired
+    private ProfileService profileService;
 
     @Value("${zuul.routes.proxy.url}")
     private String esUrl;
@@ -108,6 +109,8 @@ public class CacheService {
         Map<String, Object> rtnMap = parseIntervalAndAggsType(aggs, getIntervalTerms(indexName, startDt, endDt));
         String interval = (String) rtnMap.get("interval");
         String aggsType = (String) rtnMap.get("aggsType");
+
+        profileService.putQueryProfile(indexName, interval,iMap,qMap);
 
         // handle terms
         if (enableTermsCache && "terms".equals(aggsType)) {

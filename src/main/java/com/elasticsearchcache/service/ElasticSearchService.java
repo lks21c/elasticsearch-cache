@@ -10,7 +10,6 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +32,7 @@ public class ElasticSearchService {
 
     public HttpResponse executeHttpRequest(HttpMethod requestType, String url, ByteArrayEntity entity) throws IOException, MethodNotSupportedException {
         CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
-        HttpResponse httpResponse = null;
+        HttpResponse httpResponse;
 
         if (entity != null) {
             entity.setContentType("application/json");
