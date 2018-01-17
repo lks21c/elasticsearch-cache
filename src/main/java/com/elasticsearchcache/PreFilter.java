@@ -140,7 +140,7 @@ public class PreFilter extends ZuulFilter {
     }
 
     private String getRequestBody(HttpServletRequest request) throws IOException {
-        if (request != null) {
+        if (request != null && request.getReader() != null && request.getReader().lines() != null) {
             return request.getReader().lines().collect(Collectors.joining(System.lineSeparator())) + "\n";
         }
         return null;
