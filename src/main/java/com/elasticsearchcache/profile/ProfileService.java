@@ -32,13 +32,14 @@ public class ProfileService {
 
     public void putQueryProfile(String indexName, String interval, Map<String, Object> imap, Map<String, Object> qMap) {
         if (enableProfile) {
+            logger.info("putQueryProfile");
             HashMap<String, Object> clonedQMap = (HashMap<String, Object>) SerializationUtils.clone(new HashMap<>(qMap));
             Map<String, Object> query = (Map<String, Object>) clonedQMap.get("query");
 
             Map<String, Object> bool = (Map<String, Object>) query.get("bool");
             List<Map<String, Object>> must = (List<Map<String, Object>>) bool.get("must");
 
-            Long gte = null, lte = null;
+            long gte = -1L, lte = -1L;
             for (Map<String, Object> obj : must) {
                 Map<String, Object> range = (Map<String, Object>) obj.get("range");
                 if (range != null) {
@@ -58,11 +59,11 @@ public class ProfileService {
 
             String iMapStr = JsonUtil.convertAsString(imap);
             String qMapStr = JsonUtil.convertAsString(clonedQMap);
-            if (gte != null) {
-                qMapStr = qMapStr.replace(gte.toString(), "");
+            if (gte > 0) {
+                qMapStr = qMapStr.replace(String.valueOf(gte), "$$gte$$");
             }
-            if (lte != null) {
-                qMapStr = qMapStr.replace(lte.toString(), "");
+            if (lte > 0) {
+                qMapStr = qMapStr.replace(String.valueOf(lte), "$$lte$$");
             }
 
             IndexRequest ir = new IndexRequest(esProfileName, "info", id);

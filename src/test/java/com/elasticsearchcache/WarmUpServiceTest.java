@@ -14,7 +14,7 @@ public class WarmUpServiceTest {
     WarmUpService warmUpService;
 
     @Test
-    public void name() {
+    public void testWarmUpMinuteQueries() {
         warmUpService.warmUpMinuteQueries();
     }
 }

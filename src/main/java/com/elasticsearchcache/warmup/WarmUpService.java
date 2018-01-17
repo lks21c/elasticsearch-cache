@@ -56,7 +56,7 @@ public class WarmUpService {
             for (SearchHit hit : resp.getHits().getHits()) {
                 String value = (String) hit.getSourceAsMap().get("value");
 
-                logger.info("value = " + value);
+                logger.info("before value = " + value);
 
                 DateTime startDt = new DateTime();
                 startDt = startDt.withSecondOfMinute(0);
@@ -67,7 +67,7 @@ public class WarmUpService {
                 value = value.replace("$$gte$$", String.valueOf(startDt.getMillis()));
                 value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
 
-                logger.info("value = " + value);
+                logger.info("after value = " + value);
 
                 try {
                     cacheService.manipulateQuery(value);
