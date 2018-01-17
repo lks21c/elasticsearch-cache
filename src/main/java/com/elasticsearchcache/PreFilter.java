@@ -6,7 +6,6 @@ import com.elasticsearchcache.service.CacheService;
 import com.elasticsearchcache.service.ElasticSearchService;
 import com.elasticsearchcache.service.ParsingService;
 import com.elasticsearchcache.service.QueryPlanService;
-import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.vo.QueryPlan;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
@@ -136,7 +135,10 @@ public class PreFilter extends ZuulFilter {
     }
 
     private String getRequestBody(HttpServletRequest request) throws IOException {
-        return request.getReader().lines().collect(Collectors.joining(System.lineSeparator())) + "\n";
+        if (request != null) {
+            return request.getReader().lines().collect(Collectors.joining(System.lineSeparator())) + "\n";
+        }
+        return null;
     }
 
     public String getTargetUrl(HttpServletRequest request) {
