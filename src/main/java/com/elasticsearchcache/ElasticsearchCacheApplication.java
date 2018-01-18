@@ -16,6 +16,7 @@ import java.io.IOException;
 public class ElasticsearchCacheApplication {
 
 	public static void main(String[] args) {
+        System.setProperty("file.encoding","UTF-8");
         SpringApplication application = new SpringApplication(ElasticsearchCacheApplication.class);
         application.addListeners(new ApplicationPidFileWriter());
         application.run(args);
