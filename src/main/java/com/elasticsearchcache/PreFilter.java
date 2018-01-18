@@ -2,6 +2,7 @@ package com.elasticsearchcache;
 
 import com.elasticsearchcache.conts.EsUrl;
 import com.elasticsearchcache.conts.HttpMethod;
+import com.elasticsearchcache.performance.PerformanceService;
 import com.elasticsearchcache.service.CacheService;
 import com.elasticsearchcache.service.ElasticSearchService;
 import com.elasticsearchcache.service.ParsingService;
@@ -24,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -44,6 +46,9 @@ public class PreFilter extends ZuulFilter {
 
     @Autowired
     private QueryExecService queryExecService;
+
+    @Autowired
+    private PerformanceService performanceService;
 
     @Value("${zuul.routes.proxy.url}")
     private String esUrl;
@@ -119,7 +124,13 @@ public class PreFilter extends ZuulFilter {
                         long beforeQueries = System.currentTimeMillis();
                         HttpResponse res = esService.executeQuery(targetUrl, reqBody);
                         String resBody = EntityUtils.toString(res.getEntity());
-                        logger.info("resBody = " + resBody);
+                        Map<String, Object> resMap = parsingService.parseXContent(resBody);
+                        List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
+                        if (respes.size() > 0) {
+                            int took = (int) respes.get(0).get("took");
+                            logger.info("took = " + took);
+                            performanceService.putPerformance(reqBody, took);
+                        }
                         sb.append(resBody);
                         long afterQueries = System.currentTimeMillis() - beforeQueries;
                         logger.info("nocache afterQueries = " + afterQueries);
