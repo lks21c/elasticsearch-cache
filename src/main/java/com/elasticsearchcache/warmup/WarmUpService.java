@@ -17,6 +17,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -45,7 +46,7 @@ public class WarmUpService {
     @Value("${esc.profile.enabled}")
     private boolean enableProfile;
 
-//    @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 60000)
     public void warmUpMinuteQueries() {
         logger.info("warmup invoked");
 
@@ -66,30 +67,36 @@ public class WarmUpService {
             for (SearchHit hit : resp.getHits().getHits()) {
                 String value = (String) hit.getSourceAsMap().get("value");
 
-                DateTime startDt = new DateTime();
-                startDt = startDt.withSecondOfMinute(0);
-                startDt = startDt.withMillisOfSecond(0);
-                startDt = startDt.minusMinutes(10);
+                if (value.contains("date_histogram")) {
 
-                List<QueryPlan> queryPlanList = new ArrayList<>();
-                for (int i = 0; i < 9; i++) {
-                    logger.info("warmup startdt = " + startDt);
-                    DateTime endDt = startDt.plusMinutes(1).minusMillis(1);
-                    value = value.replace("$$gte$$", String.valueOf(startDt.getMillis()));
-                    value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
+                    DateTime startDt = new DateTime();
+                    startDt = startDt.withSecondOfMinute(0);
+                    startDt = startDt.withMillisOfSecond(0);
+                    startDt = startDt.minusMinutes(10);
 
-                    try {
-                        QueryPlan qp = cacheService.manipulateQuery(value);
-                        queryPlanList.add(qp);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (MethodNotSupportedException e) {
-                        e.printStackTrace();
+                    List<QueryPlan> queryPlanList = new ArrayList<>();
+                    for (int i = 0; i < 9; i++) {
+                        logger.info("warmup startdt = " + startDt);
+                        DateTime endDt = startDt.plusMinutes(1).minusMillis(1);
+                        value = value.replace("$$gte$$", String.valueOf(startDt.getMillis()));
+                        value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
+
+                        try {
+                            QueryPlan qp = cacheService.manipulateQuery(value);
+                            queryPlanList.add(qp);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (MethodNotSupportedException e) {
+                            e.printStackTrace();
+                        }
+
+                        startDt = startDt.plusMinutes(1);
                     }
+                    queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
 
-                    startDt = startDt.plusMinutes(1);
+                    logger.info("value = " + value);
+
                 }
-                queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
             }
         }
     }
