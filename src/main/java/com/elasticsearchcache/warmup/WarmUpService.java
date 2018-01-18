@@ -73,10 +73,10 @@ public class WarmUpService {
                     DateTime startDt = new DateTime();
                     startDt = startDt.withSecondOfMinute(0);
                     startDt = startDt.withMillisOfSecond(0);
-                    startDt = startDt.minusMinutes(10);
+                    startDt = startDt.minusMinutes(20);
 
-                    logger.info("warmup startdt = " + startDt);
                     DateTime endDt = new DateTime();
+                    logger.info("warmup startdt = " + startDt + " " + endDt);
                     value = value.replace("$$gte$$", String.valueOf(startDt.getMillis()));
                     value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
 
@@ -89,10 +89,11 @@ public class WarmUpService {
                         e.printStackTrace();
                     }
                 }
-                queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
-
 //                logger.info("value = " + value);
+                queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+                break;
             }
+
         }
     }
 }
