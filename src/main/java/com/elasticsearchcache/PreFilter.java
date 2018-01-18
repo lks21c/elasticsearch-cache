@@ -120,6 +120,7 @@ public class PreFilter extends ZuulFilter {
                         sb.append(body);
                         long afterQueries = System.currentTimeMillis() - beforeQueries;
                         logger.info("cache afterQueries = " + afterQueries);
+                        performanceService.putPerformance(reqBody, (int) afterQueries);
                     } else {
                         long beforeQueries = System.currentTimeMillis();
                         HttpResponse res = esService.executeQuery(targetUrl, reqBody);
