@@ -126,7 +126,7 @@ public class PreFilter extends ZuulFilter {
                         String resBody = EntityUtils.toString(res.getEntity());
                         Map<String, Object> resMap = parsingService.parseXContent(resBody);
                         List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
-                        if (respes.size() > 0) {
+                        if (respes.size() > 0 && !reqBody.contains(".kibana")) {
                             int took = (int) respes.get(0).get("took");
                             logger.info("took = " + took);
                             performanceService.putPerformance(reqBody, took);
