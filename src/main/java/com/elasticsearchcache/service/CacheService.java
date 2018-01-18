@@ -11,7 +11,10 @@ import com.elasticsearchcache.vo.CachePlan;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.elasticsearchcache.vo.QueryPlan;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.http.HttpResponse;
 import org.apache.http.MethodNotSupportedException;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -19,6 +22,7 @@ import org.joda.time.Days;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -39,6 +43,9 @@ public class CacheService {
 
     @Autowired
     private CachePlanService cachePlanService;
+
+    @Autowired
+    private ElasticSearchService esService;
 
     @Autowired
     @Qualifier("EsCacheRepositoryImpl")
@@ -64,6 +71,9 @@ public class CacheService {
         Map<String, Object> qMap = parsingService.parseXContent(arr[1]);
 
         List<String> idl = (List<String>) iMap.get("index");
+        logger.info("idl = " + JsonUtil.convertAsString(idl));
+        long indexSize = -1; //getTotalIndexSize(idl);
+        logger.info("total index size = " + indexSize);
         String indexName = IndexNameUtil.getIndexName(idl);
 
         for (String key : qMap.keySet()) {
@@ -133,12 +143,13 @@ public class CacheService {
         queryPlan.setCachePlan((CachePlan) SerializationUtils.clone(plan));
         queryPlan.setInterval(interval);
         queryPlan.setIndexName(indexName);
+        queryPlan.setIndexSize(indexSize);
         queryPlan.setQueryWithoutRange(JsonUtil.convertAsString(queryWithoutRange));
         queryPlan.setAggs(JsonUtil.convertAsString(aggs));
         queryPlan.setAggsType(aggsType);
 
         DateTime beforeCacheMills = new DateTime();
-        List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
+        List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, indexSize, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
         long afterCacheMills = new DateTime().getMillis() - beforeCacheMills.getMillis();
 
 //        logger.info("dhbList = " + JsonUtil.convertAsString(dhbList));
@@ -190,6 +201,33 @@ public class CacheService {
             }
             return queryPlan;
         }
+    }
+
+    private long getTotalIndexSize(List<String> idl) {
+        boolean isFirst = true;
+        StringBuilder sb = new StringBuilder();
+        for (String indexName : idl) {
+            sb.append(indexName);
+            if (!isFirst) {
+                sb.append(",");
+            }
+            isFirst = false;
+        }
+
+        long totalSize = 0;
+        try {
+            HttpResponse res = esService.executeHttpRequest(HttpMethod.GET, esUrl + "/_stats", new ByteArrayEntity("".getBytes()));
+            String body = EntityUtils.toString(res.getEntity());
+            String[] sizeArr = body.split("count");
+            String size = sizeArr[1].split(",")[0].replace("\":", "");
+            totalSize = Long.valueOf(size);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (MethodNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        return totalSize;
     }
 
     private Map<String, Object> appendDateHistogram(Map<String, Object> aggs, String interval) {
@@ -336,7 +374,7 @@ public class CacheService {
                 }
                 try {
                     if (cacheDhbList.size() > 0) {
-                        cacheRepository.putCache(queryPlan.getIndexName(), queryPlan.getQueryWithoutRange(), queryPlan.getAggs(), cacheDhbList);
+                        cacheRepository.putCache(queryPlan.getIndexName(), queryPlan.getIndexSize(), queryPlan.getQueryWithoutRange(), queryPlan.getAggs(), cacheDhbList);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();

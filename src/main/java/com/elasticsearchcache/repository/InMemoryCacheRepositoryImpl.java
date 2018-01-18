@@ -6,14 +6,12 @@ import com.elasticsearchcache.vo.DateHistogramBucket;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
-import org.joda.time.Days;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +42,7 @@ public class InMemoryCacheRepositoryImpl implements CacheRepository {
     }
 
     @Override
-    public List<DateHistogramBucket> getCache(String indexName, String query, String agg, DateTime startDt, DateTime endDt) throws IOException {
+    public List<DateHistogramBucket> getCache(String indexName, long indexSize, String query, String agg, DateTime startDt, DateTime endDt) throws IOException {
         String key = indexName + agg;
         logger.info("get cache " + key);
 
@@ -54,7 +52,7 @@ public class InMemoryCacheRepositoryImpl implements CacheRepository {
     }
 
     @Override
-    public void putCache(String indexName, String query, String agg, List<DateHistogramBucket> dhbList) throws IOException {
+    public void putCache(String indexName, long indexSize, String query, String agg, List<DateHistogramBucket> dhbList) throws IOException {
         logger.info("cache list = " + JsonUtil.convertAsString(dhbList));
 //        String key = indexName + query + agg;
 //        Map<String, Object> resMap = null;

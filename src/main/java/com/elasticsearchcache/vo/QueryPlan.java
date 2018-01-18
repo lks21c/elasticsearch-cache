@@ -20,6 +20,8 @@ public class QueryPlan implements Serializable {
 
     private String indexName;
 
+    private long indexSize;
+
     private String queryWithoutRange;
 
     private String aggs;
@@ -72,6 +74,14 @@ public class QueryPlan implements Serializable {
 
     public void setInterval(String interval) {
         this.interval = interval;
+    }
+
+    public long getIndexSize() {
+        return indexSize;
+    }
+
+    public void setIndexSize(long indexSize) {
+        this.indexSize = indexSize;
     }
 
     public String getIndexName() {

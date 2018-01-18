@@ -27,7 +27,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Base64Utils;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author lks21c
@@ -46,8 +49,8 @@ public class EsCacheRepositoryImpl implements CacheRepository {
     private String escCacheIndexName;
 
     @Override
-    public List<DateHistogramBucket> getCache(String indexName, String query, String agg, DateTime startDt, DateTime endDt) throws IOException {
-        String key = indexName + query + agg;
+    public List<DateHistogramBucket> getCache(String indexName, long indexSize, String query, String agg, DateTime startDt, DateTime endDt) throws IOException {
+        String key = indexName + indexSize + query + agg;
         logger.info("get cache " + key);
 
         List<QueryBuilder> qbList = new ArrayList<>();
@@ -86,8 +89,8 @@ public class EsCacheRepositoryImpl implements CacheRepository {
     }
 
     @Override
-    public void putCache(String indexName, String query, String agg, List<DateHistogramBucket> dhbList) throws JsonProcessingException {
-        String key = indexName + query + agg;
+    public void putCache(String indexName, long indexSize, String query, String agg, List<DateHistogramBucket> dhbList) throws JsonProcessingException {
+        String key = indexName + indexSize + query + agg;
         BulkRequest br = new BulkRequest();
         for (DateHistogramBucket dhb : dhbList) {
             Map<String, Object> bucket = dhb.getBucket();

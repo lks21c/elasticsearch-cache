@@ -10,7 +10,7 @@ import java.util.List;
  * @author lks21c
  */
 public interface CacheRepository {
-    public List<DateHistogramBucket> getCache(String indexName, String query, String agg, DateTime startDt, DateTime endDt) throws IOException;
+    public List<DateHistogramBucket> getCache(String indexName, long indexSize, String query, String agg, DateTime startDt, DateTime endDt) throws IOException;
 
-    public void putCache(String indexName, String query, String agg, List<DateHistogramBucket> dhbList) throws IOException;
+    public void putCache(String indexName, long indexSize, String query, String agg, List<DateHistogramBucket> dhbList) throws IOException;
 }
