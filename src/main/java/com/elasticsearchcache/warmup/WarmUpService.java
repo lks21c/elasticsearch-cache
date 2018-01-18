@@ -3,6 +3,7 @@ package com.elasticsearchcache.warmup;
 import com.elasticsearchcache.conts.EsUrl;
 import com.elasticsearchcache.service.CacheService;
 import com.elasticsearchcache.service.QueryExecService;
+import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.vo.QueryPlan;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.logging.log4j.LogManager;
@@ -64,39 +65,35 @@ public class WarmUpService {
         }
 
         if (resp != null) {
+            List<QueryPlan> queryPlanList = new ArrayList<>();
             for (SearchHit hit : resp.getHits().getHits()) {
                 String value = (String) hit.getSourceAsMap().get("value");
 
                 if (value.contains("date_histogram")) {
-
                     DateTime startDt = new DateTime();
                     startDt = startDt.withSecondOfMinute(0);
                     startDt = startDt.withMillisOfSecond(0);
                     startDt = startDt.minusMinutes(10);
 
-                    List<QueryPlan> queryPlanList = new ArrayList<>();
-                    for (int i = 0; i < 9; i++) {
-                        logger.info("warmup startdt = " + startDt);
-                        DateTime endDt = startDt.plusMinutes(1).minusMillis(1);
-                        value = value.replace("$$gte$$", String.valueOf(startDt.getMillis()));
-                        value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
+                    logger.info("warmup startdt = " + startDt);
+                    DateTime endDt = new DateTime();
+                    value = value.replace("$$gte$$", String.valueOf(startDt.getMillis()));
+                    value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
 
-                        try {
-                            QueryPlan qp = cacheService.manipulateQuery(value);
-                            queryPlanList.add(qp);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (MethodNotSupportedException e) {
-                            e.printStackTrace();
-                        }
-
-                        startDt = startDt.plusMinutes(1);
+                    try {
+                        QueryPlan qp = cacheService.manipulateQuery(value);
+                        queryPlanList.add(qp);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (MethodNotSupportedException e) {
+                        e.printStackTrace();
                     }
-                    queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
-
-                    logger.info("value = " + value);
-
                 }
+                queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+
+                logger.info("value = " + value);
+
+                break;
             }
         }
     }
