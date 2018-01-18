@@ -46,12 +46,15 @@ public class WarmUpService {
     @Value("${esc.warmup}")
     private boolean escWarmUp;
 
+    @Value("${esc.cache}")
+    private boolean escCache;
+
     @Value("${esc.cache.warmup.size}")
     private int esWarmUpSize;
 
     @Scheduled(fixedDelay = 1000 * 60 * 2)
     public void warmUpMinuteQueries() {
-        if (escWarmUp) {
+        if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
             startDt = startDt.withSecondOfMinute(0);
             startDt = startDt.withMillisOfSecond(0);
@@ -63,7 +66,7 @@ public class WarmUpService {
 
     @Scheduled(cron = "0 0 01 * * ?")
     public void warmUpDayQueries() {
-        if (escWarmUp) {
+        if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
             startDt = startDt.withSecondOfMinute(0);
             startDt = startDt.withMillisOfSecond(0);
