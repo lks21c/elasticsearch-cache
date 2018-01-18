@@ -50,6 +50,8 @@ public class WarmUpService {
     public void warmUpMinuteQueries() {
         logger.info("warmup invoked");
 
+        long startWarmUpTs = System.currentTimeMillis();
+
         SearchRequest sr = new SearchRequest(esProfileName).types("info");
         SearchSourceBuilder ssb = new SearchSourceBuilder();
         TermQueryBuilder tq = QueryBuilders.termQuery("interval", "1m");
@@ -100,6 +102,9 @@ public class WarmUpService {
             if (queryPlanList.size() > 0) {
                 queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
             }
+
+            long endWarmUpTs = System.currentTimeMillis() - startWarmUpTs;
+            logger.info("endWarmUpTs = " + endWarmUpTs);
         }
     }
 }
