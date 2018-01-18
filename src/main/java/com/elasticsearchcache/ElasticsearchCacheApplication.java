@@ -2,9 +2,13 @@ package com.elasticsearchcache;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.system.ApplicationPidFileWriter;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.io.File;
+import java.io.IOException;
 
 @SpringBootApplication
 @EnableZuulProxy
@@ -12,7 +16,9 @@ import org.springframework.context.annotation.Configuration;
 public class ElasticsearchCacheApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ElasticsearchCacheApplication.class, args);
+        SpringApplication application = new SpringApplication(ElasticsearchCacheApplication.class);
+        application.addListeners(new ApplicationPidFileWriter());
+        application.run(args);
 	}
 
     @Bean
