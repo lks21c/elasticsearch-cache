@@ -3,7 +3,6 @@ package com.elasticsearchcache.warmup;
 import com.elasticsearchcache.conts.EsUrl;
 import com.elasticsearchcache.service.CacheService;
 import com.elasticsearchcache.service.QueryExecService;
-import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.vo.QueryPlan;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.logging.log4j.LogManager;
@@ -90,9 +89,8 @@ public class WarmUpService {
                     }
                 }
 //                logger.info("value = " + value);
-                queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
-                break;
             }
+            queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
 
         }
     }
