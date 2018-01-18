@@ -46,7 +46,7 @@ public class WarmUpService {
     @Value("${esc.profile.enabled}")
     private boolean enableProfile;
 
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 1000 * 60 * 2)
     public void warmUpMinuteQueries() {
         logger.info("warmup invoked");
 
@@ -91,13 +91,15 @@ public class WarmUpService {
                 }
 //                logger.info("value = " + value);
 
-                if (queryPlanList.size() == 10) {
+                if (queryPlanList.size() == 1) {
                     queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
                     queryPlanList = new ArrayList<>();
                 }
             }
             logger.info("queryPlanList size = " + queryPlanList.size());
-            queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+            if (queryPlanList.size() > 0) {
+                queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+            }
         }
     }
 }
