@@ -130,11 +130,11 @@ public class PreFilter extends ZuulFilter {
                         if (respes.size() > 0 && !reqBody.contains(".kibana")) {
                             int took = (int) respes.get(0).get("took");
                             logger.info("took = " + took);
-                            performanceService.putPerformance(reqBody, took);
                         }
                         sb.append(resBody);
                         long afterQueries = System.currentTimeMillis() - beforeQueries;
                         logger.info("nocache afterQueries = " + afterQueries);
+                        performanceService.putPerformance(reqBody, (int) afterQueries);
                     }
 
                     if (sb.length() > 0) {
