@@ -30,7 +30,7 @@ public class ProfileService {
     @Value("${esc.profile.enabled}")
     private boolean enableProfile;
 
-    public void putQueryProfile(String indexName, String interval, Map<String, Object> imap, Map<String, Object> qMap) {
+    public void putQueryProfile(String indexName, String interval, Map<String, Object> imap, Map<String, Object> qMap, Map<String, Object> queryWithoutRange) {
         if (enableProfile) {
             logger.info("putQueryProfile");
             HashMap<String, Object> clonedQMap = (HashMap<String, Object>) SerializationUtils.clone(new HashMap<>(qMap));
@@ -51,7 +51,10 @@ public class ProfileService {
             }
             Map<String, Object> aggs = (Map<String, Object>) clonedQMap.get("aggs");
 
-            String key = indexName + JsonUtil.convertAsString(query) + JsonUtil.convertAsString(aggs);
+            String key = indexName + JsonUtil.convertAsString(queryWithoutRange) + JsonUtil.convertAsString(aggs);
+
+//            logger.info("profile key =  " + key);
+
             MurmurHash3.Hash128 hash = MurmurHash3.hash128(key.getBytes(), 0, key.getBytes().length, 0, new MurmurHash3.Hash128());
             String id = String.valueOf(hash.h1) + String.valueOf(hash.h2);
 

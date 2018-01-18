@@ -54,6 +54,7 @@ public class WarmUpService {
         SearchSourceBuilder ssb = new SearchSourceBuilder();
         TermQueryBuilder tq = QueryBuilders.termQuery("interval", "1m");
         ssb.query(tq);
+        ssb.size(1000);
         sr.source(ssb);
         SearchResponse resp = null;
         try {
@@ -89,9 +90,14 @@ public class WarmUpService {
                     }
                 }
 //                logger.info("value = " + value);
-            }
-            queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
 
+//                if (queryPlanList.size() == 10) {
+//                    queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+//                    queryPlanList = new ArrayList<>();
+//                }
+            }
+            logger.info("queryPlanList size = " + queryPlanList.size());
+//            queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
         }
     }
 }

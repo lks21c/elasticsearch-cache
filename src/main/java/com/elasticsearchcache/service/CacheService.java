@@ -121,7 +121,7 @@ public class CacheService {
         String interval = (String) rtnMap.get("interval");
         String aggsType = (String) rtnMap.get("aggsType");
 
-        profileService.putQueryProfile(indexName, interval, iMap, qMap);
+        profileService.putQueryProfile(indexName, interval, iMap, qMap, queryWithoutRange);
 
         // handle terms
         if (enableTermsCache && "terms".equals(aggsType)) {
