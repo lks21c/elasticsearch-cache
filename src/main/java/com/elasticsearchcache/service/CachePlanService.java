@@ -26,7 +26,7 @@ public class CachePlanService {
         CachePlan plan = checkCachePlan(interval, startDt, endDt);
         if (interval != null) {
             if (targetDt.getMillis() >= plan.getStartDt().getMillis()
-                    && targetDt.getMillis() < plan.getEndDt().getMillis()) {
+                    && targetDt.getMillis() < plan.getEndDt().minus(lastEndTimeTs).getMillis()) {
                 return true;
             }
         }
