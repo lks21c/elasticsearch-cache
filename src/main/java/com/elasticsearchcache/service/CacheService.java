@@ -110,7 +110,7 @@ public class CacheService {
         String interval = (String) rtnMap.get("interval");
         String aggsType = (String) rtnMap.get("aggsType");
 
-        profileService.putQueryProfile(indexName, interval,iMap,qMap);
+        profileService.putQueryProfile(indexName, interval, iMap, qMap);
 
         // handle terms
         if (enableTermsCache && "terms".equals(aggsType)) {
@@ -302,7 +302,9 @@ public class CacheService {
                 List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
                 for (Map<String, Object> bucket : bucketList) {
                     String key_as_string = (String) bucket.get("key_as_string");
-                    logger.info("for key_as_string = " + key_as_string + " " + "key = " + bucket.get("key"));
+
+//                    logger.info("for key_as_string = " + key_as_string + " " + "key = " + bucket.get("key"));
+
                     try {
                         Long ts = (Long) bucket.get("key");
                         DateHistogramBucket dhb = new DateHistogramBucket(new DateTime(ts), bucket);

@@ -5,7 +5,7 @@ import com.elasticsearchcache.conts.HttpMethod;
 import com.elasticsearchcache.service.CacheService;
 import com.elasticsearchcache.service.ElasticSearchService;
 import com.elasticsearchcache.service.ParsingService;
-import com.elasticsearchcache.service.QueryPlanService;
+import com.elasticsearchcache.service.QueryExecService;
 import com.elasticsearchcache.vo.QueryPlan;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
@@ -43,7 +43,7 @@ public class PreFilter extends ZuulFilter {
     CacheService cacheService;
 
     @Autowired
-    private QueryPlanService queryPlanService;
+    private QueryExecService queryExecService;
 
     @Value("${zuul.routes.proxy.url}")
     private String esUrl;
@@ -107,7 +107,7 @@ public class PreFilter extends ZuulFilter {
 //                            logger.info("queryPlan = " + JsonUtil.convertAsString(queryPlan));
                             queryPlanList.add(queryPlan);
                         }
-                        String body = queryPlanService.executeQuery(targetUrl, queryPlanList);
+                        String body = queryExecService.executeQuery(targetUrl, queryPlanList);
                         if (StringUtils.isEmpty(body)) {
                             logger.info("esc cancelled.");
                             return null;

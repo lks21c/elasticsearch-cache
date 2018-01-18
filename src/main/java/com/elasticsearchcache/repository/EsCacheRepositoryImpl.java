@@ -92,7 +92,9 @@ public class EsCacheRepositoryImpl implements CacheRepository {
         for (DateHistogramBucket dhb : dhbList) {
             Map<String, Object> bucket = dhb.getBucket();
             String key_as_string = (String) bucket.get("key_as_string");
+
             logger.info("put cache = " + key_as_string);
+
             Long ts = (Long) bucket.get("key");
             String str = key + "_" + ts;
             MurmurHash3.Hash128 hash = MurmurHash3.hash128(str.getBytes(), 0, str.getBytes().length, 0, new MurmurHash3.Hash128());

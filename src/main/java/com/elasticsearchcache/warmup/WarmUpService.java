@@ -2,7 +2,7 @@ package com.elasticsearchcache.warmup;
 
 import com.elasticsearchcache.conts.EsUrl;
 import com.elasticsearchcache.service.CacheService;
-import com.elasticsearchcache.service.QueryPlanService;
+import com.elasticsearchcache.service.QueryExecService;
 import com.elasticsearchcache.vo.QueryPlan;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.logging.log4j.LogManager;
@@ -17,7 +17,6 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -35,7 +34,7 @@ public class WarmUpService {
     private CacheService cacheService;
 
     @Autowired
-    private QueryPlanService queryPlanService;
+    private QueryExecService queryExecService;
 
     @Value("${zuul.routes.proxy.url}")
     private String esUrl;
@@ -90,7 +89,7 @@ public class WarmUpService {
 
                     startDt = startDt.plusMinutes(1);
                 }
-                queryPlanService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+                queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
             }
         }
     }

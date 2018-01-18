@@ -23,8 +23,8 @@ import java.util.Map;
  * @author lks21c
  */
 @Service
-public class QueryPlanService {
-    private static Logger logger = LoggerFactory.getLogger(QueryPlanService.class);
+public class QueryExecService {
+    private static Logger logger = LoggerFactory.getLogger(QueryExecService.class);
 
     @Autowired
     ElasticSearchService esService;
@@ -106,6 +106,7 @@ public class QueryPlanService {
                 }
 
                 logger.info("partial cache size = " + queryPlanList.get(i).getDhbList().size());
+//                logger.info("partial cache = " + JsonUtil.convertAsString(queryPlanList.get(i).getDhbList()));
                 mergedDhbList.addAll(queryPlanList.get(i).getDhbList());
 
                 List<DateHistogramBucket> postDhbList = null;
