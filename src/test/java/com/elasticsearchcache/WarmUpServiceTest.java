@@ -15,6 +15,13 @@ public class WarmUpServiceTest {
 
     @Test
     public void testWarmUpMinuteQueries() {
+        // minute
         warmUpService.warmUpMinuteQueries();
+    }
+
+    @Test
+    public void testWarmUpDayQueries() {
+        //day
+        warmUpService.warmUpDayQueries();
     }
 }
