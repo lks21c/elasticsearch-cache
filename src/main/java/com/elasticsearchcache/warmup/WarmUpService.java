@@ -52,132 +52,84 @@ public class WarmUpService {
     @Scheduled(fixedDelay = 1000 * 60 * 2)
     public void warmUpMinuteQueries() {
         if (escWarmUp) {
-            logger.info("warmup invoked");
-
-            long startWarmUpTs = System.currentTimeMillis();
-
-            SearchRequest sr = new SearchRequest(esProfileName).types("info");
-            SearchSourceBuilder ssb = new SearchSourceBuilder();
-            TermQueryBuilder tq = QueryBuilders.termQuery("interval", "1m");
-            ssb.query(tq);
-            ssb.size(1000);
-            sr.source(ssb);
-            SearchResponse resp = null;
-            try {
-                resp = restClient.search(sr);
-                logger.info("resp = " + resp.toString());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            if (resp != null) {
-                List<QueryPlan> queryPlanList = new ArrayList<>();
-                for (SearchHit hit : resp.getHits().getHits()) {
-                    String value = (String) hit.getSourceAsMap().get("value");
-
-                    if (value.contains("date_histogram")) {
-                        DateTime startDt = new DateTime();
-                        startDt = startDt.withSecondOfMinute(0);
-                        startDt = startDt.withMillisOfSecond(0);
-                        startDt = startDt.minusMinutes(20);
-
-                        DateTime endDt = new DateTime();
-                        logger.info("warmup startdt = " + startDt + " " + endDt);
-                        value = value.replace("$$gte$$", String.valueOf(startDt.getMillis()));
-                        value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
-
-                        try {
-                            QueryPlan qp = cacheService.manipulateQuery(value);
-                            queryPlanList.add(qp);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (MethodNotSupportedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-//                logger.info("value = " + value);
-
-                    if (queryPlanList.size() == esWarmUpSize) {
-                        queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
-                        queryPlanList = new ArrayList<>();
-                    }
-                }
-                logger.info("queryPlanList size = " + queryPlanList.size());
-                if (queryPlanList.size() > 0) {
-                    queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
-                }
-
-                long endWarmUpTs = System.currentTimeMillis() - startWarmUpTs;
-                logger.info("endWarmUpTs = " + endWarmUpTs);
-            }
+            DateTime startDt = new DateTime();
+            startDt = startDt.withSecondOfMinute(0);
+            startDt = startDt.withMillisOfSecond(0);
+            startDt = startDt.minusMinutes(20);
+            DateTime endDt = new DateTime();
+            warmUp("1m", startDt, endDt);
         }
     }
 
     @Scheduled(cron = "0 0 01 * * ?")
     public void warmUpDayQueries() {
         if (escWarmUp) {
-            logger.info("warmup invoked");
+            DateTime startDt = new DateTime();
+            startDt = startDt.withSecondOfMinute(0);
+            startDt = startDt.withMillisOfSecond(0);
+            startDt = startDt.withMinuteOfHour(0);
+            startDt = startDt.withHourOfDay(0);
+            DateTime endDt = startDt.plusDays(1).minus(1);
+            startDt = startDt.minusDays(7);
 
-            long startWarmUpTs = System.currentTimeMillis();
+            warmUp("1d", startDt, endDt);
+        }
+    }
 
-            SearchRequest sr = new SearchRequest(esProfileName).types("info");
-            SearchSourceBuilder ssb = new SearchSourceBuilder();
-            TermQueryBuilder tq = QueryBuilders.termQuery("interval", "1d");
-            ssb.query(tq);
-            ssb.size(1000);
-            sr.source(ssb);
-            SearchResponse resp = null;
-            try {
-                resp = restClient.search(sr);
-                logger.info("resp = " + resp.toString());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    private void warmUp(String interval, DateTime startDt, DateTime endDt) {
 
-            if (resp != null) {
-                List<QueryPlan> queryPlanList = new ArrayList<>();
-                for (SearchHit hit : resp.getHits().getHits()) {
-                    String value = (String) hit.getSourceAsMap().get("value");
+        logger.info("warmup invoked");
 
-                    if (value.contains("date_histogram")) {
-                        DateTime startDt = new DateTime();
-                        startDt = startDt.withSecondOfMinute(0);
-                        startDt = startDt.withMillisOfSecond(0);
-                        startDt = startDt.withMinuteOfHour(0);
-                        startDt = startDt.withHourOfDay(0);
+        long startWarmUpTs = System.currentTimeMillis();
 
-                        DateTime endDt = startDt.plusDays(1).minus(1);
+        SearchRequest sr = new SearchRequest(esProfileName).types("info");
+        SearchSourceBuilder ssb = new SearchSourceBuilder();
+        TermQueryBuilder tq = QueryBuilders.termQuery("interval", interval);
+        ssb.query(tq);
+        ssb.size(1000);
+        sr.source(ssb);
+        SearchResponse resp = null;
+        try {
+            resp = restClient.search(sr);
+            logger.info("resp = " + resp.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-                        startDt = startDt.minusDays(7);
+        if (resp != null) {
+            List<QueryPlan> queryPlanList = new ArrayList<>();
+            for (SearchHit hit : resp.getHits().getHits()) {
+                String value = (String) hit.getSourceAsMap().get("value");
 
-                        logger.info("warmup day startdt = " + startDt + " " + endDt);
-                        value = value.replace("$$gte$$", String.valueOf(startDt.getMillis()));
-                        value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
+                if (value.contains("date_histogram")) {
+                    logger.info("warmup startdt = " + startDt + " " + endDt);
+                    value = value.replace("$$gte$$", String.valueOf(startDt.getMillis()));
+                    value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
 
-                        try {
-                            QueryPlan qp = cacheService.manipulateQuery(value);
-                            queryPlanList.add(qp);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (MethodNotSupportedException e) {
-                            e.printStackTrace();
-                        }
+                    try {
+                        QueryPlan qp = cacheService.manipulateQuery(value);
+                        queryPlanList.add(qp);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (MethodNotSupportedException e) {
+                        e.printStackTrace();
                     }
+                }
 //                logger.info("value = " + value);
 
-                    if (queryPlanList.size() == esWarmUpSize) {
-                        queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
-                        queryPlanList = new ArrayList<>();
-                    }
-                }
-                logger.info("queryPlanList size = " + queryPlanList.size());
-                if (queryPlanList.size() > 0) {
+                if (queryPlanList.size() == esWarmUpSize) {
                     queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+                    queryPlanList = new ArrayList<>();
                 }
-
-                long endWarmUpTs = System.currentTimeMillis() - startWarmUpTs;
-                logger.info("endWarmUpTs = " + endWarmUpTs);
             }
+            logger.info("queryPlanList size = " + queryPlanList.size());
+            if (queryPlanList.size() > 0) {
+                queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+            }
+
+            long endWarmUpTs = System.currentTimeMillis() - startWarmUpTs;
+            logger.info("endWarmUpTs = " + endWarmUpTs);
         }
+
     }
 }
