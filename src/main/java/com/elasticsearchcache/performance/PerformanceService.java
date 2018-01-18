@@ -23,6 +23,9 @@ public class PerformanceService {
     @Value("${zuul.routes.proxy.url}")
     private String esUrl;
 
+    @Value("${esc.performance.enabled}")
+    private boolean enablePerformance;
+
     @Value("${esc.performance.index.name}")
     private String esPerformanceName;
 
@@ -30,29 +33,30 @@ public class PerformanceService {
     private RestHighLevelClient restClient;
 
     public void putPerformance(String reqBody, int took) {
+        if (enablePerformance) {
+            IndexRequest ir = new IndexRequest(esPerformanceName, "info");
+            Map<String, Object> source = new HashMap<>();
+            try {
+                source.put("hostname", InetAddress.getLocalHost().getHostName());
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            source.put("query", reqBody);
+            source.put("latency", took);
+            source.put("ts", System.currentTimeMillis());
+            ir.source(source);
 
-        IndexRequest ir = new IndexRequest(esPerformanceName, "info");
-        Map<String, Object> source = new HashMap<>();
-        try {
-            source.put("hostname", InetAddress.getLocalHost().getHostName());
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
+            restClient.indexAsync(ir, new ActionListener<IndexResponse>() {
+                @Override
+                public void onResponse(IndexResponse indexResponse) {
+
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+
+                }
+            });
         }
-        source.put("query", reqBody);
-        source.put("latency", took);
-        source.put("ts", System.currentTimeMillis());
-        ir.source(source);
-
-        restClient.indexAsync(ir, new ActionListener<IndexResponse>() {
-            @Override
-            public void onResponse(IndexResponse indexResponse) {
-
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-
-            }
-        });
     }
 }
