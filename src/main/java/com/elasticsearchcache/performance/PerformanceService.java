@@ -24,18 +24,18 @@ public class PerformanceService {
     @Value("${esc.performance.index.name}")
     private String esPerformanceName;
 
+    @Value("${hostname}")
+    private String hostname;
+
     @Autowired
     private RestHighLevelClient restClient;
 
     public void putPerformance(String reqBody, int took) {
         if (enablePerformance) {
             IndexRequest ir = new IndexRequest(esPerformanceName, "info");
+
             Map<String, Object> source = new HashMap<>();
-            try {
-                source.put("hostname", InetAddress.getLocalHost().getHostName());
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
+            source.put("hostname", hostname);
             source.put("query", reqBody);
             source.put("latency", took);
             source.put("ts", System.currentTimeMillis());
