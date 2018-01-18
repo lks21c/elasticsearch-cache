@@ -1,6 +1,7 @@
 package com.elasticsearchcache.service;
 
 import com.elasticsearchcache.conts.CacheMode;
+import com.elasticsearchcache.conts.EsUrl;
 import com.elasticsearchcache.profile.ProfileService;
 import com.elasticsearchcache.repository.CacheRepository;
 import com.elasticsearchcache.util.IndexNameUtil;
@@ -117,6 +118,8 @@ public class CacheService {
             aggs = appendDateHistogram(aggs, getIntervalTerms(indexName, startDt, endDt));
             qMap.put("aggs", aggs);
         }
+
+        logger.info("manipulated curl -X POST -L '" + esUrl + EsUrl.SUFFIX_MULTI_SEARCH + "' " + " --data '" + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n" + "'");
 
         CachePlan plan = cachePlanService.checkCachePlan(interval, startDt, endDt);
         logger.info("cachePlan getPreStartDt = " + plan.getPreStartDt());

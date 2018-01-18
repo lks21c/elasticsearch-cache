@@ -7,6 +7,7 @@ import com.elasticsearchcache.vo.DateHistogramBucket;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +18,9 @@ import java.util.List;
 @Service
 public class CachePlanService {
     private static final Logger logger = LogManager.getLogger(CacheService.class);
+
+    @Value("${esc.cache.lastendtime.ts}")
+    private long lastEndTimeTs;
 
     public boolean checkCacheable(String interval, DateTime targetDt, DateTime startDt, DateTime endDt) {
         CachePlan plan = checkCachePlan(interval, startDt, endDt);
@@ -30,6 +34,10 @@ public class CachePlanService {
     }
 
     public CachePlan checkCachePlan(String interval, DateTime startDt, DateTime endDt) {
+        DateTime intendedEndDt = endDt.minus(lastEndTimeTs);
+        logger.info("endDt = " + endDt);
+        logger.info("intendedEndDt = " + intendedEndDt);
+
         CachePlan cachePlan = new CachePlan();
         if (interval != null) {
             int periodUnit = PeriodUtil.getPeriodUnit(interval);
@@ -45,15 +53,26 @@ public class CachePlanService {
                 cachePlan.setStartDt(newStartDt);
             }
 
-            if (PeriodUtil.getRestMills(endDt, periodUnit) == periodUnit - 1) { //end range doesn't exist
-                cachePlan.setEndDt(endDt);
-            } else { //end range exists
+            logger.info("yaho = " + String.valueOf(new DateTime().minus(1000).getMillis() - intendedEndDt.getMillis()));
+            if (new DateTime().minus(1000).getMillis() - intendedEndDt.getMillis() <= lastEndTimeTs) {
+                logger.info("yesyes");
                 DateTime postEndDt = endDt;
-                DateTime postStartDt = endDt.minus(PeriodUtil.getRestMills(endDt, periodUnit));
+                DateTime postStartDt = intendedEndDt.minus(PeriodUtil.getRestMills(intendedEndDt, periodUnit));
                 DateTime newEndDt = postStartDt.minusMillis(1);
                 cachePlan.setPostStartDt(postStartDt);
                 cachePlan.setPostEndDt(postEndDt);
                 cachePlan.setEndDt(newEndDt);
+            } else {
+                if (PeriodUtil.getRestMills(endDt, periodUnit) == periodUnit - 1) { //end range doesn't exist
+                    cachePlan.setEndDt(endDt);
+                } else { //end range exists
+                    DateTime postEndDt = endDt;
+                    DateTime postStartDt = endDt.minus(PeriodUtil.getRestMills(endDt, periodUnit));
+                    DateTime newEndDt = postStartDt.minusMillis(1);
+                    cachePlan.setPostStartDt(postStartDt);
+                    cachePlan.setPostEndDt(postEndDt);
+                    cachePlan.setEndDt(newEndDt);
+                }
             }
         }
         return cachePlan;
