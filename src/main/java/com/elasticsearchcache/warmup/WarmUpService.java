@@ -91,13 +91,13 @@ public class WarmUpService {
                 }
 //                logger.info("value = " + value);
 
-//                if (queryPlanList.size() == 10) {
-//                    queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
-//                    queryPlanList = new ArrayList<>();
-//                }
+                if (queryPlanList.size() == 10) {
+                    queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+                    queryPlanList = new ArrayList<>();
+                }
             }
             logger.info("queryPlanList size = " + queryPlanList.size());
-//            queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+            queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
         }
     }
 }
