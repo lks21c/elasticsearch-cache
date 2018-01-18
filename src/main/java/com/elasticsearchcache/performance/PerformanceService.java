@@ -1,6 +1,5 @@
 package com.elasticsearchcache.performance;
 
-import com.elasticsearchcache.service.ElasticSearchService;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
@@ -16,10 +15,6 @@ import java.util.Map;
 
 @Service
 public class PerformanceService {
-
-    @Autowired
-    private ElasticSearchService esService;
-
     @Value("${zuul.routes.proxy.url}")
     private String esUrl;
 
