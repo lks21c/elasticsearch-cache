@@ -46,6 +46,9 @@ public class WarmUpService {
     @Value("${esc.profile.enabled}")
     private boolean enableProfile;
 
+    @Value("${esc.cache.warmup.size}")
+    private int esWarmUpSize;
+
     @Scheduled(fixedDelay = 1000 * 60 * 2)
     public void warmUpMinuteQueries() {
         logger.info("warmup invoked");
@@ -93,7 +96,7 @@ public class WarmUpService {
                 }
 //                logger.info("value = " + value);
 
-                if (queryPlanList.size() == 1) {
+                if (queryPlanList.size() == esWarmUpSize) {
                     queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
                     queryPlanList = new ArrayList<>();
                 }
