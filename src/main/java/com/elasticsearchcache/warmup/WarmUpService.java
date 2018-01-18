@@ -91,9 +91,7 @@ public class WarmUpService {
                 }
                 queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
 
-                logger.info("value = " + value);
-
-                break;
+//                logger.info("value = " + value);
             }
         }
     }
