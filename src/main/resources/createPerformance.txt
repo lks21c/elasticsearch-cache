@@ -24,6 +24,11 @@ PUT /esc_performance?master_timeout=5m
           "store": false,
           "doc_values": false
         },
+        "indexName": {
+          "type": "keyword",
+          "store": false,
+          "doc_values": true
+        },
         "latency": {
           "type": "integer",
           "store": false,
