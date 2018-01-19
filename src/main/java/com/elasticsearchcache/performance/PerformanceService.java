@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,6 +22,12 @@ public class PerformanceService {
     @Value("${esc.performance.index.name}")
     private String esPerformanceName;
 
+    @Value("${esc.profile.index.name}")
+    private String esProfileName;
+
+    @Value("${esc.cache.index.name}")
+    private String esCacheName;
+
     @Value("${hostname}")
     private String hostname;
 
@@ -31,7 +35,10 @@ public class PerformanceService {
     private RestHighLevelClient restClient;
 
     public void putPerformance(String reqBody, int took) {
-        if (enablePerformance) {
+        if (enablePerformance && !reqBody.contains(".kibana")
+                && !reqBody.contains(esPerformanceName)
+                && !reqBody.contains(esProfileName)
+                && !reqBody.contains(esCacheName)) {
             IndexRequest ir = new IndexRequest(esPerformanceName, "info");
 
             Map<String, Object> source = new HashMap<>();
