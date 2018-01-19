@@ -117,6 +117,9 @@ public class PreFilter extends ZuulFilter {
                         String body = queryExecService.executeQuery(targetUrl, queryPlanList);
                         if (StringUtils.isEmpty(body)) {
                             logger.info("esc cancelled.");
+                            long afterQueries = System.currentTimeMillis() - beforeQueries;
+                            logger.info("cache afterQueries = " + afterQueries);
+                            performanceService.putPerformance(reqBody, (int) afterQueries);
                             return null;
                         }
                         sb.append(body);
