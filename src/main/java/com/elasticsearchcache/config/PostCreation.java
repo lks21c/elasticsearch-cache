@@ -208,6 +208,11 @@ public class PostCreation {
                 "          \"type\": \"keyword\",\n" +
                 "          \"store\": false,\n" +
                 "          \"doc_values\": true\n" +
+                "        },\n"
+                + "        \"dashboardName\": {\n" +
+                "          \"type\": \"keyword\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": true\n" +
                 "        },\n" +
                 "        \"latency\": {\n" +
                 "          \"type\": \"integer\",\n" +

@@ -56,6 +56,9 @@ public class PreFilter extends ZuulFilter {
     @Value("${esc.cache}")
     private Boolean esCache;
 
+    @Value("${esc.performance.enabled}")
+    private boolean enablePerformance;
+
     private static final String PROXY = "proxy";
 
     @Override
@@ -80,7 +83,6 @@ public class PreFilter extends ZuulFilter {
 
         //TODO: 임시로 처리, 지울 예정
         if (request.getRequestURI().equals("/proxy/.kibana/config/_search") ||
-                request.getRequestURI().equals("/proxy/_mget") ||
                 request.getRequestURI().equals("/proxy/_cluster/settings") ||
                 request.getRequestURI().equals("/proxy/_nodes/_local") ||
                 request.getRequestURI().equals("/proxy/_nodes") ||
@@ -93,15 +95,13 @@ public class PreFilter extends ZuulFilter {
 
         try {
             String targetUrl = getTargetUrl(request);
-            logger.info("request = " + targetUrl);
+//            logger.info("request = " + targetUrl);
             StringBuilder sb = new StringBuilder();
             if (HttpMethod.POST.equals(request.getMethod())) {
 
-                String reqBody = getRequestBody(request);
-                logger.info("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
-
                 if (request.getRequestURI().contains(EsUrl.SUFFIX_MULTI_SEARCH)) {
-
+                    String reqBody = getRequestBody(request);
+                    logger.info("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
 
                     handleRequestHeader(request);
 
@@ -145,9 +145,15 @@ public class PreFilter extends ZuulFilter {
                     } else {
                         logger.error("original request invoked.");
                     }
+                } else if (request.getRequestURI().contains(EsUrl.SUFFIX_MULTI_GET)) {
+                    if (enablePerformance) {
+                        String reqBody = getRequestBody(request);
+                        if (!reqBody.contains("\"_type\":\"config\"")) {
+                            String resBody = performanceService.putDashboardCntAndReturnRes(reqBody);
+                            setZuulResponse(ctx, resBody);
+                        }
+                    }
                 }
-            } else {
-                logger.info("not post request = " + request.getMethod() + " " + targetUrl);
             }
         } catch (Exception e) {
             e.printStackTrace();

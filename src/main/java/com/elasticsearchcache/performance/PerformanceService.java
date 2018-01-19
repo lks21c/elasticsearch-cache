@@ -1,9 +1,13 @@
 package com.elasticsearchcache.performance;
 
-import com.elasticsearchcache.service.CacheService;
+import com.elasticsearchcache.conts.EsUrl;
+import com.elasticsearchcache.service.ElasticSearchService;
 import com.elasticsearchcache.service.ParsingService;
 import com.elasticsearchcache.util.IndexNameUtil;
 import com.elasticsearchcache.util.JsonUtil;
+import org.apache.http.HttpResponse;
+import org.apache.http.MethodNotSupportedException;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.ActionListener;
@@ -14,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +50,9 @@ public class PerformanceService {
 
     @Autowired
     private ParsingService parsingService;
+
+    @Autowired
+    private ElasticSearchService esService;
 
     public void putPerformance(String reqBody, int took) {
         if (enablePerformance && !reqBody.contains(".kibana")
@@ -83,5 +91,64 @@ public class PerformanceService {
                 }
             });
         }
+    }
+
+    public String putDashboardCntAndReturnRes(String reqBody) {
+        if (enablePerformance) {
+            String resBody = null;
+            try {
+                HttpResponse res = esService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_GET, reqBody);
+                resBody = EntityUtils.toString(res.getEntity());
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (MethodNotSupportedException e) {
+                e.printStackTrace();
+            }
+
+//            logger.info("resBody = " + resBody);
+
+            Map<String, Object> reqMap = parsingService.parseXContent(reqBody);
+            List<Map<String, Object>> reqMapDocs = (List<Map<String, Object>>) reqMap.get("docs");
+            String type = null;
+            if (reqMapDocs != null && reqMapDocs.size() > 0) {
+                if (reqMapDocs.size() > 0) {
+                    type = (String) reqMapDocs.get(0).get("_type");
+                }
+            }
+
+            logger.info("type = " + type);
+
+            Map<String, Object> map = parsingService.parseXContent(resBody);
+            List<Map<String, Object>> docs = (List<Map<String, Object>>) map.get("docs");
+            String title = null;
+            if (docs != null && docs.size() > 0) {
+                Map<String, Object> source = (Map<String, Object>) docs.get(0).get("_source");
+                title = (String) source.get("title");
+            }
+
+            if ("dashboard".equals(type)) {
+                IndexRequest ir = new IndexRequest(esPerformanceName, "info");
+
+                Map<String, Object> source = new HashMap<>();
+                source.put("hostname", hostname);
+                source.put("dashboardName", title);
+                source.put("ts", System.currentTimeMillis());
+                ir.source(source);
+
+                restClient.indexAsync(ir, new ActionListener<IndexResponse>() {
+                    @Override
+                    public void onResponse(IndexResponse indexResponse) {
+
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+
+                    }
+                });
+            }
+            return resBody;
+        }
+        return null;
     }
 }
