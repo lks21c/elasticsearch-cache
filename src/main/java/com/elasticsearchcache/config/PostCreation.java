@@ -27,6 +27,9 @@ public class PostCreation {
     @Value("${esc.profile.index.name}")
     private String esProfileName;
 
+    @Value("${esc.performance.index.name}")
+    private String esPerformanceName;
+
     @Bean
     @PostConstruct
     public String createProfileIndex() {
@@ -165,6 +168,86 @@ public class PostCreation {
                         "}";
         try {
             esService.executeHttpRequest(HttpMethod.PUT, esUrl + "/" + esCacheName, new ByteArrayEntity(body.getBytes()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (MethodNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return "ok";
+    }
+
+    @Bean
+    @PostConstruct
+    public String createPerformanceIndex() {
+        String body = "{\n" +
+                "  \"settings\": {\n" +
+                "    \"number_of_shards\": 3,\n" +
+                "    \"number_of_replicas\": 1,\n" +
+                "    \"refresh_interval\": \"10s\"\n" +
+                "  },\n" +
+                "  \"mappings\": {\n" +
+                "    \"info\": {\n" +
+                "      \"_all\": {\n" +
+                "        \"enabled\": false\n" +
+                "      },\n" +
+                "      \"_source\": {\n" +
+                "        \"enabled\": true\n" +
+                "      },\n" +
+                "      \"properties\": {\n" +
+                "        \"hostname\": {\n" +
+                "          \"type\": \"keyword\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": true\n" +
+                "        },\n" +
+                "        \"query\": {\n" +
+                "          \"type\": \"keyword\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": false\n" +
+                "        },\n" +
+                "        \"indexName\": {\n" +
+                "          \"type\": \"keyword\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": true\n" +
+                "        },\n" +
+                "        \"latency\": {\n" +
+                "          \"type\": \"integer\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": true\n" +
+                "        },\n" +
+                "        \"ts\": {\n" +
+                "          \"type\": \"date\",\n" +
+                "          \"store\": false\n" +
+                "        }\n" +
+                "      },\n" +
+                "      \"dynamic_templates\": [\n" +
+                "        {\n" +
+                "          \"unindexed_text\": {\n" +
+                "            \"match_mapping_type\": \"text\",\n" +
+                "            \"mapping\": {\n" +
+                "              \"type\": \"keyword\",\n" +
+                "              \"index\": true,\n" +
+                "              \"doc_values\": true,\n" +
+                "              \"store\": false\n" +
+                "            }\n" +
+                "          }\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"unindexed_text\": {\n" +
+                "            \"match_mapping_type\": \"string\",\n" +
+                "            \"mapping\": {\n" +
+                "              \"type\": \"keyword\",\n" +
+                "              \"index\": true,\n" +
+                "              \"doc_values\": true,\n" +
+                "              \"store\": false\n" +
+                "            }\n" +
+                "          }\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+        try {
+            esService.executeHttpRequest(HttpMethod.PUT, esUrl + "/" + esPerformanceName, new ByteArrayEntity(body.getBytes()));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (MethodNotSupportedException e) {
