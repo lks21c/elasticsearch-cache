@@ -96,10 +96,12 @@ public class PreFilter extends ZuulFilter {
             logger.info("request = " + targetUrl);
             StringBuilder sb = new StringBuilder();
             if (HttpMethod.POST.equals(request.getMethod())) {
-                if (request.getRequestURI().contains(EsUrl.SUFFIX_MULTI_SEARCH)) {
-                    String reqBody = getRequestBody(request);
 
-                    logger.info("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
+                String reqBody = getRequestBody(request);
+                logger.info("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
+
+                if (request.getRequestURI().contains(EsUrl.SUFFIX_MULTI_SEARCH)) {
+
 
                     handleRequestHeader(request);
 
@@ -144,6 +146,8 @@ public class PreFilter extends ZuulFilter {
                         logger.error("original request invoked.");
                     }
                 }
+            } else {
+                logger.info("not post request = " + request.getMethod() + " " + targetUrl);
             }
         } catch (Exception e) {
             e.printStackTrace();
