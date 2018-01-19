@@ -1,6 +1,7 @@
 package com.elasticsearchcache.service;
 
 import com.elasticsearchcache.conts.CacheMode;
+import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.util.PeriodUtil;
 import com.elasticsearchcache.vo.CachePlan;
 import com.elasticsearchcache.vo.DateHistogramBucket;
@@ -34,10 +35,6 @@ public class CachePlanService {
     }
 
     public CachePlan checkCachePlan(String interval, DateTime startDt, DateTime endDt) {
-        DateTime intendedEndDt = endDt.minus(lastEndTimeTs);
-        logger.info("endDt = " + endDt);
-        logger.info("intendedEndDt = " + intendedEndDt);
-
         CachePlan cachePlan = new CachePlan();
         if (interval != null) {
             int periodUnit = PeriodUtil.getPeriodUnit(interval);
@@ -53,32 +50,22 @@ public class CachePlanService {
                 cachePlan.setStartDt(newStartDt);
             }
 
-            logger.info("yaho = " + String.valueOf(new DateTime().minus(1000).getMillis() - intendedEndDt.getMillis()));
-            if (new DateTime().minus(1000).getMillis() - intendedEndDt.getMillis() <= lastEndTimeTs) {
-                logger.info("yesyes");
+            if (PeriodUtil.getRestMills(endDt, periodUnit) == periodUnit - 1) { //end range doesn't exist
+                cachePlan.setEndDt(endDt);
+            } else { //end range exists
                 DateTime postEndDt = endDt;
-                DateTime postStartDt = intendedEndDt.minus(PeriodUtil.getRestMills(intendedEndDt, periodUnit));
+                DateTime postStartDt = endDt.minus(PeriodUtil.getRestMills(endDt, periodUnit));
                 DateTime newEndDt = postStartDt.minusMillis(1);
                 cachePlan.setPostStartDt(postStartDt);
                 cachePlan.setPostEndDt(postEndDt);
                 cachePlan.setEndDt(newEndDt);
-            } else {
-                if (PeriodUtil.getRestMills(endDt, periodUnit) == periodUnit - 1) { //end range doesn't exist
-                    cachePlan.setEndDt(endDt);
-                } else { //end range exists
-                    DateTime postEndDt = endDt;
-                    DateTime postStartDt = endDt.minus(PeriodUtil.getRestMills(endDt, periodUnit));
-                    DateTime newEndDt = postStartDt.minusMillis(1);
-                    cachePlan.setPostStartDt(postStartDt);
-                    cachePlan.setPostEndDt(postEndDt);
-                    cachePlan.setEndDt(newEndDt);
-                }
             }
         }
         return cachePlan;
     }
 
     public CachePlan checkCacheMode(String interval, CachePlan plan, List<DateHistogramBucket> dhbList) {
+        logger.info("checkCacheMode = " + JsonUtil.convertAsString(plan));
         if (interval != null) {
             int intervalNum = PeriodUtil.parseIntervalNum(interval);
             int periodUnit = PeriodUtil.getPeriodUnit(interval);
