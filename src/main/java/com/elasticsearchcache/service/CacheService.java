@@ -120,6 +120,7 @@ public class CacheService {
         Map<String, Object> rtnMap = parseIntervalAndAggsType(aggs, getIntervalTerms(indexName, startDt, endDt));
         String interval = (String) rtnMap.get("interval");
         String aggsType = (String) rtnMap.get("aggsType");
+        logger.info("aggsType = " + aggsType);
 
         profileService.putQueryProfile(indexName, interval, iMap, qMap, queryWithoutRange);
 
@@ -300,8 +301,13 @@ public class CacheService {
                 }
 
                 if (enableTermsCache && terms != null) {
-                    interval = termInterval;
-                    aggType = "terms";
+                    if (!JsonUtil.convertAsString(aggs).contains("cardinality")) {
+                        logger.info("yaho terms = " + JsonUtil.convertAsString(terms));
+                        interval = termInterval;
+                        aggType = "terms";
+                    } else {
+                        aggType = "cardinality";
+                    }
                 }
             }
         }
@@ -386,7 +392,7 @@ public class CacheService {
     }
 
     public String generateTermsRes(String resBody) {
-        logger.info("generateTermsRes = " + resBody);
+//        logger.info("generateTermsRes = " + resBody);
         Map<String, Object> resp = parsingService.parseXContent(resBody);
 
         Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
