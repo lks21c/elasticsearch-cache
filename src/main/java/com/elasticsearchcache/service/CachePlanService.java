@@ -65,7 +65,6 @@ public class CachePlanService {
     }
 
     public CachePlan checkCacheMode(String interval, CachePlan plan, List<DateHistogramBucket> dhbList) {
-        logger.info("checkCacheMode = " + JsonUtil.convertAsString(plan));
         if (interval != null) {
             int intervalNum = PeriodUtil.parseIntervalNum(interval);
             int periodUnit = PeriodUtil.getPeriodUnit(interval);
