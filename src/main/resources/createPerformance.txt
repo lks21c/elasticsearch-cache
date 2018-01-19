@@ -27,7 +27,7 @@ PUT /esc_performance?master_timeout=5m
         "latency": {
           "type": "integer",
           "store": false,
-          "doc_values": false
+          "doc_values": true
         },
         "ts": {
           "type": "date",
