@@ -1,6 +1,23 @@
 # Intro
 Elasticsearch-Cache(ESC) is a cache server working as a reverse proxy of Elasticsearch and caches past aggregation data to enhance speed and to save computing cost on Elasticsearch. It Boosts speed of aggregation on Elasticsearch and Kibana. This should be hlepful who performs massive aggregation using Elasticsearch.
 
+# How To Run
+
+Running ESC is super simple. You can just checkout the repo and run the java jar. You can just run the jar, otherwise you can also manually build source code using Maven.
+
+## Run ESC using binary distribution.
+
+    $ git clone https://github.com/lks21c/elasticsearch-cache
+    $ cd elasticsearch-cache
+    $ java -server -Xms256m -Xmx1024m -XX:+UseG1GC -Dhostname=my_hostname -Desc.cache=true -Desc.warmup=true -Desc.cache.index.name=esc_cache_prd -Desc.cache.terms=true -Dzuul.routes.*.url=http://ES_URL:ES_PORT -jar dist/elasticsearch-cache.jar
+
+## Run ESC using source code
+
+    $ git clone https://github.com/lks21c/elasticsearch-cache
+    $ cd elasticsearch-cache
+    $ mvn -Dmaven.test.skip=true clean package
+    $ java -server -Xms256m -Xmx1024m -XX:+UseG1GC -Dhostname=my_hostname -Desc.cache=true -Desc.warmup=true -Desc.cache.index.name=esc_cache_prd -Desc.cache.terms=true -Dzuul.routes.*.url=http://ES_URL:ES_PORT -jar target/elasticsearch-cache-0.0.1-SNAPSHOT.jar
+
 # Core Concept
 
 ESC intercepts aggregation query and caches responses with each interval. It only caches past periods transparently, so it ensures stale cache info doesn't exist.
