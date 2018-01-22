@@ -59,8 +59,6 @@ public class PreFilter extends ZuulFilter {
     @Value("${esc.performance.enabled}")
     private boolean enablePerformance;
 
-    private static final String PROXY = "proxy";
-
     @Override
     public String filterType() {
         return "pre";
@@ -82,14 +80,14 @@ public class PreFilter extends ZuulFilter {
         HttpServletRequest request = ctx.getRequest();
 
         //TODO: 임시로 처리, 지울 예정
-        if (request.getRequestURI().equals("/proxy/.kibana/config/_search") ||
-                request.getRequestURI().equals("/proxy/_cluster/settings") ||
-                request.getRequestURI().equals("/proxy/_nodes/_local") ||
-                request.getRequestURI().equals("/proxy/_nodes") ||
-                request.getRequestURI().equals("/proxy/") ||
-                request.getRequestURI().equals("/proxy/_mapping") ||
-                request.getRequestURI().equals("/proxy/_aliases") ||
-                request.getRequestURI().equals("/proxy/_cluster/health/.kibana")) {
+        if (request.getRequestURI().equals("/.kibana/config/_search") ||
+                request.getRequestURI().equals("/_cluster/settings") ||
+                request.getRequestURI().equals("/_nodes/_local") ||
+                request.getRequestURI().equals("/_nodes") ||
+                request.getRequestURI().equals("/") ||
+                request.getRequestURI().equals("/_mapping") ||
+                request.getRequestURI().equals("/_aliases") ||
+                request.getRequestURI().equals("/_cluster/health/.kibana")) {
             return null;
         }
 
@@ -174,9 +172,9 @@ public class PreFilter extends ZuulFilter {
     public String getTargetUrl(HttpServletRequest request) {
         String suffixUrl;
         if (!StringUtils.isEmpty(request.getQueryString())) {
-            suffixUrl = request.getRequestURI().replace("/" + PROXY, "") + "?" + request.getQueryString();
+            suffixUrl = request.getRequestURI() + "?" + request.getQueryString();
         } else {
-            suffixUrl = request.getRequestURI().replace("/" + PROXY, "");
+            suffixUrl = request.getRequestURI();
         }
         return esUrl + suffixUrl;
     }
