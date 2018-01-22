@@ -91,6 +91,9 @@ public class WarmUpService {
         ssb.query(tq);
         ssb.size(1000);
         sr.source(ssb);
+
+        logger.info("sr = " + sr.toString());
+
         SearchResponse resp = null;
         try {
             resp = restClient.search(sr);
