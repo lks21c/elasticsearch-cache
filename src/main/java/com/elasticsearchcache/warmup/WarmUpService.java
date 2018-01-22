@@ -92,12 +92,12 @@ public class WarmUpService {
         ssb.size(1000);
         sr.source(ssb);
 
-        logger.info("sr = " + sr.toString());
+//        logger.info("sr = " + sr.toString());
 
         SearchResponse resp = null;
         try {
             resp = restClient.search(sr);
-            logger.info("resp = " + resp.toString());
+//            logger.info("resp = " + resp.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
