@@ -34,10 +34,9 @@ ESC provides Extensibility on cache repository and query parser. It has options 
 ESC caches date histogram and terms aggregation. It stores past data into cache repository. It saves time cost of aggregation up to 90% with empirical evidence.
 
 * Performance Profile
+ESC profiles Kibana profile such as kibana request count and latency. It provides which dashboard is popular or which dashboard(or visualization) is bottle-neck.
 
 ![](https://github.com/lks21c/elasticsearch-cache/blob/master/screenshot/border/screenshot0100.png)
-
-ESC profiles Kibana profile such as kibana request count and latency. It provides which dashboard is popular or which dashboard(or visualization) is bottle-neck.
 
 * Warm-Up Cache
 
