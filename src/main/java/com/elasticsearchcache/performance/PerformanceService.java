@@ -27,7 +27,7 @@ import java.util.Map;
 public class PerformanceService {
     private static final Logger logger = LogManager.getLogger(PerformanceService.class);
 
-    @Value("${zuul.routes.proxy.url}")
+    @Value("${zuul.routes.*.url}")
     private String esUrl;
 
     @Value("${esc.performance.enabled}")

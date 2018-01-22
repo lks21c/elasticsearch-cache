@@ -54,7 +54,7 @@ public class CacheService {
     @Autowired
     private ProfileService profileService;
 
-    @Value("${zuul.routes.proxy.url}")
+    @Value("${zuul.routes.*.url}")
     private String esUrl;
 
     @Value("${esc.cache.terms}")

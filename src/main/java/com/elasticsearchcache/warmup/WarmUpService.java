@@ -37,7 +37,7 @@ public class WarmUpService {
     @Autowired
     private QueryExecService queryExecService;
 
-    @Value("${zuul.routes.proxy.url}")
+    @Value("${zuul.routes.*.url}")
     private String esUrl;
 
     @Value("${esc.profile.index.name}")
