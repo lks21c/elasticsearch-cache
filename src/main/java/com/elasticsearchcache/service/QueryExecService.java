@@ -50,33 +50,37 @@ public class QueryExecService {
             }
         }
 
-        long beforeManipulateBulkQuery = System.currentTimeMillis();
-        HttpResponse res = null;
-        try {
-            res = esService.executeQuery(targetUrl, qb.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (MethodNotSupportedException e) {
-            e.printStackTrace();
-        }
+        List<Map<String, Object>> respes = null;
+        if (!StringUtils.isEmpty(qb.toString())) {
+            long beforeManipulateBulkQuery = System.currentTimeMillis();
+            HttpResponse res = null;
+            try {
+                res = esService.executeQuery(targetUrl, qb.toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (MethodNotSupportedException e) {
+                e.printStackTrace();
+            }
 
-        if (res.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-            logger.info("it's not ok code.");
-            return null;
-        }
+            if (res.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                logger.error("it's not ok code.");
 
-        long afterManipulateBulkQuery = System.currentTimeMillis() - beforeManipulateBulkQuery;
-        logger.info("afterManipulateBulkQuery = " + afterManipulateBulkQuery);
-        String bulkRes = null;
-        try {
-            bulkRes = EntityUtils.toString(res.getEntity());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+                return null;
+            }
+
+            long afterManipulateBulkQuery = System.currentTimeMillis() - beforeManipulateBulkQuery;
+            logger.info("afterManipulateBulkQuery = " + afterManipulateBulkQuery);
+            String bulkRes = null;
+            try {
+                bulkRes = EntityUtils.toString(res.getEntity());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 //        logger.info("refactor res = " + bulkRes);
 
-        Map<String, Object> resMap = parsingService.parseXContent(bulkRes);
-        List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
+            Map<String, Object> resMap = parsingService.parseXContent(bulkRes);
+            respes = (List<Map<String, Object>>) resMap.get("responses");
+        }
 
         StringBuilder mergedRes = new StringBuilder();
         mergedRes.append("{");
