@@ -38,5 +38,4 @@ ESC profiles Kibana profile such as kibana request count and latency. It provide
 ![](https://github.com/lks21c/elasticsearch-cache/blob/master/screenshot/border/screenshot0100.png)
 
 * Warm-Up Cache
-
 ESC supports warm-up service which make necessary in advance.
