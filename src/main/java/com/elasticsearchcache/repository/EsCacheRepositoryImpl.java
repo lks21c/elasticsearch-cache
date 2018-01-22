@@ -96,7 +96,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
             Map<String, Object> bucket = dhb.getBucket();
             String key_as_string = (String) bucket.get("key_as_string");
 
-            logger.info("put cache = " + key_as_string);
+            logger.info("put cache = " + indexName + " " + key_as_string);
 
             Long ts = (Long) bucket.get("key");
             String str = key + "_" + ts;
