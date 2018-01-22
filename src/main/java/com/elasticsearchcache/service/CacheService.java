@@ -493,7 +493,7 @@ public class CacheService {
         } else if (Days.daysBetween(startDt, endDt).getDays() > 7) {
             return "1d";
         } else {
-            return "1d";
+            return "1h";
         }
     }
 }
