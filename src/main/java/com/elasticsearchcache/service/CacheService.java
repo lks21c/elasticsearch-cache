@@ -340,6 +340,10 @@ public class CacheService {
 
         Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
 
+        if (aggrs == null) {
+            return dhbList;
+        }
+
         for (String aggKey : aggrs.keySet()) {
 //                logger.info("aggKey = " + aggrs.get(aggKey));
 
