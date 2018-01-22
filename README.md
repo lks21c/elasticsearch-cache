@@ -35,7 +35,7 @@ ESC caches date histogram and terms aggregation. It stores past data into cache 
 
 * Performance Profile
 ESC profiles Kibana profile such as kibana request count and latency. It provides which dashboard is popular or which dashboard(or visualization) is bottle-neck.
-![](https://github.com/lks21c/elasticsearch-cache/blob/master/screenshot/border/screenshot0100.png)
+![](https://github.com/lks21c/elasticsearch-cache/blob/master/screenshot/border/screenshot0200.png)
 
 * Warm-Up Cache
 ESC supports warm-up service which make necessary in advance.
