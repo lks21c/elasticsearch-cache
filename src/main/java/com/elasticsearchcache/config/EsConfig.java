@@ -24,7 +24,7 @@ public class EsConfig {
 
     private static String profile = System.getProperty("spring.profile.active");
 
-    @Value("${zuul.routes.*.url}")
+    @Value("${zuul.routes.**.url}")
     private String esUrl;
 
     @Bean(destroyMethod = "close")

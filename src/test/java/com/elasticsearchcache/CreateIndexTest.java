@@ -19,7 +19,7 @@ public class CreateIndexTest {
     @Autowired
     private ElasticSearchService esService;
 
-    @Value("${zuul.routes.*.url}")
+    @Value("${zuul.routes.**.url}")
     private String esUrl;
 
     @Test

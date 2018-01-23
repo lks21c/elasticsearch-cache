@@ -18,7 +18,7 @@ public class PostCreation {
     @Autowired
     private ElasticSearchService esService;
 
-    @Value("${zuul.routes.*.url}")
+    @Value("${zuul.routes.**.url}")
     private String esUrl;
 
     @Value("${esc.cache.index.name}")

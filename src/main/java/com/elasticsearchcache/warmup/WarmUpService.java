@@ -37,7 +37,7 @@ public class WarmUpService {
     @Autowired
     private QueryExecService queryExecService;
 
-    @Value("${zuul.routes.*.url}")
+    @Value("${zuul.routes.**.url}")
     private String esUrl;
 
     @Value("${esc.profile.index.name}")
@@ -48,6 +48,9 @@ public class WarmUpService {
 
     @Value("${esc.cache}")
     private boolean escCache;
+
+    @Value("${esc.cache.terms}")
+    private boolean escTerms;
 
     @Value("${esc.cache.warmup.size}")
     private int esWarmUpSize;
@@ -104,10 +107,12 @@ public class WarmUpService {
 
         if (resp != null) {
             List<QueryPlan> queryPlanList = new ArrayList<>();
+            logger.info("warm candiate size = " + resp.getHits().getHits().length);
             for (SearchHit hit : resp.getHits().getHits()) {
                 String value = (String) hit.getSourceAsMap().get("value");
 
-                if (value.contains("date_histogram")) {
+                if (value.contains("date_histogram")
+                        || (escTerms && value.contains("terms") && !value.contains("cardinality"))) {
                     logger.info("warmup startdt = " + startDt + " " + endDt);
                     value = value.replace("$$gte$$", String.valueOf(startDt.getMillis()));
                     value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));

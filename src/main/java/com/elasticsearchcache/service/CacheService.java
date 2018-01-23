@@ -54,7 +54,7 @@ public class CacheService {
     @Autowired
     private ProfileService profileService;
 
-    @Value("${zuul.routes.*.url}")
+    @Value("${zuul.routes.**.url}")
     private String esUrl;
 
     @Value("${esc.cache.terms}")
@@ -400,6 +400,10 @@ public class CacheService {
         Map<String, Object> resp = parsingService.parseXContent(resBody);
 
         Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
+
+        if (aggrs == null) {
+            return resBody;
+        }
 
         Map<String, Object> mergedMap = new HashMap<>();
         String termsBucketKey = null;

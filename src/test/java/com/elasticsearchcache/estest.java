@@ -23,7 +23,7 @@ public class estest {
     @Autowired
     private ElasticSearchService esService;
 
-    @Value("${zuul.routes.*.url}")
+    @Value("${zuul.routes.**.url}")
     private String esUrl;
 
     @Autowired

@@ -50,7 +50,7 @@ public class PreFilter extends ZuulFilter {
     @Autowired
     private PerformanceService performanceService;
 
-    @Value("${zuul.routes.*.url}")
+    @Value("${zuul.routes.**.url}")
     private String esUrl;
 
     @Value("${esc.cache}")

@@ -9,14 +9,14 @@ Running ESC is super simple. You can just checkout the repo and run the java jar
 
     $ git clone https://github.com/lks21c/elasticsearch-cache
     $ cd elasticsearch-cache
-    $ java -server -Xms256m -Xmx1024m -XX:+UseG1GC -Dhostname=my_hostname -Desc.cache=true -Desc.warmup=true -Desc.cache.index.name=esc_cache_prd -Desc.cache.terms=true -Dzuul.routes.*.url=http://ES_URL:ES_PORT -jar dist/elasticsearch-cache.jar
+    $ java -server -Xms256m -Xmx1024m -XX:+UseG1GC -Dhostname=my_hostname -Desc.cache=true -Desc.warmup=true -Desc.cache.index.name=esc_cache_prd -Desc.cache.terms=true -Dzuul.routes.**.url=http://ES_URL:ES_PORT -jar dist/elasticsearch-cache.jar
 
 ## Run ESC using source code
 
     $ git clone https://github.com/lks21c/elasticsearch-cache
     $ cd elasticsearch-cache
     $ mvn -Dmaven.test.skip=true clean package
-    $ java -server -Xms256m -Xmx1024m -XX:+UseG1GC -Dhostname=my_hostname -Desc.cache=true -Desc.warmup=true -Desc.cache.index.name=esc_cache_prd -Desc.cache.terms=true -Dzuul.routes.*.url=http://ES_URL:ES_PORT -jar target/elasticsearch-cache-0.0.1-SNAPSHOT.jar
+    $ java -server -Xms256m -Xmx1024m -XX:+UseG1GC -Dhostname=my_hostname -Desc.cache=true -Desc.warmup=true -Desc.cache.index.name=esc_cache_prd -Desc.cache.terms=true -Dzuul.routes.**.url=http://ES_URL:ES_PORT -jar target/elasticsearch-cache-0.0.1-SNAPSHOT.jar
 
 # Core Concept
 
