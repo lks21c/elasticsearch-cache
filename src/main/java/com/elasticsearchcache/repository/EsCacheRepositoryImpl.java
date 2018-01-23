@@ -106,6 +106,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
             Map<String, Object> irMap = new HashMap<>();
             irMap.put("value", new String(Base64Utils.encode(JsonUtil.convertAsString(bucket).getBytes())));
             irMap.put("key", key);
+            irMap.put("indexName", indexName);
             irMap.put(timeFiledName, ts);
             ir.source(irMap);
             br.add(ir);

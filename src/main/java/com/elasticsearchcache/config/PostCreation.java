@@ -129,6 +129,11 @@ public class PostCreation {
                         "          \"store\": false,\n" +
                         "          \"doc_values\": true\n" +
                         "        },\n" +
+                        "        \"indexName\": {\n" +
+                        "          \"type\": \"keyword\",\n" +
+                        "          \"store\": false,\n" +
+                        "          \"doc_values\": true\n" +
+                        "        },\n" +
                         "        \"value\": {\n" +
                         "          \"type\": \"binary\",\n" +
                         "          \"store\": false,\n" +
