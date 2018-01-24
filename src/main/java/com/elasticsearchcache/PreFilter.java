@@ -146,6 +146,9 @@ public class PreFilter extends ZuulFilter {
                     } else {
                         logger.error("original request invoked.");
                     }
+                } else if (request.getRequestURI().contains(EsUrl.SUFFIX_SEARCH)) {
+                    String reqBody = getRequestBody(request);
+                    logger.info("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
                 } else if (request.getRequestURI().contains(EsUrl.SUFFIX_MULTI_GET)) {
                     if (enablePerformance) {
                         String reqBody = getRequestBody(request);

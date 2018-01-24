@@ -54,49 +54,5 @@ public class InMemoryCacheRepositoryImpl implements CacheRepository {
     @Override
     public void putCache(String indexName, long indexSize, String query, String agg, List<DateHistogramBucket> dhbList) throws IOException {
         logger.info("cache list = " + JsonUtil.convertAsString(dhbList));
-//        String key = indexName + query + agg;
-//        Map<String, Object> resMap = null;
-//        try {
-//            logger.info("before res map");
-//            resMap = parsingService.parseXContent(res);
-//            logger.info("resMap = " + JsonUtil.convertAsString(resMap));
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            logger.info("exception occurred");
-//        }
-//
-//        List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
-//        for (Map<String, Object> resp : respes) {
-//            Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
-//            for (String aggKey : aggrs.keySet()) {
-//                logger.info("aggKey = " + aggrs.get(aggKey));
-//
-//                LinkedHashMap<String, Object> buckets = (LinkedHashMap<String, Object>) aggrs.get(aggKey);
-//
-//                for (String bucketsKey : buckets.keySet()) {
-//                    List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
-//                    for (Map<String, Object> bucket : bucketList) {
-//                        String key_as_string = (String) bucket.get("key_as_string");
-//                        Long ts = (Long) bucket.get("key");
-//                        logger.info("for key_as_string = " + key_as_string);
-//
-//                        if ("1d".equals(interval)) {
-//                            if (Days.daysBetween(new DateTime(ts), new DateTime())
-//                                    .isGreaterThan(Days.days(0))) { /* 과거 ~ 오늘전까지만 캐시 */
-//
-//                                logger.info("put cache " + key + "_" + ts);
-//                                setCache(key + "_" + ts, JsonUtil.convertAsString(bucket));
-//
-//                                //TODO:
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-    }
-
-    public void setCache(String key, String value) {
-        cacheManager.getCache(CACHE_KEY).put(key, value);
     }
 }
