@@ -176,7 +176,9 @@ public class CacheService {
             }
 
             long afterPreQueryMills = new DateTime().getMillis() - measureDt.getMillis();
-            logger.info("after pre query = " + afterPreQueryMills);
+            if (afterPreQueryMills > 0) {
+                logger.info("after pre query = " + afterPreQueryMills);
+            }
 
             //dhbList
             queryPlan.setDhbList(dhbList);
@@ -188,7 +190,9 @@ public class CacheService {
             }
 
             long afterPostQueryMills = new DateTime().getMillis() - measureDt.getMillis();
-            logger.info("after post query = " + afterPostQueryMills);
+            if (afterPostQueryMills > 0) {
+                logger.info("after post query = " + afterPostQueryMills);
+            }
 
             return queryPlan;
         } else {
