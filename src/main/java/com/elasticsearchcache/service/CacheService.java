@@ -118,7 +118,7 @@ public class CacheService {
         Map<String, Object> rtnMap = parseIntervalAndAggsType(aggs, getIntervalTerms(indexName, startDt, endDt));
         String interval = (String) rtnMap.get("interval");
         String aggsType = (String) rtnMap.get("aggsType");
-        logger.info("aggsType = " + aggsType);
+        logger.debug("aggsType = " + aggsType);
 
         profileService.putQueryProfile(indexName, interval, iMap, qMap, queryWithoutRange);
 

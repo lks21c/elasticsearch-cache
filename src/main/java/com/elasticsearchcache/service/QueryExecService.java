@@ -101,7 +101,7 @@ public class QueryExecService {
                 List<DateHistogramBucket> mergedDhbList = new ArrayList<>();
                 List<DateHistogramBucket> preDhbList = null;
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getPreQuery())) {
-                    logger.info("pre query executed");
+                    logger.debug("pre query executed");
                     String preResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
                     // put cache
                     cacheService.putCache(preResBody, queryPlanList.get(i));

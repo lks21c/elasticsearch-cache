@@ -75,7 +75,7 @@ public class CachePlanService {
             }
 
             int periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
-            logger.info("periodBetween = " + periodBetween);
+            logger.debug("periodBetween = " + periodBetween);
 
             if (periodBetween + 1 == dhbList.size()
                     && plan.getPreStartDt() == null
@@ -96,7 +96,7 @@ public class CachePlanService {
                     preDateTime = dhb.getDate();
                 }
 
-                logger.info("isSuccessive = " + isSuccessive);
+                logger.debug("isSuccessive = " + isSuccessive);
                 if (isSuccessive || dhbList.size() == 1) {
                     if (PeriodUtil.periodBetween(dhbList.get(0).getDate(), plan.getStartDt(), periodUnit) != 0) {
                         plan.setPreStartDt(plan.getStartDt());
