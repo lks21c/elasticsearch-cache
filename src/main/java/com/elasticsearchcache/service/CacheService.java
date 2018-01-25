@@ -63,10 +63,10 @@ public class CacheService {
     @Value("${filedname.time}")
     private String timeFiledName;
 
-    public QueryPlan manipulateQuery(String info) throws IOException, MethodNotSupportedException {
-        logger.info("info = " + info);
+    public QueryPlan manipulateQuery(String mReqBody) throws IOException, MethodNotSupportedException {
+        logger.info("mReqBody = " + mReqBody);
 
-        String[] arr = info.split("\n");
+        String[] arr = mReqBody.split("\n");
         Map<String, Object> iMap = parsingService.parseXContent(arr[0]);
         Map<String, Object> qMap = parsingService.parseXContent(arr[1]);
 
@@ -109,7 +109,7 @@ public class CacheService {
             obj.remove("range");
         }
         logger.info("queryWithoutRange = " + queryWithoutRange);
-//        logger.info("query = " + query);
+//        logger.mReqBody("query = " + query);
 
         logger.info("invoked here");
 
@@ -153,7 +153,7 @@ public class CacheService {
         List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, indexSize, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
         long afterCacheMills = new DateTime().getMillis() - beforeCacheMills.getMillis();
 
-//        logger.info("dhbList = " + JsonUtil.convertAsString(dhbList));
+//        logger.mReqBody("dhbList = " + JsonUtil.convertAsString(dhbList));
         logger.info("afterCacheMills = " + afterCacheMills);
 
         plan = cachePlanService.checkCacheMode(interval, plan, dhbList);
@@ -198,7 +198,7 @@ public class CacheService {
             if ("terms".equals(aggsType)) {
                 queryPlan.setQuery(JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n");
             } else {
-                queryPlan.setQuery(info);
+                queryPlan.setQuery(mReqBody);
             }
             return queryPlan;
         }
@@ -376,11 +376,11 @@ public class CacheService {
             if (queryPlan.getInterval() != null) {
                 List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
                 for (DateHistogramBucket dhb : dhbList) {
-                    logger.info("cache candiate : " + queryPlan.getInterval() + " " + dhb.getDate() + " startDt : " + queryPlan.getCachePlan().getStartDt() + " endDt : " + queryPlan.getCachePlan().getEndDt());
+                    logger.debug("cache candiate : " + queryPlan.getInterval() + " " + dhb.getDate() + " startDt : " + queryPlan.getCachePlan().getStartDt() + " endDt : " + queryPlan.getCachePlan().getEndDt());
                     boolean cacheable = cachePlanService.checkCacheable(queryPlan.getInterval(), dhb.getDate(), queryPlan.getCachePlan().getStartDt(), queryPlan.getCachePlan().getEndDt());
-                    logger.info("checkCacheable = " + cacheable);
+                    logger.debug("checkCacheable = " + cacheable);
                     if (cacheable) {
-                        logger.info("cacheable");
+                        logger.debug("cacheable");
                         cacheDhbList.add(dhb);
                     }
                 }
