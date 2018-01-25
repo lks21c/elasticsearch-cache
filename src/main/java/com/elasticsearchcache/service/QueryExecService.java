@@ -115,10 +115,10 @@ public class QueryExecService {
 
                 List<DateHistogramBucket> postDhbList = null;
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getPostQuery())) {
-                    logger.info("post query executed");
+                    logger.debug("post query executed");
                     String postResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
                     // put cache
-                    logger.info("try post put cache");
+                    logger.debug("try post put cache");
                     cacheService.putCache(postResBody, queryPlanList.get(i));
                     postDhbList = cacheService.getDhbList(postResBody);
                     mergedDhbList.addAll(postDhbList);
