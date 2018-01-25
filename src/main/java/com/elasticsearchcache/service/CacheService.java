@@ -300,7 +300,7 @@ public class CacheService {
 
                 if (enableTermsCache && terms != null) {
                     if (!JsonUtil.convertAsString(aggs).contains("cardinality")) {
-                        logger.info("yaho terms = " + JsonUtil.convertAsString(terms));
+                        logger.debug("terms = " + JsonUtil.convertAsString(terms));
                         interval = termInterval;
                         aggType = "terms";
                     } else {

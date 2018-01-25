@@ -32,7 +32,7 @@ public class ProfileService {
 
     public void putQueryProfile(String indexName, String interval, Map<String, Object> imap, Map<String, Object> qMap, Map<String, Object> queryWithoutRange) {
         if (enableProfile) {
-            logger.info("putQueryProfile");
+            logger.debug("putQueryProfile");
             HashMap<String, Object> clonedQMap = (HashMap<String, Object>) SerializationUtils.clone(new HashMap<>(qMap));
             Map<String, Object> query = (Map<String, Object>) clonedQMap.get("query");
 
