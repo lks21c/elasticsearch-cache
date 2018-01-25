@@ -35,7 +35,7 @@ public class PeriodUtil {
         long localHourDiff = getLocalTimeDiff() * PeriodUtil.MILLS_HOUR;
         long modifiedMills = dt.getMillis() + localHourDiff;
         long restMills = (modifiedMills) % periodUnit;
-        logger.info("restMills = " + restMills);
+        logger.debug("restMills = " + restMills);
         return restMills;
     }
 
