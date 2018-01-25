@@ -64,7 +64,7 @@ public class CacheService {
     private String timeFiledName;
 
     public QueryPlan manipulateQuery(String mReqBody) throws IOException, MethodNotSupportedException {
-        logger.info("mReqBody = " + mReqBody);
+        logger.debug("mReqBody = " + mReqBody);
 
         String[] arr = mReqBody.split("\n");
         Map<String, Object> iMap = parsingService.parseXContent(arr[0]);
@@ -73,11 +73,11 @@ public class CacheService {
         List<String> idl = (List<String>) iMap.get("index");
         logger.info("idl = " + JsonUtil.convertAsString(idl));
         long indexSize = -1; //getTotalIndexSize(idl);
-        logger.info("total index size = " + indexSize);
+        logger.debug("total index size = " + indexSize);
         String indexName = IndexNameUtil.getIndexName(idl);
 
         for (String key : qMap.keySet()) {
-            logger.info("key = " + key);
+            logger.debug("key = " + key);
         }
 
         // Get gte, lte
@@ -108,10 +108,8 @@ public class CacheService {
         for (Map<String, Object> obj : clonedMust) {
             obj.remove("range");
         }
-        logger.info("queryWithoutRange = " + queryWithoutRange);
+        logger.debug("queryWithoutRange = " + queryWithoutRange);
 //        logger.mReqBody("query = " + query);
-
-        logger.info("invoked here");
 
         // Get aggs
         Map<String, Object> aggs = (Map<String, Object>) qMap.get("aggs");
