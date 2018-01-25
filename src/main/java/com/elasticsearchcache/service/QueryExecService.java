@@ -87,7 +87,7 @@ public class QueryExecService {
         mergedRes.append("\"responses\":[");
         int responseCnt = 0;
         for (int i = 0; i < queryPlanList.size(); i++) {
-            logger.info("query plan cache mode(" + i + ") = " + queryPlanList.get(i).getCachePlan().getCacheMode());
+            logger.info("query plan cache mode(" + i + ") = " + queryPlanList.get(i).getCachePlan().getCacheMode() + "(" + queryPlanList.get(i).getDhbList().size() + ")");
             if (CacheMode.ALL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
                 String resBody = cacheService.generateRes(queryPlanList.get(i).getDhbList());
                 if (i != 0) {
@@ -109,7 +109,7 @@ public class QueryExecService {
                     mergedDhbList.addAll(preDhbList);
                 }
 
-                logger.info("partial cache size = " + queryPlanList.get(i).getDhbList().size());
+//                logger.info("partial cache size = " + queryPlanList.get(i).getDhbList().size());
 //                logger.info("partial cache = " + JsonUtil.convertAsString(queryPlanList.get(i).getDhbList()));
                 mergedDhbList.addAll(queryPlanList.get(i).getDhbList());
 
