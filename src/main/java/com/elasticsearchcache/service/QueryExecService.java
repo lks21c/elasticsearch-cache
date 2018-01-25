@@ -87,7 +87,12 @@ public class QueryExecService {
         mergedRes.append("\"responses\":[");
         int responseCnt = 0;
         for (int i = 0; i < queryPlanList.size(); i++) {
-            logger.info("query plan cache mode(" + i + ") = " + queryPlanList.get(i).getCachePlan().getCacheMode() + "(" + queryPlanList.get(i).getDhbList().size() + ")");
+            String log = "query plan cache mode(" + i + ") = " + queryPlanList.get(i).getCachePlan().getCacheMode();
+            if (CacheMode.PARTIAL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
+                log += "(" + queryPlanList.get(i).getDhbList().size() + ")";
+            }
+            logger.info(log);
+
             if (CacheMode.ALL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
                 String resBody = cacheService.generateRes(queryPlanList.get(i).getDhbList());
                 if (i != 0) {
