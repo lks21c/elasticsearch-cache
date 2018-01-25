@@ -51,7 +51,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
     @Override
     public List<DateHistogramBucket> getCache(String indexName, long indexSize, String query, String agg, DateTime startDt, DateTime endDt) throws IOException {
         String key = indexName + indexSize + query + agg;
-        logger.info("get cache " + key);
+        logger.debug("get cache " + key);
 
         List<QueryBuilder> qbList = new ArrayList<>();
         qbList.add(QueryBuilders.termQuery("key", key));
