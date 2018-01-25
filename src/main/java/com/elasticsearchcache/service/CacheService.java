@@ -130,15 +130,15 @@ public class CacheService {
             qMap.put("aggs", aggs);
         }
 
-        logger.info("manipulated curl -X POST -L '" + esUrl + EsUrl.SUFFIX_MULTI_SEARCH + "' " + " --data '" + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n" + "'");
+        logger.debug("manipulated curl -X POST -L '" + esUrl + EsUrl.SUFFIX_MULTI_SEARCH + "' " + " --data '" + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n" + "'");
 
         CachePlan plan = cachePlanService.checkCachePlan(interval, startDt, endDt);
-        logger.info("cachePlan getPreStartDt = " + plan.getPreStartDt());
-        logger.info("cachePlan getPreEndDt = " + plan.getPreEndDt());
-        logger.info("cachePlan getStartDt = " + plan.getStartDt());
-        logger.info("cachePlan getEndDt = " + plan.getEndDt());
-        logger.info("cachePlan getPostStartDt = " + plan.getPostStartDt());
-        logger.info("cachePlan getPostEndDt = " + plan.getPostEndDt());
+        logger.debug("cachePlan getPreStartDt = " + plan.getPreStartDt());
+        logger.debug("cachePlan getPreEndDt = " + plan.getPreEndDt());
+        logger.debug("cachePlan getStartDt = " + plan.getStartDt());
+        logger.debug("cachePlan getEndDt = " + plan.getEndDt());
+        logger.debug("cachePlan getPostStartDt = " + plan.getPostStartDt());
+        logger.debug("cachePlan getPostEndDt = " + plan.getPostEndDt());
 
         QueryPlan queryPlan = new QueryPlan();
         queryPlan.setCachePlan((CachePlan) SerializationUtils.clone(plan));
@@ -158,13 +158,13 @@ public class CacheService {
 
         plan = cachePlanService.checkCacheMode(interval, plan, dhbList);
         queryPlan.getCachePlan().setCacheMode(plan.getCacheMode());
-        logger.info("cacheMode = " + plan.getCacheMode() + " cache size : " + dhbList.size());
-        logger.info("after cachePlan getPreStartDt = " + plan.getPreStartDt());
-        logger.info("after cachePlan getPreEndDt = " + plan.getPreEndDt());
-        logger.info("after cachePlan getStartDt = " + plan.getStartDt());
-        logger.info("after cachePlan getEndDt = " + plan.getEndDt());
-        logger.info("after cachePlan getPostStartDt = " + plan.getPostStartDt());
-        logger.info("after cachePlan getPostEndDt = " + plan.getPostEndDt());
+        logger.debug("cacheMode = " + plan.getCacheMode() + " cache size : " + dhbList.size());
+        logger.debug("after cachePlan getPreStartDt = " + plan.getPreStartDt());
+        logger.debug("after cachePlan getPreEndDt = " + plan.getPreEndDt());
+        logger.debug("after cachePlan getStartDt = " + plan.getStartDt());
+        logger.debug("after cachePlan getEndDt = " + plan.getEndDt());
+        logger.debug("after cachePlan getPostStartDt = " + plan.getPostStartDt());
+        logger.debug("after cachePlan getPostEndDt = " + plan.getPostEndDt());
 
         if (CacheMode.ALL.equals(plan.getCacheMode())) {
             queryPlan.setDhbList(dhbList);
