@@ -76,8 +76,11 @@ public class WarmUpService {
             startDt = startDt.withMinuteOfHour(0);
             startDt = startDt.withHourOfDay(0);
             DateTime endDt = startDt.plusDays(1).minus(1);
-            startDt = startDt.minusDays(2);
+            startDt = startDt.minusDays(3);
+            warmUp("1d", startDt, endDt);
 
+            startDt = startDt.minusDays(4);
+            endDt = endDt.minusDays(4);
             warmUp("1d", startDt, endDt);
         }
     }
