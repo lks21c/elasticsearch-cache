@@ -95,7 +95,7 @@ public class WarmUpService {
         SearchSourceBuilder ssb = new SearchSourceBuilder();
         TermQueryBuilder tq = QueryBuilders.termQuery("interval", interval);
         ssb.query(tq);
-        ssb.size(1000);
+        ssb.size(10000);
         sr.source(ssb);
 
 //        logger.info("sr = " + sr.toString());
