@@ -63,22 +63,21 @@ public class CacheService {
     @Value("${filedname.time}")
     private String timeFiledName;
 
-    public QueryPlan manipulateQuery(String mReqBody) throws IOException {
+    public QueryPlan manipulateQuery(boolean isMultiSearch, String requestUri, String mReqBody) throws IOException {
         logger.debug("mReqBody = " + mReqBody);
 
-        String[] arr = mReqBody.split("\n");
-        Map<String, Object> iMap = parsingService.parseXContent(arr[0]);
-        Map<String, Object> qMap = parsingService.parseXContent(arr[1]);
+        Map<String, Object> qMap = null;
 
-        List<String> idl = (List<String>) iMap.get("index");
-        logger.info("idl = " + JsonUtil.convertAsString(idl));
+        if (isMultiSearch) {
+            String[] arr = mReqBody.split("\n");
+            qMap = parsingService.parseXContent(arr[1]);
+        }
+
         long indexSize = -1; //getTotalIndexSize(idl);
         logger.debug("total index size = " + indexSize);
-        String indexName = IndexNameUtil.getIndexName(idl);
 
-        for (String key : qMap.keySet()) {
-            logger.debug("key = " + key);
-        }
+        // Parse Index Name
+        String indexName = getIndexName(isMultiSearch, requestUri, mReqBody);
 
         // Get Query
         Map<String, Object> query = (Map<String, Object>) qMap.get("query");
@@ -95,13 +94,16 @@ public class CacheService {
         Map<String, Object> aggs = (Map<String, Object>) qMap.get("aggs");
 
         // Parse Interval
-        Map<String, Object> rtnMap = parseIntervalAndAggsType(aggs, getIntervalTerms(indexName, startDt, endDt));
+        Map<String, Object> rtnMap = parsingService.parseIntervalAndAggsType(aggs, getIntervalTerms(indexName, startDt, endDt));
         String interval = (String) rtnMap.get("interval");
         String aggsType = (String) rtnMap.get("aggsType");
         logger.debug("aggsType = " + aggsType);
 
         // Put Query Profile
-        profileService.putQueryProfile(indexName, interval, iMap, qMap, queryWithoutRange);
+        if (isMultiSearch) {
+            Map<String, Object> iMap = getIMap(mReqBody);
+            profileService.putQueryProfile(indexName, interval, iMap, qMap, queryWithoutRange);
+        }
 
         // handle terms
         if (enableTermsCache && "terms".equals(aggsType)) {
@@ -109,7 +111,10 @@ public class CacheService {
             qMap.put("aggs", aggs);
         }
 
-        logger.debug("manipulated curl -X POST -L '" + esUrl + EsUrl.SUFFIX_MULTI_SEARCH + "' " + " --data '" + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n" + "'");
+        if (isMultiSearch) {
+            Map<String, Object> iMap = getIMap(mReqBody);
+            logger.debug("manipulated curl -X POST -L '" + esUrl + EsUrl.SUFFIX_MULTI_SEARCH + "' " + " --data '" + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n" + "'");
+        }
 
         CachePlan plan = cachePlanService.checkCachePlan(interval, startDt, endDt);
         logger.debug("cachePlan getPreStartDt = " + plan.getPreStartDt());
@@ -153,7 +158,10 @@ public class CacheService {
             // execute pre query
             if (plan.getPreStartDt() != null && plan.getPreEndDt() != null) {
                 Map<String, Object> preQmap = getManipulateQuery(qMap, plan.getPreStartDt(), plan.getPreEndDt());
-                queryPlan.setPreQuery(JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(preQmap) + "\n");
+                if (isMultiSearch) {
+                    Map<String, Object> iMap = getIMap(mReqBody);
+                    queryPlan.setPreQuery(buildMultiSearchQuery(iMap, preQmap));
+                }
             }
 
             long afterPreQueryMills = new DateTime().getMillis() - measureDt.getMillis();
@@ -167,7 +175,10 @@ public class CacheService {
             // execute post query
             if (plan.getPostStartDt() != null && plan.getPostEndDt() != null) {
                 Map<String, Object> postQmap = getManipulateQuery(qMap, plan.getPostStartDt(), plan.getPostEndDt());
-                queryPlan.setPostQuery(JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(postQmap) + "\n");
+                if (isMultiSearch) {
+                    Map<String, Object> iMap = getIMap(mReqBody);
+                    queryPlan.setPostQuery(buildMultiSearchQuery(iMap, postQmap));
+                }
             }
 
             long afterPostQueryMills = new DateTime().getMillis() - measureDt.getMillis();
@@ -179,12 +190,25 @@ public class CacheService {
         } else {
             logger.info("else, so original request invoked " + startDt.getSecondOfDay());
             if ("terms".equals(aggsType)) {
-                queryPlan.setQuery(JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n");
+                if (isMultiSearch) {
+                    Map<String, Object> iMap = getIMap(mReqBody);
+                    queryPlan.setQuery(buildMultiSearchQuery(iMap, qMap));
+                }
             } else {
                 queryPlan.setQuery(mReqBody);
             }
             return queryPlan;
         }
+    }
+
+    private String getIndexName(boolean isMultiSearch, String requestUri, String mReqBody) {
+        if (isMultiSearch) {
+            Map<String, Object> iMap = getIMap(mReqBody);
+            List<String> idl = (List<String>) iMap.get("index");
+            logger.info("idl = " + JsonUtil.convertAsString(idl));
+            return IndexNameUtil.getIndexName(idl);
+        }
+        return null;
     }
 
     private long getTotalIndexSize(List<String> idl) {
@@ -232,73 +256,6 @@ public class CacheService {
         return newAggs;
     }
 
-    public String generateRes(List<DateHistogramBucket> dhbList) {
-        //TODO: manipulates took and so on.
-        String res = "" +
-                "    {\n" +
-                "      \"took\": 3,\n" +
-                "      \"timed_out\": false,\n" +
-                "      \"_shards\": {\n" +
-                "        \"total\": 55,\n" +
-                "        \"successful\": 55,\n" +
-                "        \"failed\": 0\n" +
-                "      },\n" +
-                "      \"hits\": {\n" +
-                "        \"total\": 2718971,\n" +
-                "        \"max_score\": 0,\n" +
-                "        \"hits\": []\n" +
-                "      },\n" +
-                "      \"aggregations\": {\n" +
-                "        \"2\": {\n" +
-                "          \"buckets\": \n";
-
-        List<Map<String, Object>> buckets = new ArrayList<>();
-        for (DateHistogramBucket bucket : dhbList) {
-            buckets.add(bucket.getBucket());
-        }
-        res += JsonUtil.convertAsString(buckets);
-
-        res += "            \n" +
-                "        }\n" +
-                "      },\n" +
-                "      \"status\": 200\n" +
-                "    }\n";
-
-        return res;
-    }
-
-    private Map<String, Object> parseIntervalAndAggsType(Map<String, Object> aggs, String termInterval) {
-        Map<String, Object> rtn = new HashMap<>();
-        String interval = null;
-        String aggType = null;
-        if (aggs.size() == 1) {
-            for (String aggsKey : aggs.keySet()) {
-                Map<String, Object> firstDepthAggs = (Map<String, Object>) aggs.get(aggsKey);
-                Map<String, Object> date_histogram = (Map<String, Object>) firstDepthAggs.get("date_histogram");
-                Map<String, Object> terms = (Map<String, Object>) firstDepthAggs.get("terms");
-
-                if (date_histogram != null) {
-                    interval = (String) date_histogram.get("interval");
-                    aggType = "date_histogram";
-                    logger.info("interval = " + interval);
-                }
-
-                if (enableTermsCache && terms != null) {
-                    if (!JsonUtil.convertAsString(aggs).contains("cardinality")) {
-                        logger.debug("terms = " + JsonUtil.convertAsString(terms));
-                        interval = termInterval;
-                        aggType = "terms";
-                    } else {
-                        aggType = "cardinality";
-                    }
-                }
-            }
-        }
-        rtn.put("interval", interval);
-        rtn.put("aggsType", aggType);
-        return rtn;
-    }
-
     public Map<String, Object> getManipulateQuery(Map<String, Object> qMap, DateTime startDt, DateTime endDt) {
         Map<String, Object> map = (Map<String, Object>) SerializationUtils.clone((HashMap<String, Object>) qMap);
         Map<String, Object> query = (Map<String, Object>) map.get("query");
@@ -317,45 +274,9 @@ public class CacheService {
         return map;
     }
 
-    public List<DateHistogramBucket> getDhbList(String resBody) {
-        List<DateHistogramBucket> dhbList = new ArrayList<>();
-        Map<String, Object> resp = parsingService.parseXContent(resBody);
-
-        Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
-
-        if (aggrs == null) {
-            return dhbList;
-        }
-
-        for (String aggKey : aggrs.keySet()) {
-//                logger.info("aggKey = " + aggrs.get(aggKey));
-
-            HashMap<String, Object> buckets = (HashMap<String, Object>) aggrs.get(aggKey);
-
-            for (String bucketsKey : buckets.keySet()) {
-                List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
-                for (Map<String, Object> bucket : bucketList) {
-                    String key_as_string = (String) bucket.get("key_as_string");
-
-//                    logger.info("for key_as_string = " + key_as_string + " " + "key = " + bucket.get("key"));
-
-                    try {
-                        Long ts = (Long) bucket.get("key");
-                        DateHistogramBucket dhb = new DateHistogramBucket(new DateTime(ts), bucket);
-                        dhbList.add(dhb);
-                    } catch (ClassCastException e) {
-                        logger.info("debug info : " + resBody);
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-        return dhbList;
-    }
-
     public void putCache(String resBody, QueryPlan queryPlan) {
         if (queryPlan.getInterval() != null) {
-            List<DateHistogramBucket> dhbList = getDhbList(resBody);
+            List<DateHistogramBucket> dhbList = parsingService.getDhbList(resBody);
             if (queryPlan.getInterval() != null) {
                 List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
                 for (DateHistogramBucket dhb : dhbList) {
@@ -378,106 +299,6 @@ public class CacheService {
         }
     }
 
-    public String generateTermsRes(String resBody) {
-//        logger.info("generateTermsRes = " + resBody);
-        Map<String, Object> resp = parsingService.parseXContent(resBody);
-
-        Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
-
-        if (aggrs == null) {
-            return resBody;
-        }
-
-        Map<String, Object> mergedMap = new HashMap<>();
-        String termsBucketKey = null;
-        for (String aggKey : aggrs.keySet()) {
-//            logger.info("aggKey = " + aggKey);
-
-            HashMap<String, Object> buckets = (HashMap<String, Object>) aggrs.get(aggKey);
-
-            for (String bucketsKey : buckets.keySet()) {
-//                logger.info("bucketsKey = " + bucketsKey);
-                List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
-                for (Map<String, Object> dhBucket : bucketList) {
-                    Map<String, Object> termsMap = null;
-                    for (String dhBucketKey : dhBucket.keySet()) {
-                        if (!"doc_count".equals(dhBucketKey) && !"key_as_string".equals(dhBucketKey) && !"key".equals(dhBucketKey)) {
-                            termsBucketKey = dhBucketKey;
-                            termsMap = (Map<String, Object>) dhBucket.get(dhBucketKey);
-                        }
-                    }
-
-                    calculateRecursively(mergedMap, termsMap);
-//                    logger.info("mergedMap = " + JsonUtil.convertAsString(mergedMap));
-                }
-            }
-        }
-
-//        logger.info("mergedMap = " + JsonUtil.convertAsString(mergedMap) + " " + mergedMap.size());
-
-        if (mergedMap.size() == 0) {
-            return resBody;
-        }
-
-        aggrs = new HashMap<>();
-        aggrs.put(termsBucketKey, mergedMap);
-        resp.remove("aggregations");
-        resp.put("aggregations", aggrs);
-//        String rtnBody = JsonUtil.convertAsString(resp);
-//        logger.info("rtnBody = " + rtnBody);
-        return JsonUtil.convertAsString(resp);
-    }
-
-    private void calculateRecursively(Map<String, Object> mergedMap, Map<String, Object> termsMap) {
-        for (String key : termsMap.keySet()) {
-            if (!mergedMap.containsKey(key)) {
-                mergedMap.put(key, termsMap.get(key));
-            } else if (termsMap.get(key) instanceof Map) {
-                if (!mergedMap.containsKey(key)) {
-                    mergedMap.put(key, new HashMap<String, Object>());
-                }
-                calculateRecursively((Map<String, Object>) mergedMap.get(key), (Map<String, Object>) termsMap.get(key));
-            } else {
-                if (mergedMap.get(key) instanceof Long || termsMap.get(key) instanceof Long) {
-                    long newVal = Long.parseLong(mergedMap.get(key).toString()) + Long.parseLong(termsMap.get(key).toString());
-                    mergedMap.put(key, newVal);
-                } else if (mergedMap.get(key) instanceof Float || termsMap.get(key) instanceof Float) {
-                    float newVal = Float.parseFloat(mergedMap.get(key).toString()) + Float.parseFloat(termsMap.get(key).toString());
-                    mergedMap.put(key, newVal);
-                } else if (mergedMap.get(key) instanceof Double || termsMap.get(key) instanceof Double) {
-                    double newVal = Double.parseDouble(mergedMap.get(key).toString()) + Double.parseDouble(termsMap.get(key).toString());
-                    mergedMap.put(key, newVal);
-                } else if (mergedMap.get(key) instanceof Integer) {
-                    int newVal = Integer.parseInt(mergedMap.get(key).toString()) + Integer.parseInt(termsMap.get(key).toString());
-                    mergedMap.put(key, newVal);
-                } else if (mergedMap.get(key) instanceof Short) {
-                    int newVal = Short.parseShort(mergedMap.get(key).toString()) + Short.parseShort(termsMap.get(key).toString());
-                    mergedMap.put(key, newVal);
-                } else if (mergedMap.get(key) instanceof List) {
-                    List<Map<String, Object>> bucketList = (List<Map<String, Object>>) termsMap.get(key);
-                    List<Map<String, Object>> mergedBucketList = (List<Map<String, Object>>) mergedMap.get(key);
-                    calculateList(mergedBucketList, bucketList);
-                }
-            }
-        }
-    }
-
-    private void calculateList(List<Map<String, Object>> mergedBucketList, List<Map<String, Object>> bucketList) {
-        for (Map<String, Object> bucket : bucketList) {
-            boolean notExists = true;
-            for (Map<String, Object> mergedBucket : mergedBucketList) {
-                if (bucket.get("key").toString().equals(mergedBucket.get("key").toString())) {
-                    notExists = false;
-                    calculateRecursively(mergedBucket, bucket);
-                }
-            }
-            if (notExists) {
-                Map<String, Object> clonedBucket = (Map<String, Object>) SerializationUtils.clone(new HashMap<>(bucket));
-                mergedBucketList.add(clonedBucket);
-            }
-        }
-    }
-
     private String getIntervalTerms(String indexName, DateTime startDt, DateTime endDt) {
         if (indexName.contains("realtime")) {
             return "1m";
@@ -486,5 +307,15 @@ public class CacheService {
         } else {
             return "1h";
         }
+    }
+
+    private Map<String, Object> getIMap(String mReqBody) {
+        String[] arr = mReqBody.split("\n");
+        Map<String, Object> iMap = parsingService.parseXContent(arr[0]);
+        return iMap;
+    }
+
+    private String buildMultiSearchQuery(Map<String, Object> iMap, Map<String, Object> qMap) {
+        return JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n";
     }
 }

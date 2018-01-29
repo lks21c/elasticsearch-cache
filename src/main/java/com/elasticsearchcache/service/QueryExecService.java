@@ -35,6 +35,9 @@ public class QueryExecService {
     @Autowired
     CacheService cacheService;
 
+    @Autowired
+    ResponseBuildService responseBuildService;
+
     public String executeQuery(String targetUrl, List<QueryPlan> queryPlanList) {
         StringBuilder sb = new StringBuilder();
         StringBuilder qb = new StringBuilder();
@@ -94,12 +97,12 @@ public class QueryExecService {
             logger.info(log);
 
             if (CacheMode.ALL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
-                String resBody = cacheService.generateRes(queryPlanList.get(i).getDhbList());
+                String resBody = responseBuildService.generateRes(queryPlanList.get(i).getDhbList());
                 if (i != 0) {
                     mergedRes.append(",");
                 }
                 if ("terms".equals(queryPlanList.get(i).getAggsType())) {
-                    resBody = cacheService.generateTermsRes(resBody);
+                    resBody = parsingService.generateTermsRes(resBody);
                 }
                 mergedRes.append(resBody);
             } else if (CacheMode.PARTIAL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
@@ -110,7 +113,7 @@ public class QueryExecService {
                     String preResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
                     // put cache
                     cacheService.putCache(preResBody, queryPlanList.get(i));
-                    preDhbList = cacheService.getDhbList(preResBody);
+                    preDhbList = parsingService.getDhbList(preResBody);
                     mergedDhbList.addAll(preDhbList);
                 }
 
@@ -125,17 +128,17 @@ public class QueryExecService {
                     // put cache
                     logger.debug("try post put cache");
                     cacheService.putCache(postResBody, queryPlanList.get(i));
-                    postDhbList = cacheService.getDhbList(postResBody);
+                    postDhbList = parsingService.getDhbList(postResBody);
                     mergedDhbList.addAll(postDhbList);
                 }
-                String resBody = cacheService.generateRes(mergedDhbList);
+                String resBody = responseBuildService.generateRes(mergedDhbList);
 
                 if (i != 0) {
                     mergedRes.append(",");
                 }
 
                 if ("terms".equals(queryPlanList.get(i).getAggsType())) {
-                    resBody = cacheService.generateTermsRes(resBody);
+                    resBody = parsingService.generateTermsRes(resBody);
                 }
                 mergedRes.append(resBody);
             } else {
@@ -148,7 +151,7 @@ public class QueryExecService {
                     cacheService.putCache(resBody, queryPlanList.get(i));
                     if ("terms".equals(queryPlanList.get(i).getAggsType())) {
                         logger.info("terms nocache");
-                        resBody = cacheService.generateTermsRes(resBody);
+                        resBody = parsingService.generateTermsRes(resBody);
                     }
                     mergedRes.append(resBody);
                 }

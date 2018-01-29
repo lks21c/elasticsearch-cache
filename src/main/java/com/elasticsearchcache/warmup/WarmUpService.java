@@ -4,7 +4,6 @@ import com.elasticsearchcache.conts.EsUrl;
 import com.elasticsearchcache.service.CacheService;
 import com.elasticsearchcache.service.QueryExecService;
 import com.elasticsearchcache.vo.QueryPlan;
-import org.apache.http.MethodNotSupportedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.search.SearchRequest;
@@ -55,7 +54,7 @@ public class WarmUpService {
     @Value("${esc.cache.warmup.size}")
     private int esWarmUpSize;
 
-//    @Scheduled(fixedDelay = 1000 * 60 * 2)
+    //    @Scheduled(fixedDelay = 1000 * 60 * 2)
     public void warmUpMinuteQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
@@ -85,7 +84,7 @@ public class WarmUpService {
         }
     }
 
-//    @Scheduled(fixedDelay = 1000 * 60 * 120)
+    //    @Scheduled(fixedDelay = 1000 * 60 * 120)
     public void warmUpDayQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
@@ -139,11 +138,9 @@ public class WarmUpService {
                     value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
 
                     try {
-                        QueryPlan qp = cacheService.manipulateQuery(value);
+                        QueryPlan qp = cacheService.manipulateQuery(true, null, value);
                         queryPlanList.add(qp);
                     } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (MethodNotSupportedException e) {
                         e.printStackTrace();
                     }
                 }

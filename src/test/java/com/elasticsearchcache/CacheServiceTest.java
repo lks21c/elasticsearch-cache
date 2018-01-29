@@ -1,7 +1,7 @@
 package com.elasticsearchcache;
 
 import com.elasticsearchcache.service.CacheService;
-import com.elasticsearchcache.service.NativeParsingServiceImpl;
+import com.elasticsearchcache.service.ParsingService;
 import org.apache.http.MethodNotSupportedException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,7 +15,7 @@ import java.io.IOException;
 @SpringBootTest
 public class CacheServiceTest {
     @Autowired
-    NativeParsingServiceImpl parsingService;
+    ParsingService parsingService;
 
     @Autowired
     CacheService cacheService;
@@ -25,7 +25,7 @@ public class CacheServiceTest {
         String i = "{\"index\":[\"mel_com_private_music_st_realtime_member_*\"],\"ignore_unavailable\":true,\"preference\":1513646426988}\n";
         String q = "{\"query\":{\"bool\":{\"must\":[{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}},{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"*\"}},{\"range\":{\"ts\":{\"gte\":1513263600000,\"lte\":1513752110170,\"format\":\"epoch_millis\"}}}],\"must_not\":[]}},\"size\":0,\"_source\":{\"excludes\":[]},\"aggs\":{\"2\":{\"date_histogram\":{\"field\":\"ts\",\"interval\":\"1d\",\"time_zone\":\"Asia/Tokyo\",\"min_doc_count\":1},\"aggs\":{\"3\":{\"terms\":{\"field\":\"log_type\",\"size\":10,\"order\":{\"1\":\"desc\"}},\"aggs\":{\"1\":{\"sum\":{\"field\":\"datapoint\"}}}}}}},\"version\":true,\"highlight\":{\"pre_tags\":[\"@kibana-highlighted-field@\"],\"post_tags\":[\"@/kibana-highlighted-field@\"],\"fields\":{\"*\":{\"highlight_query\":{\"bool\":{\"must\":[{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true,\"all_fields\":true}},{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"*\",\"all_fields\":true}},{\"range\":{\"ts\":{\"gte\":1513263600000,\"lte\":1513752110170,\"format\":\"epoch_millis\"}}}],\"must_not\":[]}}}},\"fragment_size\":2147483647}}\n";
 //        System.out.println(q);
-        cacheService.manipulateQuery(i + q);
+        cacheService.manipulateQuery(true,null,i + q);
     }
 
     @Test
@@ -61,7 +61,7 @@ public class CacheServiceTest {
                 "    }\n" +
                 "";
 //        System.out.println("resBody = " + resBody);
-        String newRes = cacheService.generateTermsRes(resBody);
+        String newRes = parsingService.generateTermsRes(resBody);
         System.out.println("newRes = " + newRes);
     }
 
@@ -89,7 +89,7 @@ public class CacheServiceTest {
                 "      \"status\": 200\n" +
                 "    }";
         System.out.println("resBody = " + resBody);
-        String newRes = cacheService.generateTermsRes(resBody);
+        String newRes = parsingService.generateTermsRes(resBody);
 
         System.out.println("newRes = " + newRes);
     }
@@ -98,7 +98,7 @@ public class CacheServiceTest {
     public void testGenerateTermsRes3() {
         String resBody = "{\"took\":2,\"timed_out\":false,\"_shards\":{\"total\":16,\"successful\":16,\"failed\":0},\"hits\":{\"total\":35544838,\"max_score\":0.0,\"hits\":[]},\"aggregations\":{\"dates\":{\"buckets\":[{\"key_as_string\":\"2018-01-14T00:00:00.000+09:00\",\"key\":1515855600000,\"doc_count\":17218871,\"3\":{\"doc_count_error_upper_bound\":0,\"sum_other_doc_count\":0,\"buckets\":[{\"key\":\"Android Phone App\",\"doc_count\":9600024},{\"key\":\"iPhone App\",\"doc_count\":7268542},{\"key\":\"iPad App\",\"doc_count\":176717},{\"key\":\"Macintosh PC Player\",\"doc_count\":48386},{\"key\":\"Android Phone Melon with kakao\",\"doc_count\":41153},{\"key\":\"iPhone Web\",\"doc_count\":29800},{\"key\":\"iPhone Melon with kakao\",\"doc_count\":28390},{\"key\":\"Android Phone Web\",\"doc_count\":25569},{\"key\":\"미러링크 현대차OEM\",\"doc_count\":208},{\"key\":\"Android AZTalk Phone Web\",\"doc_count\":44},{\"key\":\"iPhone AZTalk Web\",\"doc_count\":26},{\"key\":\"Windows PC AZTalk Web\",\"doc_count\":4},{\"key\":\"Mobile AZTalk Web (Etc)\",\"doc_count\":2},{\"key\":\"PC AZTalk Web (Etc)\",\"doc_count\":1}]}},{\"key_as_string\":\"2018-01-15T00:00:00.000+09:00\",\"key\":1515942000000,\"doc_count\":18325967,\"3\":{\"doc_count_error_upper_bound\":0,\"sum_other_doc_count\":0,\"buckets\":[{\"key\":\"Android Phone App\",\"doc_count\":9758827},{\"key\":\"iPhone App\",\"doc_count\":8200248},{\"key\":\"iPad App\",\"doc_count\":176042},{\"key\":\"Macintosh PC Player\",\"doc_count\":61350},{\"key\":\"Android Phone Melon with kakao\",\"doc_count\":39812},{\"key\":\"iPhone Web\",\"doc_count\":33062},{\"key\":\"Android Phone Web\",\"doc_count\":28335},{\"key\":\"iPhone Melon with kakao\",\"doc_count\":27867},{\"key\":\"미러링크 현대차OEM\",\"doc_count\":232},{\"key\":\"Android AZTalk Phone Web\",\"doc_count\":96},{\"key\":\"iPhone AZTalk Web\",\"doc_count\":49},{\"key\":\"Windows PC AZTalk Web\",\"doc_count\":29},{\"key\":\"Mobile AZTalk Web (Etc)\",\"doc_count\":5},{\"key\":\"PC AZTalk Web (Etc)\",\"doc_count\":3}]}}]}},\"status\":200}";
         System.out.println("resBody = " + resBody);
-        String newRes = cacheService.generateTermsRes(resBody);
+        String newRes = parsingService.generateTermsRes(resBody);
     }
 
 

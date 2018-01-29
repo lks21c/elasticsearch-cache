@@ -1,7 +1,5 @@
 package com.elasticsearchcache.vo;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.io.Serializable;
 import java.util.List;
 
@@ -11,6 +9,8 @@ public class QueryPlan implements Serializable {
     private String query;
 
     private String postQuery;
+
+    private String requestUri;
 
     private List<DateHistogramBucket> dhbList;
 
@@ -27,6 +27,8 @@ public class QueryPlan implements Serializable {
     private String aggs;
 
     private String aggsType;
+
+    private boolean isMultiSearch;
 
     public String getPreQuery() {
         return preQuery;
@@ -116,17 +118,19 @@ public class QueryPlan implements Serializable {
         this.aggsType = aggsType;
     }
 
-    public int getTotalQueryCnt() {
-        int queryCnt = 0;
-        if (!StringUtils.isEmpty(preQuery)) {
-            queryCnt++;
-        }
-        if (!StringUtils.isEmpty(query)) {
-            queryCnt++;
-        }
-        if (!StringUtils.isEmpty(postQuery)) {
-            queryCnt++;
-        }
-        return queryCnt;
+    public String getRequestUri() {
+        return requestUri;
+    }
+
+    public void setRequestUri(String requestUri) {
+        this.requestUri = requestUri;
+    }
+
+    public boolean isMultiSearch() {
+        return isMultiSearch;
+    }
+
+    public void setMultiSearch(boolean multiSearch) {
+        isMultiSearch = multiSearch;
     }
 }
