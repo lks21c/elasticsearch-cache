@@ -63,7 +63,7 @@ public class CacheService {
     @Value("${filedname.time}")
     private String timeFiledName;
 
-    public QueryPlan manipulateQuery(String mReqBody) throws IOException, MethodNotSupportedException {
+    public QueryPlan manipulateQuery(String mReqBody) throws IOException {
         logger.debug("mReqBody = " + mReqBody);
 
         String[] arr = mReqBody.split("\n");
@@ -80,36 +80,16 @@ public class CacheService {
             logger.debug("key = " + key);
         }
 
-        // Get gte, lte
-        DateTime startDt = null, endDt = null;
+        // Get Query
         Map<String, Object> query = (Map<String, Object>) qMap.get("query");
 
-        Map<String, Object> queryWithoutRange = (Map<String, Object>) SerializationUtils.clone((HashMap<String, Object>) query);
-        Map<String, Object> bool = (Map<String, Object>) query.get("bool");
-        List<Map<String, Object>> must = (List<Map<String, Object>>) bool.get("must");
+        // getQueryWithoutRange
+        Map<String, Object> queryWithoutRange = parsingService.getQueryWithoutRange(query);
 
-        for (Map<String, Object> obj : must) {
-            Map<String, Object> range = (Map<String, Object>) obj.get("range");
-            if (range != null) {
-                for (String rangeKey : range.keySet()) {
-                    Long gte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("gte");
-                    Long lte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("lte");
-                    startDt = new DateTime(gte);
-                    endDt = new DateTime(lte);
-
-                    logger.info("startDt = " + startDt);
-                    logger.info("endDt = " + endDt);
-                }
-            }
-        }
-
-        Map<String, Object> clonedBool = (Map<String, Object>) queryWithoutRange.get("bool");
-        List<Map<String, Object>> clonedMust = (List<Map<String, Object>>) clonedBool.get("must");
-        for (Map<String, Object> obj : clonedMust) {
-            obj.remove("range");
-        }
-        logger.debug("queryWithoutRange = " + queryWithoutRange);
-//        logger.mReqBody("query = " + query);
+        // parse startDt, endDt
+        Map<String, Object> dateMap = parsingService.parseStartEndDt(query);
+        DateTime startDt = (DateTime) dateMap.get("startDt");
+        DateTime endDt = (DateTime) dateMap.get("endDt");
 
         // Get aggs
         Map<String, Object> aggs = (Map<String, Object>) qMap.get("aggs");
@@ -120,6 +100,7 @@ public class CacheService {
         String aggsType = (String) rtnMap.get("aggsType");
         logger.debug("aggsType = " + aggsType);
 
+        // Put Query Profile
         profileService.putQueryProfile(indexName, interval, iMap, qMap, queryWithoutRange);
 
         // handle terms

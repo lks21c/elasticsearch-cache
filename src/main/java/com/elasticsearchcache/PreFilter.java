@@ -96,7 +96,6 @@ public class PreFilter extends ZuulFilter {
 //            logger.info("request = " + targetUrl);
             StringBuilder sb = new StringBuilder();
             if (HttpMethod.POST.equals(request.getMethod())) {
-
                 if (request.getRequestURI().contains(EsUrl.SUFFIX_MULTI_SEARCH)) {
                     String reqBody = getRequestBody(request);
                     logger.debug("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");

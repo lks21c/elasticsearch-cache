@@ -1,5 +1,6 @@
 package com.elasticsearchcache.service;
 
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.io.stream.NamedWriteableRegistry;
@@ -133,10 +134,12 @@ import org.elasticsearch.search.aggregations.metrics.tophits.InternalTopHits;
 import org.elasticsearch.search.aggregations.metrics.tophits.TopHitsAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.valuecount.InternalValueCount;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggregationBuilder;
+import org.joda.time.DateTime;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -306,6 +309,44 @@ public class NativeParsingServiceImpl implements ParsingService {
 
         AggregatorFactories.Builder ab = AggregatorFactories.parseAggregators(parser);
         return ab;
+    }
+
+    @Override
+    public Map<String, Object> getQueryWithoutRange(Map<String, Object> query) {
+        Map<String, Object> queryWithoutRange = (Map<String, Object>) SerializationUtils.clone((HashMap<String, Object>) query);
+        Map<String, Object> clonedBool = (Map<String, Object>) queryWithoutRange.get("bool");
+        List<Map<String, Object>> clonedMust = (List<Map<String, Object>>) clonedBool.get("must");
+        for (Map<String, Object> obj : clonedMust) {
+            obj.remove("range");
+        }
+        logger.debug("queryWithoutRange = " + queryWithoutRange);
+        return queryWithoutRange;
+    }
+
+    @Override
+    public Map<String,Object> parseStartEndDt(Map<String, Object> query) {
+        Map<String, Object> rtnMap = new HashMap<>();
+        Map<String, Object> bool = (Map<String, Object>) query.get("bool");
+        List<Map<String, Object>> must = (List<Map<String, Object>>) bool.get("must");
+
+        for (Map<String, Object> obj : must) {
+            Map<String, Object> range = (Map<String, Object>) obj.get("range");
+            if (range != null) {
+                for (String rangeKey : range.keySet()) {
+                    Long gte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("gte");
+                    Long lte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("lte");
+                    DateTime startDt = new DateTime(gte);
+                    DateTime endDt = new DateTime(lte);
+
+                    rtnMap.put("startDt", startDt);
+                    rtnMap.put("endDt", endDt);
+
+                    logger.info("startDt = " + startDt);
+                    logger.info("endDt = " + endDt);
+                }
+            }
+        }
+        return rtnMap;
     }
 
     private void registerQuery(SearchPlugin.QuerySpec<?> spec) {
