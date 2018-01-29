@@ -67,7 +67,7 @@ public class WarmUpService {
         }
     }
 
-    @Scheduled(cron = "0 0 01 * * ?")
+    @Scheduled(fixedDelay = 1000 * 60 * 120)
     public void warmUpDayQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
