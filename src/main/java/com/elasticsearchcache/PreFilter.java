@@ -45,6 +45,7 @@ public class PreFilter extends ZuulFilter {
 
     @Value("${esc.performance.enabled}")
     private boolean enablePerformance;
+    private boolean skipUrl;
 
     @Override
     public String filterType() {
@@ -67,14 +68,7 @@ public class PreFilter extends ZuulFilter {
         HttpServletRequest request = ctx.getRequest();
 
         //TODO: it's temporarily skip.
-        if (request.getRequestURI().equals("/.kibana/config/_search") ||
-                request.getRequestURI().equals("/_cluster/settings") ||
-                request.getRequestURI().equals("/_nodes/_local") ||
-                request.getRequestURI().equals("/_nodes") ||
-                request.getRequestURI().equals("/") ||
-                request.getRequestURI().equals("/_mapping") ||
-                request.getRequestURI().equals("/_aliases") ||
-                request.getRequestURI().equals("/_cluster/health/.kibana")) {
+        if (isSkipUrl(request)) {
             return null;
         }
 
@@ -146,4 +140,17 @@ public class PreFilter extends ZuulFilter {
 
     }
 
+    public boolean isSkipUrl(HttpServletRequest request) {
+        if (request.getRequestURI().equals("/.kibana/config/_search") ||
+                request.getRequestURI().equals("/_cluster/settings") ||
+                request.getRequestURI().equals("/_nodes/_local") ||
+                request.getRequestURI().equals("/_nodes") ||
+                request.getRequestURI().equals("/") ||
+                request.getRequestURI().equals("/_mapping") ||
+                request.getRequestURI().equals("/_aliases") ||
+                request.getRequestURI().equals("/_cluster/health/.kibana")) {
+            return true;
+        }
+        return false;
+    }
 }
