@@ -54,6 +54,9 @@ public class CacheService {
     @Autowired
     private ProfileService profileService;
 
+    @Autowired
+    private ResponseBuildService responseBuildService;
+
     @Value("${zuul.routes.**.url}")
     private String esUrl;
 
@@ -160,7 +163,7 @@ public class CacheService {
                 Map<String, Object> preQmap = getManipulateQuery(qMap, plan.getPreStartDt(), plan.getPreEndDt());
                 if (isMultiSearch) {
                     Map<String, Object> iMap = getIMap(mReqBody);
-                    queryPlan.setPreQuery(buildMultiSearchQuery(iMap, preQmap));
+                    queryPlan.setPreQuery(responseBuildService.buildMultiSearchQuery(iMap, preQmap));
                 }
             }
 
@@ -177,7 +180,7 @@ public class CacheService {
                 Map<String, Object> postQmap = getManipulateQuery(qMap, plan.getPostStartDt(), plan.getPostEndDt());
                 if (isMultiSearch) {
                     Map<String, Object> iMap = getIMap(mReqBody);
-                    queryPlan.setPostQuery(buildMultiSearchQuery(iMap, postQmap));
+                    queryPlan.setPostQuery(responseBuildService.buildMultiSearchQuery(iMap, postQmap));
                 }
             }
 
@@ -192,7 +195,7 @@ public class CacheService {
             if ("terms".equals(aggsType)) {
                 if (isMultiSearch) {
                     Map<String, Object> iMap = getIMap(mReqBody);
-                    queryPlan.setQuery(buildMultiSearchQuery(iMap, qMap));
+                    queryPlan.setQuery(responseBuildService.buildMultiSearchQuery(iMap, qMap));
                 }
             } else {
                 queryPlan.setQuery(mReqBody);
@@ -313,9 +316,5 @@ public class CacheService {
         String[] arr = mReqBody.split("\n");
         Map<String, Object> iMap = parsingService.parseXContent(arr[0]);
         return iMap;
-    }
-
-    private String buildMultiSearchQuery(Map<String, Object> iMap, Map<String, Object> qMap) {
-        return JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n";
     }
 }

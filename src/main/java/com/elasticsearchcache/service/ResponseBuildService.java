@@ -45,4 +45,8 @@ public class ResponseBuildService {
 
         return res;
     }
+
+    public String buildMultiSearchQuery(Map<String, Object> iMap, Map<String, Object> qMap) {
+        return JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n";
+    }
 }
