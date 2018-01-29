@@ -55,7 +55,7 @@ public class WarmUpService {
     @Value("${esc.cache.warmup.size}")
     private int esWarmUpSize;
 
-    @Scheduled(fixedDelay = 1000 * 60 * 2)
+//    @Scheduled(fixedDelay = 1000 * 60 * 2)
     public void warmUpMinuteQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
@@ -67,7 +67,25 @@ public class WarmUpService {
         }
     }
 
-    @Scheduled(fixedDelay = 1000 * 60 * 120)
+    @Scheduled(fixedDelay = 1000 * 60 * 60)
+    public void warmUpHourQueries() {
+        if (escCache && escWarmUp) {
+            DateTime startDt = new DateTime();
+            startDt = startDt.withSecondOfMinute(0);
+            startDt = startDt.withMillisOfSecond(0);
+            startDt = startDt.withMinuteOfHour(0);
+            startDt = startDt.withHourOfDay(0);
+            DateTime endDt = startDt.plusDays(1).minus(1);
+            startDt = startDt.minusDays(1);
+            warmUp("1h", startDt, endDt);
+
+            startDt = startDt.minusDays(2);
+            endDt = endDt.minusDays(2);
+            warmUp("1h", startDt, endDt);
+        }
+    }
+
+//    @Scheduled(fixedDelay = 1000 * 60 * 120)
     public void warmUpDayQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
