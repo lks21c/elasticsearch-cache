@@ -110,7 +110,7 @@ public class CacheService {
 
         // handle terms
         if (enableTermsCache && "terms".equals(aggsType)) {
-            aggs = appendDateHistogram(aggs, getIntervalTerms(indexName, startDt, endDt));
+            aggs = appendDateHistogramForTermsAggr(aggs, getIntervalTerms(indexName, startDt, endDt));
             qMap.put("aggs", aggs);
         }
 
@@ -241,7 +241,7 @@ public class CacheService {
         return totalSize;
     }
 
-    private Map<String, Object> appendDateHistogram(Map<String, Object> aggs, String interval) {
+    private Map<String, Object> appendDateHistogramForTermsAggr(Map<String, Object> aggs, String interval) {
         HashMap<String, Object> hashMap = new HashMap<>(aggs);
         HashMap<String, Object> newAggs = new HashMap<>();
         Map<String, Object> clonedAggs = (Map<String, Object>) SerializationUtils.clone(hashMap);
