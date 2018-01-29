@@ -2,6 +2,7 @@ package com.elasticsearchcache.service;
 
 import com.elasticsearchcache.conts.CacheMode;
 import com.elasticsearchcache.conts.EsUrl;
+import com.elasticsearchcache.performance.PerformanceService;
 import com.elasticsearchcache.profile.ProfileService;
 import com.elasticsearchcache.repository.CacheRepository;
 import com.elasticsearchcache.util.IndexNameUtil;
@@ -11,6 +12,7 @@ import com.elasticsearchcache.vo.CachePlan;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.elasticsearchcache.vo.QueryPlan;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.http.entity.ByteArrayEntity;
@@ -57,6 +59,12 @@ public class CacheService {
     @Autowired
     private ResponseBuildService responseBuildService;
 
+    @Autowired
+    private QueryExecService queryExecService;
+
+    @Autowired
+    private PerformanceService performanceService;
+
     @Value("${zuul.routes.**.url}")
     private String esUrl;
 
@@ -65,6 +73,9 @@ public class CacheService {
 
     @Value("${filedname.time}")
     private String timeFiledName;
+
+    @Value("${esc.cache}")
+    private Boolean esCache;
 
     public QueryPlan manipulateQuery(boolean isMultiSearch, String requestUri, String mReqBody) throws IOException {
         logger.debug("mReqBody = " + mReqBody);
@@ -316,5 +327,46 @@ public class CacheService {
         String[] arr = mReqBody.split("\n");
         Map<String, Object> iMap = parsingService.parseXContent(arr[0]);
         return iMap;
+    }
+
+    public StringBuilder executeMultiSearch(String targetUrl, String reqBody) throws IOException, MethodNotSupportedException {
+        StringBuilder sb = new StringBuilder();
+        String[] reqs = reqBody.split("\n");
+        if (esCache && !reqBody.contains(".kibana")) {
+            long beforeQueries = System.currentTimeMillis();
+            List<QueryPlan> queryPlanList = new ArrayList<>();
+            for (int i = 0; i < reqs.length; i = i + 2) {
+                QueryPlan queryPlan = manipulateQuery(true, null, reqs[i] + "\n" + reqs[i + 1] + "\n");
+//                            logger.info("queryPlan = " + JsonUtil.convertAsString(queryPlan));
+                queryPlanList.add(queryPlan);
+            }
+            String body = queryExecService.executeQuery(targetUrl, queryPlanList);
+            if (StringUtils.isEmpty(body)) {
+                logger.info("esc cancelled.");
+                long afterQueries = System.currentTimeMillis() - beforeQueries;
+                logger.info("cache afterQueries = " + afterQueries);
+                performanceService.putPerformance(reqBody, (int) afterQueries);
+                return null;
+            }
+            sb.append(body);
+            long afterQueries = System.currentTimeMillis() - beforeQueries;
+            logger.info("cache afterQueries = " + afterQueries);
+            performanceService.putPerformance(reqBody, (int) afterQueries);
+        } else {
+            long beforeQueries = System.currentTimeMillis();
+            HttpResponse res = esService.executeQuery(targetUrl, reqBody);
+            String resBody = EntityUtils.toString(res.getEntity());
+            Map<String, Object> resMap = parsingService.parseXContent(resBody);
+            List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
+            if (respes.size() > 0 && !reqBody.contains(".kibana")) {
+                int took = (int) respes.get(0).get("took");
+                logger.info("took = " + took);
+            }
+            sb.append(resBody);
+            long afterQueries = System.currentTimeMillis() - beforeQueries;
+            logger.info("nocache afterQueries = " + afterQueries);
+            performanceService.putPerformance(reqBody, (int) afterQueries);
+        }
+        return sb;
     }
 }

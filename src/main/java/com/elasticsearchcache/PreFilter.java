@@ -6,14 +6,10 @@ import com.elasticsearchcache.performance.PerformanceService;
 import com.elasticsearchcache.service.CacheService;
 import com.elasticsearchcache.service.ElasticSearchService;
 import com.elasticsearchcache.service.ParsingService;
-import com.elasticsearchcache.service.QueryExecService;
-import com.elasticsearchcache.vo.QueryPlan;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +19,6 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -45,16 +38,10 @@ public class PreFilter extends ZuulFilter {
     CacheService cacheService;
 
     @Autowired
-    private QueryExecService queryExecService;
-
-    @Autowired
     private PerformanceService performanceService;
 
     @Value("${zuul.routes.**.url}")
     private String esUrl;
-
-    @Value("${esc.cache}")
-    private Boolean esCache;
 
     @Value("${esc.performance.enabled}")
     private boolean enablePerformance;
@@ -79,7 +66,7 @@ public class PreFilter extends ZuulFilter {
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
 
-        //TODO: 임시로 처리, 지울 예정
+        //TODO: it's temporarily skip.
         if (request.getRequestURI().equals("/.kibana/config/_search") ||
                 request.getRequestURI().equals("/_cluster/settings") ||
                 request.getRequestURI().equals("/_nodes/_local") ||
@@ -94,51 +81,11 @@ public class PreFilter extends ZuulFilter {
         try {
             String targetUrl = getTargetUrl(request);
 //            logger.info("request = " + targetUrl);
-            StringBuilder sb = new StringBuilder();
             if (HttpMethod.POST.equals(request.getMethod())) {
                 if (request.getRequestURI().contains(EsUrl.SUFFIX_MULTI_SEARCH)) {
                     String reqBody = getRequestBody(request);
                     logger.debug("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
-
-                    handleRequestHeader(request);
-
-                    String[] reqs = reqBody.split("\n");
-                    if (esCache && !reqBody.contains(".kibana")) {
-                        long beforeQueries = System.currentTimeMillis();
-                        List<QueryPlan> queryPlanList = new ArrayList<>();
-                        for (int i = 0; i < reqs.length; i = i + 2) {
-                            QueryPlan queryPlan = cacheService.manipulateQuery(true, null, reqs[i] + "\n" + reqs[i + 1] + "\n");
-//                            logger.info("queryPlan = " + JsonUtil.convertAsString(queryPlan));
-                            queryPlanList.add(queryPlan);
-                        }
-                        String body = queryExecService.executeQuery(targetUrl, queryPlanList);
-                        if (StringUtils.isEmpty(body)) {
-                            logger.info("esc cancelled.");
-                            long afterQueries = System.currentTimeMillis() - beforeQueries;
-                            logger.info("cache afterQueries = " + afterQueries);
-                            performanceService.putPerformance(reqBody, (int) afterQueries);
-                            return null;
-                        }
-                        sb.append(body);
-                        long afterQueries = System.currentTimeMillis() - beforeQueries;
-                        logger.info("cache afterQueries = " + afterQueries);
-                        performanceService.putPerformance(reqBody, (int) afterQueries);
-                    } else {
-                        long beforeQueries = System.currentTimeMillis();
-                        HttpResponse res = esService.executeQuery(targetUrl, reqBody);
-                        String resBody = EntityUtils.toString(res.getEntity());
-                        Map<String, Object> resMap = parsingService.parseXContent(resBody);
-                        List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
-                        if (respes.size() > 0 && !reqBody.contains(".kibana")) {
-                            int took = (int) respes.get(0).get("took");
-                            logger.info("took = " + took);
-                        }
-                        sb.append(resBody);
-                        long afterQueries = System.currentTimeMillis() - beforeQueries;
-                        logger.info("nocache afterQueries = " + afterQueries);
-                        performanceService.putPerformance(reqBody, (int) afterQueries);
-                    }
-
+                    StringBuilder sb = cacheService.executeMultiSearch(targetUrl, reqBody);
                     if (sb.length() > 0) {
                         logger.info("sc ok ");
                         setZuulResponse(ctx, sb.toString());
