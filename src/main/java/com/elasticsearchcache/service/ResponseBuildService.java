@@ -45,9 +45,13 @@ public class ResponseBuildService {
 
         res += "            \n" +
                 "        }\n" +
-                "      },\n" +
-                "      \"status\": 200\n" +
-                "    }\n";
+                "      }\n";
+
+        if (!typedKeys) {
+            res += "      ,\"status\": 200\n";
+        }
+
+        res += "    }\n";
 
         return res;
     }

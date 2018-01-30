@@ -101,7 +101,7 @@ public class QueryExecService {
             logger.info(log);
 
             if (CacheMode.ALL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
-                String resBody = responseBuildService.generateRes(isMultiSearch, queryPlanList.get(i).getDhbList());
+                String resBody = responseBuildService.generateRes(!isMultiSearch, queryPlanList.get(i).getDhbList());
                 if (i != 0) {
                     mergedRes.append(",");
                 }
@@ -135,7 +135,7 @@ public class QueryExecService {
                     postDhbList = parsingService.getDhbList(postResBody);
                     mergedDhbList.addAll(postDhbList);
                 }
-                String resBody = responseBuildService.generateRes(isMultiSearch, mergedDhbList);
+                String resBody = responseBuildService.generateRes(!isMultiSearch, mergedDhbList);
 
                 if (i != 0) {
                     mergedRes.append(",");
