@@ -89,6 +89,13 @@ public class PreFilter extends ZuulFilter {
                 } else if (request.getRequestURI().contains(EsUrl.SUFFIX_SEARCH)) {
                     String reqBody = getRequestBody(request);
                     logger.debug("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
+                    StringBuilder sb = cacheService.executeSearch(targetUrl, request.getRequestURI(), reqBody);
+                    if (sb.length() > 0) {
+                        logger.info("sc ok ");
+                        setZuulResponse(ctx, sb.toString());
+                    } else {
+                        logger.error("original request invoked.");
+                    }
                 } else if (request.getRequestURI().contains(EsUrl.SUFFIX_MULTI_GET)) {
                     if (enablePerformance) {
                         String reqBody = getRequestBody(request);

@@ -3,6 +3,7 @@ package com.elasticsearchcache.service;
 import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.io.stream.NamedWriteableRegistry;
@@ -137,6 +138,8 @@ import org.elasticsearch.search.aggregations.metrics.tophits.TopHitsAggregationB
 import org.elasticsearch.search.aggregations.metrics.valuecount.InternalValueCount;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggregationBuilder;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -321,11 +324,11 @@ public class ParsingService {
         for (Map<String, Object> obj : clonedMust) {
             obj.remove("range");
         }
-        logger.debug("queryWithoutRange = " + queryWithoutRange);
+        logger.debug("queryWithoutRange = " + JsonUtil.convertAsString(queryWithoutRange));
         return queryWithoutRange;
     }
 
-    public Map<String,Object> parseStartEndDt(Map<String, Object> query) {
+    public Map<String, Object> parseStartEndDt(Map<String, Object> query) {
         Map<String, Object> rtnMap = new HashMap<>();
         Map<String, Object> bool = (Map<String, Object>) query.get("bool");
         List<Map<String, Object>> must = (List<Map<String, Object>>) bool.get("must");
@@ -336,8 +339,33 @@ public class ParsingService {
                 for (String rangeKey : range.keySet()) {
                     Long gte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("gte");
                     Long lte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("lte");
-                    DateTime startDt = new DateTime(gte);
-                    DateTime endDt = new DateTime(lte);
+
+                    String from = (String) ((Map<String, Object>) range.get(rangeKey)).get("from");
+                    String to = (String) ((Map<String, Object>) range.get(rangeKey)).get("to");
+
+                    boolean includeLower = (boolean) ((Map<String, Object>) range.get(rangeKey)).get("include_lower");
+                    boolean includeUpper = (boolean) ((Map<String, Object>) range.get(rangeKey)).get("include_upper");
+
+                    String datePattern = "yyyy-MM-dd'T'HH:mm:ss";
+                    DateTimeFormatter dateFormatter = DateTimeFormat.forPattern(datePattern);
+
+                    DateTime startDt = null;
+                    DateTime endDt = null;
+
+                    if (!StringUtils.isEmpty(from) && !StringUtils.isEmpty(to)) {
+                        startDt = dateFormatter.parseDateTime(from);
+                        endDt = dateFormatter.parseDateTime(to);
+                    } else if (gte != null && lte != null) {
+                        startDt = new DateTime(gte);
+                        endDt = new DateTime(lte);
+                    }
+
+                    if (!includeLower) {
+                        startDt = startDt.plus(1);
+                    }
+                    if (!includeUpper) {
+                        endDt = endDt.minus(1);
+                    }
 
                     rtnMap.put("startDt", startDt);
                     rtnMap.put("endDt", endDt);
@@ -538,5 +566,14 @@ public class ParsingService {
             }
         }
         return dhbList;
+    }
+
+    public Map<String, Object> getAggs(Map<String, Object> qMap) {
+        if (qMap.containsKey("aggs")) {
+            return (Map<String, Object>) qMap.get("aggs");
+        } else if (qMap.containsKey("aggregations")) {
+            return (Map<String, Object>) qMap.get("aggregations");
+        }
+        return null;
     }
 }

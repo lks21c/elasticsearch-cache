@@ -26,9 +26,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +87,8 @@ public class CacheService {
         if (isMultiSearch) {
             String[] arr = mReqBody.split("\n");
             qMap = parsingService.parseXContent(arr[1]);
+        } else {
+            qMap = parsingService.parseXContent(mReqBody);
         }
 
         long indexSize = -1; //getTotalIndexSize(idl);
@@ -92,9 +96,12 @@ public class CacheService {
 
         // Parse Index Name
         String indexName = getIndexName(isMultiSearch, requestUri, mReqBody);
+        logger.debug("indexName = " + indexName);
+        Assert.notNull(indexName, "indexName should not be null.");
 
         // Get Query
         Map<String, Object> query = (Map<String, Object>) qMap.get("query");
+        logger.debug("query = " + JsonUtil.convertAsString(query));
 
         // getQueryWithoutRange
         Map<String, Object> queryWithoutRange = parsingService.getQueryWithoutRange(query);
@@ -105,7 +112,7 @@ public class CacheService {
         DateTime endDt = (DateTime) dateMap.get("endDt");
 
         // Get aggs
-        Map<String, Object> aggs = (Map<String, Object>) qMap.get("aggs");
+        Map<String, Object> aggs = parsingService.getAggs(qMap);
 
         // Parse Interval
         Map<String, Object> rtnMap = parsingService.parseIntervalAndAggsType(aggs, getIntervalTerms(indexName, startDt, endDt));
@@ -221,8 +228,10 @@ public class CacheService {
             List<String> idl = (List<String>) iMap.get("index");
             logger.info("idl = " + JsonUtil.convertAsString(idl));
             return IndexNameUtil.getIndexName(idl);
+        } else {
+            List<String> idl = Arrays.asList(requestUri.replace("/", "").split(","));
+            return IndexNameUtil.getIndexName(idl);
         }
-        return null;
     }
 
     private long getTotalIndexSize(List<String> idl) {
@@ -366,6 +375,54 @@ public class CacheService {
             long afterQueries = System.currentTimeMillis() - beforeQueries;
             logger.info("nocache afterQueries = " + afterQueries);
             performanceService.putPerformance(reqBody, (int) afterQueries);
+        }
+        return sb;
+    }
+
+    public StringBuilder executeSearch(String targetUrl, String requestURI, String reqBody) {
+        StringBuilder sb = new StringBuilder();
+        if (esCache && !reqBody.contains(".kibana")) {
+            long beforeQueries = System.currentTimeMillis();
+            List<QueryPlan> queryPlanList = new ArrayList<>();
+            try {
+                QueryPlan queryPlan = manipulateQuery(false, requestURI, reqBody);
+                queryPlanList.add(queryPlan);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            String body = queryExecService.executeQuery(targetUrl, queryPlanList);
+            if (StringUtils.isEmpty(body)) {
+                logger.info("esc cancelled.");
+                return null;
+            }
+            sb.append(body);
+            long afterQueries = System.currentTimeMillis() - beforeQueries;
+            logger.info("cache afterQueries = " + afterQueries);
+        } else {
+            long beforeQueries = System.currentTimeMillis();
+            HttpResponse res = null;
+            try {
+                res = esService.executeQuery(targetUrl, reqBody);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (MethodNotSupportedException e) {
+                e.printStackTrace();
+            }
+            String resBody = null;
+            try {
+                resBody = EntityUtils.toString(res.getEntity());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Map<String, Object> resMap = parsingService.parseXContent(resBody);
+            List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
+            if (respes.size() > 0 && !reqBody.contains(".kibana")) {
+                int took = (int) respes.get(0).get("took");
+                logger.info("took = " + took);
+            }
+            sb.append(resBody);
+            long afterQueries = System.currentTimeMillis() - beforeQueries;
+            logger.info("nocache afterQueries = " + afterQueries);
         }
         return sb;
     }
