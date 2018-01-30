@@ -415,6 +415,7 @@ public class CacheService {
             String resBody = null;
             try {
                 resBody = EntityUtils.toString(res.getEntity());
+                logger.debug("resBody = " + resBody);
             } catch (IOException e) {
                 e.printStackTrace();
             }
