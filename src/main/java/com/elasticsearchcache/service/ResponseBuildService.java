@@ -11,7 +11,7 @@ import java.util.Map;
 @Service
 public class ResponseBuildService {
 
-    public String generateRes(List<DateHistogramBucket> dhbList) {
+    public String generateRes(boolean typedKeys, List<DateHistogramBucket> dhbList) {
         //TODO: manipulates took and so on.
         String res = "" +
                 "    {\n" +
@@ -27,9 +27,15 @@ public class ResponseBuildService {
                 "        \"max_score\": 0,\n" +
                 "        \"hits\": []\n" +
                 "      },\n" +
-                "      \"aggregations\": {\n" +
-                "        \"2\": {\n" +
-                "          \"buckets\": \n";
+                "      \"aggregations\": {\n";
+
+        if (typedKeys) {
+            res += "        \"date_histogram#2\": {\n";
+        } else {
+            res += "        \"2\": {\n";
+        }
+
+        res += "          \"buckets\": \n";
 
         List<Map<String, Object>> buckets = new ArrayList<>();
         for (DateHistogramBucket bucket : dhbList) {
