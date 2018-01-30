@@ -7,6 +7,7 @@ import com.elasticsearchcache.vo.DateHistogramBucket;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
+import org.joda.time.Months;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -92,13 +93,20 @@ public class CachePlanService {
             int intervalNum = PeriodUtil.parseIntervalNum(interval);
             int periodUnit = PeriodUtil.getPeriodUnit(interval);
 
-            if (periodUnit == -1) {
-                plan.setCacheMode(CacheMode.NOCACHE);
-                return plan;
-            }
+            int periodBetween;
 
-            int periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
-            logger.debug("periodBetween = " + periodBetween);
+            if (!interval.contains("M")) {
+                if (periodUnit == -1) {
+                    plan.setCacheMode(CacheMode.NOCACHE);
+                    return plan;
+                }
+
+                periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
+                logger.debug("periodBetween = " + periodBetween);
+            } else {
+                periodBetween = Months.monthsBetween(plan.getStartDt(), plan.getEndDt()).getMonths() + 1;
+                logger.debug("periodBetween = " + periodBetween);
+            }
 
             if (periodBetween + 1 == dhbList.size()
                     && plan.getPreStartDt() == null
