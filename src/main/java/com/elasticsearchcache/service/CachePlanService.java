@@ -1,7 +1,6 @@
 package com.elasticsearchcache.service;
 
 import com.elasticsearchcache.conts.CacheMode;
-import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.util.PeriodUtil;
 import com.elasticsearchcache.vo.CachePlan;
 import com.elasticsearchcache.vo.DateHistogramBucket;
@@ -39,26 +38,50 @@ public class CachePlanService {
         if (interval != null) {
             int periodUnit = PeriodUtil.getPeriodUnit(interval);
             logger.debug("periodUnit = " + periodUnit);
-            if (PeriodUtil.getRestMills(startDt, periodUnit) == 0) { //pre range doesn't exist
-                cachePlan.setStartDt(startDt);
-            } else { //pre range exists
-                DateTime newStartDt = PeriodUtil.getNewStartDt(startDt, periodUnit);
-                DateTime preStartDt = startDt;
-                DateTime preEndDt = newStartDt.minusMillis(1);
-                cachePlan.setPreStartDt(preStartDt);
-                cachePlan.setPreEndDt(preEndDt);
-                cachePlan.setStartDt(newStartDt);
-            }
+            if (!interval.contains("M")) {
+                if (PeriodUtil.getRestMills(startDt, periodUnit) == 0) { //pre range doesn't exist
+                    cachePlan.setStartDt(startDt);
+                } else { //pre range exists
+                    DateTime newStartDt = PeriodUtil.getNewStartDt(startDt, periodUnit);
+                    DateTime preStartDt = startDt;
+                    DateTime preEndDt = newStartDt.minusMillis(1);
+                    cachePlan.setPreStartDt(preStartDt);
+                    cachePlan.setPreEndDt(preEndDt);
+                    cachePlan.setStartDt(newStartDt);
+                }
 
-            if (PeriodUtil.getRestMills(endDt, periodUnit) == periodUnit - 1) { //end range doesn't exist
-                cachePlan.setEndDt(endDt);
-            } else { //end range exists
-                DateTime postEndDt = endDt;
-                DateTime postStartDt = endDt.minus(PeriodUtil.getRestMills(endDt, periodUnit));
-                DateTime newEndDt = postStartDt.minusMillis(1);
-                cachePlan.setPostStartDt(postStartDt);
-                cachePlan.setPostEndDt(postEndDt);
-                cachePlan.setEndDt(newEndDt);
+                if (PeriodUtil.getRestMills(endDt, periodUnit) == periodUnit - 1) { //end range doesn't exist
+                    cachePlan.setEndDt(endDt);
+                } else { //end range exists
+                    DateTime postEndDt = endDt;
+                    DateTime postStartDt = endDt.minus(PeriodUtil.getRestMills(endDt, periodUnit));
+                    DateTime newEndDt = postStartDt.minusMillis(1);
+                    cachePlan.setPostStartDt(postStartDt);
+                    cachePlan.setPostEndDt(postEndDt);
+                    cachePlan.setEndDt(newEndDt);
+                }
+            } else {
+                if (startDt.getMillisOfDay() == 0) {
+                    cachePlan.setStartDt(startDt);
+                } else {
+                    DateTime newStartDt = startDt.plusMonths(1).withDayOfMonth(1).withMillisOfDay(0);
+                    DateTime preStartDt = startDt;
+                    DateTime preEndDt = newStartDt.minusMillis(1);
+                    cachePlan.setPreStartDt(preStartDt);
+                    cachePlan.setPreEndDt(preEndDt);
+                    cachePlan.setStartDt(newStartDt);
+                }
+
+                if (endDt.plus(1).getMillis() == endDt.plusMonths(1).withDayOfMonth(1).withMillisOfDay(0).getMillis()) { //end range doesn't exist
+                    cachePlan.setEndDt(endDt);
+                } else { //end range exists
+                    DateTime postEndDt = endDt;
+                    DateTime postStartDt = endDt.withMillisOfDay(0);
+                    DateTime newEndDt = postStartDt.minusMillis(1);
+                    cachePlan.setPostStartDt(postStartDt);
+                    cachePlan.setPostEndDt(postEndDt);
+                    cachePlan.setEndDt(newEndDt);
+                }
             }
         }
         return cachePlan;

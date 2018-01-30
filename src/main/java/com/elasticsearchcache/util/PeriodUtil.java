@@ -22,8 +22,6 @@ public class PeriodUtil {
 
     public static final int MILLS_WEEK = 7 * MILLS_DAY;
 
-    public static final int MILLS_MONTH = 31 * MILLS_DAY;
-
     public static final int MILLS_YEAR = 365 * MILLS_DAY;
 
     public static int periodBetween(DateTime startDt, DateTime endDt, long interval) {
@@ -70,8 +68,6 @@ public class PeriodUtil {
         int periodUnit = -1;
         if (interval.contains("y")) {
             periodUnit = intervalNum * PeriodUtil.MILLS_YEAR;
-        } else if (interval.contains("M")) {
-            periodUnit = intervalNum * PeriodUtil.MILLS_MONTH;
         } else if (interval.contains("w")) {
             periodUnit = intervalNum * PeriodUtil.MILLS_WEEK;
         } else if (interval.contains("d")) {
