@@ -418,8 +418,7 @@ public class CacheService {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            Map<String, Object> resMap = parsingService.parseXContent(resBody);
-            List<Map<String, Object>> respes = (List<Map<String, Object>>) resMap.get("responses");
+            List<Map<String, Object>> respes = parsingService.parseResponses(resBody);
             if (respes.size() > 0 && !reqBody.contains(".kibana")) {
                 int took = (int) respes.get(0).get("took");
                 logger.info("took = " + took);
