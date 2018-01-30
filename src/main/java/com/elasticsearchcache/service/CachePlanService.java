@@ -104,7 +104,7 @@ public class CachePlanService {
                 periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
                 logger.debug("periodBetween = " + periodBetween);
             } else {
-                periodBetween = Months.monthsBetween(plan.getStartDt(), plan.getEndDt()).getMonths() + 1;
+                periodBetween = Months.monthsBetween(plan.getStartDt(), plan.getEndDt()).getMonths();
                 logger.debug("periodBetween = " + periodBetween);
             }
 
@@ -119,26 +119,48 @@ public class CachePlanService {
                 DateTime preDateTime = null;
                 boolean isSuccessive = false;
                 for (DateHistogramBucket dhb : dhbList) {
-                    if (preDateTime != null && PeriodUtil.periodBetween(preDateTime, dhb.getDate(), periodUnit) == 1) {
-                        isSuccessive = true;
+                    if (!interval.contains("M")) {
+                        if (preDateTime != null && PeriodUtil.periodBetween(preDateTime, dhb.getDate(), periodUnit) == 1) {
+                            isSuccessive = true;
+                        } else {
+                            isSuccessive = false;
+                        }
                     } else {
-                        isSuccessive = false;
+                        if (preDateTime != null && Months.monthsBetween(preDateTime, dhb.getDate()).getMonths() == 1) {
+                            isSuccessive = true;
+                        } else {
+                            isSuccessive = false;
+                        }
                     }
                     preDateTime = dhb.getDate();
                 }
 
                 logger.debug("isSuccessive = " + isSuccessive);
                 if (isSuccessive || dhbList.size() == 1) {
-                    if (PeriodUtil.periodBetween(dhbList.get(0).getDate(), plan.getStartDt(), periodUnit) != 0) {
-                        plan.setPreStartDt(plan.getStartDt());
-                        plan.setStartDt(dhbList.get(0).getDate());
-                        plan.setPreEndDt(dhbList.get(0).getDate().minusMillis(1));
-                    }
+                    if (!interval.contains("M")) {
+                        if (PeriodUtil.periodBetween(dhbList.get(0).getDate(), plan.getStartDt(), periodUnit) != 0) {
+                            plan.setPreStartDt(plan.getStartDt());
+                            plan.setStartDt(dhbList.get(0).getDate());
+                            plan.setPreEndDt(dhbList.get(0).getDate().minusMillis(1));
+                        }
 
-                    if (PeriodUtil.periodBetween(dhbList.get(dhbList.size() - 1).getDate(), plan.getEndDt(), periodUnit) != 0) {
-                        plan.setPostStartDt(dhbList.get(dhbList.size() - 1).getDate().plus(periodUnit));
-                        plan.setPostEndDt(plan.getEndDt());
-                        plan.setEndDt(dhbList.get(dhbList.size() - 1).getDate().plus(periodUnit).minusMillis(1));
+                        if (PeriodUtil.periodBetween(dhbList.get(dhbList.size() - 1).getDate(), plan.getEndDt(), periodUnit) != 0) {
+                            plan.setPostStartDt(dhbList.get(dhbList.size() - 1).getDate().plus(periodUnit));
+                            plan.setPostEndDt(plan.getEndDt());
+                            plan.setEndDt(dhbList.get(dhbList.size() - 1).getDate().plus(periodUnit).minusMillis(1));
+                        }
+                    } else {
+                        if (Months.monthsBetween(dhbList.get(0).getDate(), plan.getStartDt()).getMonths() != 0) {
+                            plan.setPreStartDt(plan.getStartDt());
+                            plan.setStartDt(dhbList.get(0).getDate());
+                            plan.setPreEndDt(dhbList.get(0).getDate().minusMillis(1));
+                        }
+
+                        if (Months.monthsBetween(dhbList.get(dhbList.size() - 1).getDate(), plan.getEndDt()).getMonths() != 0) {
+                            plan.setPostStartDt(dhbList.get(dhbList.size() - 1).getDate().plusMonths(1));
+                            plan.setPostEndDt(plan.getEndDt());
+                            plan.setEndDt(dhbList.get(dhbList.size() - 1).getDate().plusMonths(1).minusMillis(1));
+                        }
                     }
                     plan.setCacheMode(CacheMode.PARTIAL);
                     return plan;
