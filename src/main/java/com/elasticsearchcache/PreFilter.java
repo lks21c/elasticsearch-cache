@@ -89,7 +89,7 @@ public class PreFilter extends ZuulFilter {
                 } else if (request.getRequestURI().contains(EsUrl.SUFFIX_SEARCH)) {
                     String reqBody = getRequestBody(request);
                     logger.debug("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
-                    StringBuilder sb = cacheService.executeSearch(targetUrl, request.getRequestURI(), reqBody);
+                    StringBuilder sb = cacheService.executeSearch(targetUrl, reqBody);
                     if (sb.length() > 0) {
                         logger.info("sc ok ");
                         setZuulResponse(ctx, sb.toString());

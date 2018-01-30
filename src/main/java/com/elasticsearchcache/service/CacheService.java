@@ -1,7 +1,6 @@
 package com.elasticsearchcache.service;
 
 import com.elasticsearchcache.conts.CacheMode;
-import com.elasticsearchcache.conts.EsUrl;
 import com.elasticsearchcache.performance.PerformanceService;
 import com.elasticsearchcache.profile.ProfileService;
 import com.elasticsearchcache.repository.CacheRepository;
@@ -79,7 +78,7 @@ public class CacheService {
     @Value("${esc.cache}")
     private Boolean esCache;
 
-    public QueryPlan manipulateQuery(boolean isMultiSearch, String requestUri, String mReqBody) throws IOException {
+    public QueryPlan manipulateQuery(boolean isMultiSearch, String targetUrl, String mReqBody) throws IOException {
         logger.debug("mReqBody = " + mReqBody);
 
         Map<String, Object> qMap = null;
@@ -95,7 +94,7 @@ public class CacheService {
         logger.debug("total index size = " + indexSize);
 
         // Parse Index Name
-        String indexName = getIndexName(isMultiSearch, requestUri, mReqBody);
+        String indexName = getIndexName(isMultiSearch, targetUrl, mReqBody);
         logger.debug("indexName = " + indexName);
         Assert.notNull(indexName, "indexName should not be null.");
 
@@ -134,7 +133,9 @@ public class CacheService {
 
         if (isMultiSearch) {
             Map<String, Object> iMap = getIMap(mReqBody);
-            logger.debug("manipulated curl -X POST -L '" + esUrl + EsUrl.SUFFIX_MULTI_SEARCH + "' " + " --data '" + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n" + "'");
+            logger.debug("manipulated curl -X POST -L '" + targetUrl + "' " + " --data '" + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n" + "'");
+        } else {
+            logger.debug("manipulated curl -X POST -L '" + targetUrl + "' " + " --data '" + JsonUtil.convertAsString(qMap) + "'");
         }
 
         CachePlan plan = cachePlanService.checkCachePlan(interval, startDt, endDt);
@@ -214,6 +215,8 @@ public class CacheService {
                 if (isMultiSearch) {
                     Map<String, Object> iMap = getIMap(mReqBody);
                     queryPlan.setQuery(responseBuildService.buildMultiSearchQuery(iMap, qMap));
+                } else {
+                    queryPlan.setQuery(JsonUtil.convertAsString(qMap));
                 }
             } else {
                 if (isMultiSearch) {
@@ -226,14 +229,14 @@ public class CacheService {
         }
     }
 
-    private String getIndexName(boolean isMultiSearch, String requestUri, String mReqBody) {
+    private String getIndexName(boolean isMultiSearch, String targetUrl, String mReqBody) {
         if (isMultiSearch) {
             Map<String, Object> iMap = getIMap(mReqBody);
             List<String> idl = (List<String>) iMap.get("index");
             logger.info("idl = " + JsonUtil.convertAsString(idl));
             return IndexNameUtil.getIndexName(idl);
         } else {
-            List<String> idl = Arrays.asList(requestUri.replace("/", "").split(","));
+            List<String> idl = Arrays.asList(targetUrl.replace(esUrl, "").replace("/", "").split(","));
             return IndexNameUtil.getIndexName(idl);
         }
     }
@@ -383,13 +386,13 @@ public class CacheService {
         return sb;
     }
 
-    public StringBuilder executeSearch(String targetUrl, String requestURI, String reqBody) {
+    public StringBuilder executeSearch(String targetUrl, String reqBody) {
         StringBuilder sb = new StringBuilder();
         if (esCache && !reqBody.contains(".kibana")) {
             long beforeQueries = System.currentTimeMillis();
             List<QueryPlan> queryPlanList = new ArrayList<>();
             try {
-                QueryPlan queryPlan = manipulateQuery(false, requestURI, reqBody);
+                QueryPlan queryPlan = manipulateQuery(false, targetUrl, reqBody);
                 queryPlanList.add(queryPlan);
             } catch (IOException e) {
                 e.printStackTrace();

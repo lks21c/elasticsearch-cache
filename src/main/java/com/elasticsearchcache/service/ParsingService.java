@@ -451,18 +451,20 @@ public class ParsingService {
 
             for (String bucketsKey : buckets.keySet()) {
 //                logger.info("bucketsKey = " + bucketsKey);
-                List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
-                for (Map<String, Object> dhBucket : bucketList) {
-                    Map<String, Object> termsMap = null;
-                    for (String dhBucketKey : dhBucket.keySet()) {
-                        if (!"doc_count".equals(dhBucketKey) && !"key_as_string".equals(dhBucketKey) && !"key".equals(dhBucketKey)) {
-                            termsBucketKey = dhBucketKey;
-                            termsMap = (Map<String, Object>) dhBucket.get(dhBucketKey);
+                if ("buckets".equals(bucketsKey)) {
+                    List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
+                    for (Map<String, Object> dhBucket : bucketList) {
+                        Map<String, Object> termsMap = null;
+                        for (String dhBucketKey : dhBucket.keySet()) {
+                            if (!"doc_count".equals(dhBucketKey) && !"key_as_string".equals(dhBucketKey) && !"key".equals(dhBucketKey)) {
+                                termsBucketKey = dhBucketKey;
+                                termsMap = (Map<String, Object>) dhBucket.get(dhBucketKey);
+                            }
                         }
-                    }
 
-                    calculateRecursively(mergedMap, termsMap);
+                        calculateRecursively(mergedMap, termsMap);
 //                    logger.info("mergedMap = " + JsonUtil.convertAsString(mergedMap));
+                    }
                 }
             }
         }
@@ -543,24 +545,28 @@ public class ParsingService {
         }
 
         for (String aggKey : aggrs.keySet()) {
-//                logger.info("aggKey = " + aggrs.get(aggKey));
+            logger.debug("aggKey = " + aggKey);
 
             HashMap<String, Object> buckets = (HashMap<String, Object>) aggrs.get(aggKey);
 
             for (String bucketsKey : buckets.keySet()) {
-                List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
-                for (Map<String, Object> bucket : bucketList) {
-                    String key_as_string = (String) bucket.get("key_as_string");
+                if ("buckets".equals(bucketsKey)) {
+                    List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
+
+                    for (Map<String, Object> bucket : bucketList) {
+                        String key_as_string = (String) bucket.get("key_as_string");
 
 //                    logger.info("for key_as_string = " + key_as_string + " " + "key = " + bucket.get("key"));
 
-                    try {
-                        Long ts = (Long) bucket.get("key");
-                        DateHistogramBucket dhb = new DateHistogramBucket(new DateTime(ts), bucket);
-                        dhbList.add(dhb);
-                    } catch (ClassCastException e) {
-                        logger.info("debug info : " + resBody);
-                        e.printStackTrace();
+                        try {
+                            logger.debug("getDhbList key = " + bucket.get("key"));
+                            Long ts = (Long) bucket.get("key");
+                            DateHistogramBucket dhb = new DateHistogramBucket(new DateTime(ts), bucket);
+                            dhbList.add(dhb);
+                        } catch (ClassCastException e) {
+                            logger.info("debug info : " + resBody);
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
