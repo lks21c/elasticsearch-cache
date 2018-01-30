@@ -10,8 +10,6 @@ public class QueryPlan implements Serializable {
 
     private String postQuery;
 
-    private String requestUri;
-
     private List<DateHistogramBucket> dhbList;
 
     private CachePlan cachePlan;
@@ -116,14 +114,6 @@ public class QueryPlan implements Serializable {
 
     public void setAggsType(String aggsType) {
         this.aggsType = aggsType;
-    }
-
-    public String getRequestUri() {
-        return requestUri;
-    }
-
-    public void setRequestUri(String requestUri) {
-        this.requestUri = requestUri;
     }
 
     public boolean isMultiSearch() {

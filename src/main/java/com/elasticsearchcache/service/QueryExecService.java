@@ -38,7 +38,7 @@ public class QueryExecService {
     @Autowired
     ResponseBuildService responseBuildService;
 
-    public String executeQuery(String targetUrl, List<QueryPlan> queryPlanList) {
+    public String executeQuery(boolean isMultiSearch, String targetUrl, List<QueryPlan> queryPlanList) {
         StringBuilder sb = new StringBuilder();
         StringBuilder qb = new StringBuilder();
         for (QueryPlan qp : queryPlanList) {
@@ -58,6 +58,7 @@ public class QueryExecService {
             long beforeManipulateBulkQuery = System.currentTimeMillis();
             HttpResponse res = null;
             try {
+                logger.debug("executeQuery curl -X POST -H 'Content-Type: application/json' -L '" + targetUrl + "' " + " --data '" + qb.toString() + "'");
                 res = esService.executeQuery(targetUrl, qb.toString());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -79,15 +80,18 @@ public class QueryExecService {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-//        logger.info("refactor res = " + bulkRes);
 
-            Map<String, Object> resMap = parsingService.parseXContent(bulkRes);
-            respes = (List<Map<String, Object>>) resMap.get("responses");
+            logger.debug("bulkRes res = " + bulkRes);
+
+            respes = parsingService.parseResponses(bulkRes);
         }
 
         StringBuilder mergedRes = new StringBuilder();
-        mergedRes.append("{");
-        mergedRes.append("\"responses\":[");
+
+        if (isMultiSearch) {
+            mergedRes.append("{");
+            mergedRes.append("\"responses\":[");
+        }
         int responseCnt = 0;
         for (int i = 0; i < queryPlanList.size(); i++) {
             String log = "query plan cache mode(" + i + ") = " + queryPlanList.get(i).getCachePlan().getCacheMode();
@@ -157,9 +161,10 @@ public class QueryExecService {
                 }
             }
         }
-        mergedRes.append("]");
-        mergedRes.append("}");
-
+        if (isMultiSearch) {
+            mergedRes.append("]");
+            mergedRes.append("}");
+        }
 
 //        logger.info("merged res = " + mergedRes.toString());
 

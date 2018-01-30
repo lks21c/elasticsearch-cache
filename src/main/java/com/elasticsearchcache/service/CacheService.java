@@ -138,12 +138,12 @@ public class CacheService {
         }
 
         CachePlan plan = cachePlanService.checkCachePlan(interval, startDt, endDt);
-        logger.debug("cachePlan getPreStartDt = " + plan.getPreStartDt());
-        logger.debug("cachePlan getPreEndDt = " + plan.getPreEndDt());
-        logger.debug("cachePlan getStartDt = " + plan.getStartDt());
-        logger.debug("cachePlan getEndDt = " + plan.getEndDt());
-        logger.debug("cachePlan getPostStartDt = " + plan.getPostStartDt());
-        logger.debug("cachePlan getPostEndDt = " + plan.getPostEndDt());
+        logger.debug("before cachePlan getPreStartDt = " + plan.getPreStartDt());
+        logger.debug("before cachePlan getPreEndDt = " + plan.getPreEndDt());
+        logger.debug("before cachePlan getStartDt = " + plan.getStartDt());
+        logger.debug("before cachePlan getEndDt = " + plan.getEndDt());
+        logger.debug("before cachePlan getPostStartDt = " + plan.getPostStartDt());
+        logger.debug("before cachePlan getPostEndDt = " + plan.getPostEndDt());
 
         QueryPlan queryPlan = new QueryPlan();
         queryPlan.setCachePlan((CachePlan) SerializationUtils.clone(plan));
@@ -220,7 +220,6 @@ public class CacheService {
                     queryPlan.setQuery(mReqBody);
                 } else {
                     queryPlan.setQuery(mReqBody);
-                    queryPlan.setRequestUri(requestUri);
                 }
             }
             return queryPlan;
@@ -354,7 +353,7 @@ public class CacheService {
 //                            logger.info("queryPlan = " + JsonUtil.convertAsString(queryPlan));
                 queryPlanList.add(queryPlan);
             }
-            String body = queryExecService.executeQuery(targetUrl, queryPlanList);
+            String body = queryExecService.executeQuery(true, targetUrl, queryPlanList);
             if (StringUtils.isEmpty(body)) {
                 logger.info("esc cancelled.");
                 long afterQueries = System.currentTimeMillis() - beforeQueries;
@@ -395,7 +394,7 @@ public class CacheService {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            String body = queryExecService.executeQuery(targetUrl, queryPlanList);
+            String body = queryExecService.executeQuery(false, targetUrl, queryPlanList);
             if (StringUtils.isEmpty(body)) {
                 logger.info("esc cancelled.");
                 return null;

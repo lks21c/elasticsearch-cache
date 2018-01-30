@@ -576,4 +576,15 @@ public class ParsingService {
         }
         return null;
     }
+
+    public List<Map<String, Object>> parseResponses(String bulkRes) {
+        List<Map<String, Object>> responseList = new ArrayList<>();
+        Map<String, Object> resMap = parseXContent(bulkRes);
+        if (resMap.containsKey("responses")) {
+            responseList = (List<Map<String, Object>>) resMap.get("responses");
+        } else {
+            responseList.add(resMap);
+        }
+        return responseList;
+    }
 }

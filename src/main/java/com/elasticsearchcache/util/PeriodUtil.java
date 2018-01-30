@@ -66,6 +66,7 @@ public class PeriodUtil {
 
     public static int getPeriodUnit(String interval) {
         int intervalNum = parseIntervalNum(interval);
+        logger.debug("intervalNum = " + interval + " " + intervalNum);
         int periodUnit = -1;
         if (interval.contains("y")) {
             periodUnit = intervalNum * PeriodUtil.MILLS_YEAR;

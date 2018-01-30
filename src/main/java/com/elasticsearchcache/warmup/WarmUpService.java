@@ -147,13 +147,13 @@ public class WarmUpService {
 //                logger.info("value = " + value);
 
                 if (queryPlanList.size() == esWarmUpSize) {
-                    queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+                    queryExecService.executeQuery(true,esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
                     queryPlanList = new ArrayList<>();
                 }
             }
             logger.info("queryPlanList size = " + queryPlanList.size());
             if (queryPlanList.size() > 0) {
-                queryExecService.executeQuery(esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+                queryExecService.executeQuery(true,esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
             }
 
             long endWarmUpTs = System.currentTimeMillis() - startWarmUpTs;
