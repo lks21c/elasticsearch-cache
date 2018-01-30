@@ -216,7 +216,12 @@ public class CacheService {
                     queryPlan.setQuery(responseBuildService.buildMultiSearchQuery(iMap, qMap));
                 }
             } else {
-                queryPlan.setQuery(mReqBody);
+                if (isMultiSearch) {
+                    queryPlan.setQuery(mReqBody);
+                } else {
+                    queryPlan.setQuery(mReqBody);
+                    queryPlan.setRequestUri(requestUri);
+                }
             }
             return queryPlan;
         }
