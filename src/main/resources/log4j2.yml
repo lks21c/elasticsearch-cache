@@ -25,10 +25,3 @@ Configutation:
       AppenderRef:
         - ref: File_Appender
         - ref: Console_Appender
-
-    Logger:
-      name: com.elasticsearchcache
-      additivity: false
-      level: debug
-      AppenderRef:
-        - ref: Console_Appender
