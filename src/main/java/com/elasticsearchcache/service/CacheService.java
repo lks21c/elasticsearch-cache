@@ -78,6 +78,9 @@ public class CacheService {
     @Value("${esc.cache}")
     private Boolean esCache;
 
+    @Value("${esc.cache.search}")
+    private Boolean esSearchCache;
+
     public QueryPlan manipulateQuery(boolean isMultiSearch, String targetUrl, String mReqBody) throws IOException {
         logger.debug("mReqBody = " + mReqBody);
 
@@ -388,7 +391,7 @@ public class CacheService {
 
     public StringBuilder executeSearch(String targetUrl, String reqBody) {
         StringBuilder sb = new StringBuilder();
-        if (esCache && !reqBody.contains(".kibana")) {
+        if (esCache && esSearchCache && !reqBody.contains(".kibana")) {
             long beforeQueries = System.currentTimeMillis();
             List<QueryPlan> queryPlanList = new ArrayList<>();
             try {
