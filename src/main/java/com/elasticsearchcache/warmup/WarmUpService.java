@@ -54,7 +54,7 @@ public class WarmUpService {
     @Value("${esc.cache.warmup.size}")
     private int esWarmUpSize;
 
-    //    @Scheduled(fixedDelay = 1000 * 60 * 2)
+    @Scheduled(fixedDelay = 1000 * 60 * 2)
     public void warmUpMinuteQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
@@ -84,7 +84,7 @@ public class WarmUpService {
         }
     }
 
-    //    @Scheduled(fixedDelay = 1000 * 60 * 120)
+    @Scheduled(fixedDelay = 1000 * 60 * 120)
     public void warmUpDayQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
@@ -147,13 +147,13 @@ public class WarmUpService {
 //                logger.info("value = " + value);
 
                 if (queryPlanList.size() == esWarmUpSize) {
-                    queryExecService.executeQuery(true,esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+                    queryExecService.executeQuery(true, esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
                     queryPlanList = new ArrayList<>();
                 }
             }
             logger.info("queryPlanList size = " + queryPlanList.size());
             if (queryPlanList.size() > 0) {
-                queryExecService.executeQuery(true,esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+                queryExecService.executeQuery(true, esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
             }
 
             long endWarmUpTs = System.currentTimeMillis() - startWarmUpTs;

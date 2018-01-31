@@ -343,8 +343,14 @@ public class ParsingService {
                     String from = (String) ((Map<String, Object>) range.get(rangeKey)).get("from");
                     String to = (String) ((Map<String, Object>) range.get(rangeKey)).get("to");
 
-                    boolean includeLower = (boolean) ((Map<String, Object>) range.get(rangeKey)).get("include_lower");
-                    boolean includeUpper = (boolean) ((Map<String, Object>) range.get(rangeKey)).get("include_upper");
+                    boolean includeLower = true;
+                    if (((Map<String, Object>) range.get(rangeKey)).containsKey("include_lower")) {
+                        includeLower = (boolean) ((Map<String, Object>) range.get(rangeKey)).get("include_lower");
+                    }
+                    boolean includeUpper = true;
+                    if (((Map<String, Object>) range.get(rangeKey)).containsKey("include_upper")) {
+                        includeUpper = (boolean) ((Map<String, Object>) range.get(rangeKey)).get("include_upper");
+                    }
 
                     String datePattern = "yyyy-MM-dd'T'HH:mm:ss";
                     DateTimeFormatter dateFormatter = DateTimeFormat.forPattern(datePattern);
