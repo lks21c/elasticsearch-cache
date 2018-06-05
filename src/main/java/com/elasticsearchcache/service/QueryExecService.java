@@ -153,6 +153,7 @@ public class QueryExecService {
                     }
                     String resBody = JsonUtil.convertAsString(respes.get(responseCnt++));
                     // put cache
+                    logger.info("nocache put cache");
                     cacheService.putCache(resBody, queryPlanList.get(i));
                     if ("terms".equals(queryPlanList.get(i).getAggsType())) {
                         logger.info("terms nocache");

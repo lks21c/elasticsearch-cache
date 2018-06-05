@@ -167,13 +167,13 @@ public class CacheService {
 
         plan = cachePlanService.checkCacheMode(interval, plan, dhbList);
         queryPlan.getCachePlan().setCacheMode(plan.getCacheMode());
-        logger.debug("cacheMode = " + plan.getCacheMode() + " cache size : " + dhbList.size());
-        logger.debug("after cachePlan getPreStartDt = " + plan.getPreStartDt());
-        logger.debug("after cachePlan getPreEndDt = " + plan.getPreEndDt());
-        logger.debug("after cachePlan getStartDt = " + plan.getStartDt());
-        logger.debug("after cachePlan getEndDt = " + plan.getEndDt());
-        logger.debug("after cachePlan getPostStartDt = " + plan.getPostStartDt());
-        logger.debug("after cachePlan getPostEndDt = " + plan.getPostEndDt());
+        logger.info("cacheMode = " + plan.getCacheMode() + " cache size : " + dhbList.size());
+        logger.info("after cachePlan getPreStartDt = " + plan.getPreStartDt());
+        logger.info("after cachePlan getPreEndDt = " + plan.getPreEndDt());
+        logger.info("after cachePlan getStartDt = " + plan.getStartDt());
+        logger.info("after cachePlan getEndDt = " + plan.getEndDt());
+        logger.info("after cachePlan getPostStartDt = " + plan.getPostStartDt());
+        logger.info("after cachePlan getPostEndDt = " + plan.getPostEndDt());
 
         if (CacheMode.ALL.equals(plan.getCacheMode())) {
             queryPlan.setDhbList(dhbList);
@@ -313,9 +313,9 @@ public class CacheService {
             if (queryPlan.getInterval() != null) {
                 List<DateHistogramBucket> cacheDhbList = new ArrayList<>();
                 for (DateHistogramBucket dhb : dhbList) {
-                    logger.debug("cache candiate : " + queryPlan.getInterval() + " " + dhb.getDate() + " startDt : " + queryPlan.getCachePlan().getStartDt() + " endDt : " + queryPlan.getCachePlan().getEndDt());
+                    logger.info("cache candiate : " + queryPlan.getInterval() + " " + dhb.getDate() + " startDt : " + queryPlan.getCachePlan().getStartDt() + " endDt : " + queryPlan.getCachePlan().getEndDt());
                     boolean cacheable = cachePlanService.checkCacheable(queryPlan.getInterval(), dhb.getDate(), queryPlan.getCachePlan().getStartDt(), queryPlan.getCachePlan().getEndDt());
-                    logger.debug("checkCacheable = " + cacheable);
+                    logger.info("checkCacheable = " + cacheable);
                     if (cacheable) {
                         logger.debug("cacheable");
                         cacheDhbList.add(dhb);

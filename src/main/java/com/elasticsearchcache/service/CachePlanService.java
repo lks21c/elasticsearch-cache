@@ -27,7 +27,8 @@ public class CachePlanService {
         CachePlan plan = checkCachePlan(interval, startDt, endDt);
         if (interval != null) {
             if (targetDt.getMillis() >= plan.getStartDt().getMillis()
-                    && targetDt.getMillis() < plan.getEndDt().minus(lastEndTimeTs).getMillis()) {
+                    && targetDt.getMillis() < plan.getEndDt().getMillis()
+                    && targetDt.getMillis() <= new DateTime().minus(lastEndTimeTs).getMillis()) {
                 return true;
             }
         }
@@ -102,10 +103,10 @@ public class CachePlanService {
                 }
 
                 periodBetween = PeriodUtil.periodBetween(plan.getStartDt(), plan.getEndDt(), (intervalNum * periodUnit));
-                logger.debug("periodBetween = " + periodBetween);
+                logger.info("periodBetween = " + periodBetween);
             } else {
                 periodBetween = Months.monthsBetween(plan.getStartDt(), plan.getEndDt()).getMonths();
-                logger.debug("periodBetween = " + periodBetween);
+                logger.info("periodBetween = " + periodBetween);
             }
 
             if (periodBetween + 1 == dhbList.size()
