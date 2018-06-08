@@ -44,6 +44,8 @@ public class ProfileService {
                 Map<String, Object> range = (Map<String, Object>) obj.get("range");
                 if (range != null) {
                     for (String rangeKey : range.keySet()) {
+                        logger.info("rangeKey = " + rangeKey);
+                        logger.info("gte = " + ((Map<String, Object>) range.get(rangeKey)).get("gte"));
                         gte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("gte");
                         lte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("lte");
                     }

@@ -115,7 +115,7 @@ public class WarmUpService {
         ssb.size(10000);
         sr.source(ssb);
 
-//        logger.info("sr = " + sr.toString());
+//        logger.info("SearchRequest = " + sr.toString());
 
         SearchResponse resp = null;
         try {
@@ -144,7 +144,7 @@ public class WarmUpService {
                         e.printStackTrace();
                     }
                 }
-//                logger.info("value = " + value);
+                logger.info("value = " + value);
 
                 if (queryPlanList.size() == esWarmUpSize) {
                     queryExecService.executeQuery(true, esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);

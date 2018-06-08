@@ -122,12 +122,6 @@ public class CacheService {
         String aggsType = (String) rtnMap.get("aggsType");
         logger.debug("aggsType = " + aggsType);
 
-        // Put Query Profile
-        if (isMultiSearch) {
-            Map<String, Object> iMap = getIMap(mReqBody);
-            profileService.putQueryProfile(indexName, interval, iMap, qMap, queryWithoutRange);
-        }
-
         // handle terms
         if (enableTermsCache && "terms".equals(aggsType)) {
             aggs = appendDateHistogramForTermsAggr(aggs, getIntervalTerms(indexName, startDt, endDt));
@@ -177,7 +171,6 @@ public class CacheService {
 
         if (CacheMode.ALL.equals(plan.getCacheMode())) {
             queryPlan.setDhbList(dhbList);
-            return queryPlan;
         } else if (CacheMode.PARTIAL.equals(plan.getCacheMode())) {
             DateTime measureDt = new DateTime();
             // execute pre query
@@ -217,8 +210,6 @@ public class CacheService {
             if (afterPostQueryMills > 0) {
                 logger.info("after post query = " + afterPostQueryMills);
             }
-
-            return queryPlan;
         } else {
             logger.info("else, so original request invoked " + startDt.getSecondOfDay());
             if ("terms".equals(aggsType)) {
@@ -235,16 +226,37 @@ public class CacheService {
                     queryPlan.setQuery(mReqBody);
                 }
             }
-            return queryPlan;
+        }
+        insertProfile(isMultiSearch, mReqBody, indexName, interval, qMap, queryWithoutRange);
+        return queryPlan;
+    }
+
+    private void insertProfile(boolean isMultiSearch, String mReqBody, String indexName, String interval, Map<String, Object> qMap, Map<String, Object> queryWithoutRange) {
+        Map<String, Object> convertedQMap = getManipulateQuery(qMap, new DateTime(), new DateTime().plus(1));
+
+        logger.info("convertedQMap = " + JsonUtil.convertAsString(convertedQMap));
+
+        // Put Query Profile
+        if (isMultiSearch) {
+            Map<String, Object> iMap = getIMap(mReqBody);
+            profileService.putQueryProfile(indexName, interval, iMap, convertedQMap, queryWithoutRange);
+        } else {
+            Map<String, Object> iMap = new HashMap<>();
+            iMap.put("index", indexName);
+            profileService.putQueryProfile(indexName, interval, iMap, convertedQMap, queryWithoutRange);
         }
     }
 
     private String getIndexName(boolean isMultiSearch, String targetUrl, String mReqBody) {
         if (isMultiSearch) {
             Map<String, Object> iMap = getIMap(mReqBody);
-            List<String> idl = (List<String>) iMap.get("index");
-            logger.info("idl = " + JsonUtil.convertAsString(idl));
-            return IndexNameUtil.getIndexName(idl);
+            try {
+                List<String> idl = (List<String>) iMap.get("index");
+                logger.info("idl = " + JsonUtil.convertAsString(idl));
+                return IndexNameUtil.getIndexName(idl);
+            } catch (Exception e) {
+                return iMap.get("index").toString();
+            }
         } else {
             List<String> idl = Arrays.asList(targetUrl.replace(esUrl, "").replace("/", "").split(","));
             logger.info("idl = " + JsonUtil.convertAsString(idl));
