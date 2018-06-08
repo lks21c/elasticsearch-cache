@@ -120,6 +120,7 @@ public class CacheService {
         Map<String, Object> rtnMap = parsingService.parseIntervalAndAggsType(aggs, getIntervalTerms(indexName, startDt, endDt));
         String interval = (String) rtnMap.get("interval");
         String aggsType = (String) rtnMap.get("aggsType");
+        String aggsKey = (String) rtnMap.get("aggsKey");
         logger.debug("aggsType = " + aggsType);
 
         // handle terms
@@ -151,6 +152,7 @@ public class CacheService {
         queryPlan.setQueryWithoutRange(JsonUtil.convertAsString(queryWithoutRange));
         queryPlan.setAggs(JsonUtil.convertAsString(aggs));
         queryPlan.setAggsType(aggsType);
+        queryPlan.setAggsKey(aggsKey);
 
         DateTime beforeCacheMills = new DateTime();
         List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, indexSize, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());

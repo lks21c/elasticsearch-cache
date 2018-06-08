@@ -26,6 +26,8 @@ public class QueryPlan implements Serializable {
 
     private String aggsType;
 
+    private String aggsKey;
+
     private boolean isMultiSearch;
 
     public String getPreQuery() {
@@ -114,6 +116,14 @@ public class QueryPlan implements Serializable {
 
     public void setAggsType(String aggsType) {
         this.aggsType = aggsType;
+    }
+
+    public String getAggsKey() {
+        return aggsKey;
+    }
+
+    public void setAggsKey(String aggsKey) {
+        this.aggsKey = aggsKey;
     }
 
     public boolean isMultiSearch() {

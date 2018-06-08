@@ -420,6 +420,10 @@ public class ParsingService {
                     interval = (String) date_histogram.get("interval");
                     aggType = "date_histogram";
                     logger.info("interval = " + interval);
+
+                    if(!rtn.containsKey("aggsKey")) {
+                        rtn.put("aggsKey", aggsKey);
+                    }
                 }
 
                 if (enableTermsCache && terms != null) {

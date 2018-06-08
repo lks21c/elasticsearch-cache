@@ -11,7 +11,7 @@ import java.util.Map;
 @Service
 public class ResponseBuildService {
 
-    public String generateRes(boolean typedKeys, List<DateHistogramBucket> dhbList) {
+    public String generateRes(boolean typedKeys, List<DateHistogramBucket> dhbList, String aggsKey) {
         //TODO: manipulates took and so on.
         String res = "" +
                 "    {\n" +
@@ -30,7 +30,7 @@ public class ResponseBuildService {
                 "      \"aggregations\": {\n";
 
         if (typedKeys) {
-            res += "        \"date_histogram#2\": {\n";
+            res += "        \"date_histogram#" + aggsKey + "\": {\n";
         } else {
             res += "        \"2\": {\n";
         }
