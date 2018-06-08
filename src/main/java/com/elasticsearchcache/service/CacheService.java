@@ -82,7 +82,7 @@ public class CacheService {
     private Boolean esSearchCache;
 
     public QueryPlan manipulateQuery(boolean isMultiSearch, String targetUrl, String mReqBody) throws IOException {
-        logger.debug("mReqBody = " + mReqBody);
+//        logger.debug("mReqBody = " + mReqBody);
 
         Map<String, Object> qMap = null;
 
@@ -136,9 +136,9 @@ public class CacheService {
 
         if (isMultiSearch) {
             Map<String, Object> iMap = getIMap(mReqBody);
-            logger.debug("manipulated curl -X POST -L '" + targetUrl + "' " + " --data '" + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n" + "'");
+            logger.info("manipulated curl -X POST -L '" + targetUrl + "' " + " --data '" + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n" + "'");
         } else {
-            logger.debug("manipulated curl -X POST -L '" + targetUrl + "' " + " --data '" + JsonUtil.convertAsString(qMap) + "'");
+            logger.info("manipulated curl -X POST -L '" + targetUrl + "' " + " --data '" + JsonUtil.convertAsString(qMap) + "'");
         }
 
         CachePlan plan = cachePlanService.checkCachePlan(interval, startDt, endDt);
@@ -186,6 +186,8 @@ public class CacheService {
                 if (isMultiSearch) {
                     Map<String, Object> iMap = getIMap(mReqBody);
                     queryPlan.setPreQuery(responseBuildService.buildMultiSearchQuery(iMap, preQmap));
+                } else {
+                    queryPlan.setPreQuery(JsonUtil.convertAsString(preQmap));
                 }
             }
 
@@ -199,10 +201,15 @@ public class CacheService {
 
             // execute post query
             if (plan.getPostStartDt() != null && plan.getPostEndDt() != null) {
+                logger.info("execute post query " + isMultiSearch);
                 Map<String, Object> postQmap = getManipulateQuery(qMap, plan.getPostStartDt(), plan.getPostEndDt());
+//                logger.info("postQmap = " + JsonUtil.convertAsString(postQmap));
+
                 if (isMultiSearch) {
                     Map<String, Object> iMap = getIMap(mReqBody);
                     queryPlan.setPostQuery(responseBuildService.buildMultiSearchQuery(iMap, postQmap));
+                } else {
+                    queryPlan.setPostQuery(JsonUtil.convertAsString(postQmap));
                 }
             }
 
@@ -301,6 +308,10 @@ public class CacheService {
                 ts.put("gte", startDt.getMillis());
                 ts.put("lte", endDt.getMillis());
 //                logger.info("ts = " + JsonUtil.convertAsString(ts));
+
+                ts.remove("time_zone");
+                ts.remove("from");
+                ts.remove("to");
             }
         }
         map.put("query", query);
@@ -355,7 +366,7 @@ public class CacheService {
             long beforeQueries = System.currentTimeMillis();
             List<QueryPlan> queryPlanList = new ArrayList<>();
             for (int i = 0; i < reqs.length; i = i + 2) {
-                QueryPlan queryPlan = manipulateQuery(true, null, reqs[i] + "\n" + reqs[i + 1] + "\n");
+                QueryPlan queryPlan = manipulateQuery(true, targetUrl, reqs[i] + "\n" + reqs[i + 1] + "\n");
 //                            logger.info("queryPlan = " + JsonUtil.convertAsString(queryPlan));
                 queryPlanList.add(queryPlan);
             }

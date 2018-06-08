@@ -59,7 +59,7 @@ public class QueryExecService {
             long beforeManipulateBulkQuery = System.currentTimeMillis();
             HttpResponse res = null;
             try {
-                logger.debug("executeQuery curl -X POST -H 'Content-Type: application/json' -L '" + targetUrl + "' " + " --data '" + qb.toString() + "'");
+                logger.info("executeQuery curl -X POST -H 'Content-Type: application/json' -L '" + targetUrl + "' " + " --data '" + qb.toString() + "'");
                 res = esService.executeQuery(targetUrl, qb.toString());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -114,7 +114,7 @@ public class QueryExecService {
                 List<DateHistogramBucket> mergedDhbList = new ArrayList<>();
                 List<DateHistogramBucket> preDhbList = null;
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getPreQuery())) {
-                    logger.debug("pre query executed");
+                    logger.info("pre query executed");
                     String preResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
                     // put cache
                     cacheService.putCache(preResBody, queryPlanList.get(i));
@@ -128,7 +128,7 @@ public class QueryExecService {
 
                 List<DateHistogramBucket> postDhbList = null;
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getPostQuery())) {
-                    logger.debug("post query executed");
+                    logger.info("post query executed");
                     String postResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
                     // put cache
                     logger.debug("try post put cache");
