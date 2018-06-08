@@ -1,5 +1,7 @@
 package com.elasticsearchcache.util;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.util.List;
 
 /**
@@ -7,8 +9,18 @@ import java.util.List;
  */
 public class IndexNameUtil {
     public static String getIndexName(List<String> idl) {
-        String indexName = idl.get(0).substring(0,idl.get(0).lastIndexOf("_")) + "*";
-//        System.out.println("indexName = " + indexName);
-        return indexName;
+        String sb = "";
+        for (String indexName : idl) {
+            if (!StringUtils.isEmpty(sb)) {
+                sb += ",";
+            }
+
+            if (indexName.contains("*")) {
+                sb += indexName.substring(0, indexName.indexOf("*")) + "*";
+            } else {
+                sb += indexName;
+            }
+        }
+        return sb;
     }
 }

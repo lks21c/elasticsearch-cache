@@ -98,7 +98,7 @@ public class CacheService {
 
         // Parse Index Name
         String indexName = getIndexName(isMultiSearch, targetUrl, mReqBody);
-        logger.debug("indexName = " + indexName);
+        logger.info("indexName = " + indexName);
         Assert.notNull(indexName, "indexName should not be null.");
 
         // Get Query
@@ -247,6 +247,7 @@ public class CacheService {
             return IndexNameUtil.getIndexName(idl);
         } else {
             List<String> idl = Arrays.asList(targetUrl.replace(esUrl, "").replace("/", "").split(","));
+            logger.info("idl = " + JsonUtil.convertAsString(idl));
             return IndexNameUtil.getIndexName(idl);
         }
     }
