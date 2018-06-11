@@ -19,6 +19,11 @@ PUT /esc_profile?master_timeout=5m
           "store": false,
           "doc_values": true
         },
+        "indexName": {
+          "type": "keyword",
+          "store": false,
+          "doc_values": true
+        },
         "value": {
           "type": "keyword",
           "store": false,
