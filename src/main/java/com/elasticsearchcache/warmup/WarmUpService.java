@@ -149,11 +149,9 @@ public class WarmUpService {
                 }
                 logger.info("value = " + value);
 
-                if (queryPlanList.size() == esWarmUpSize) {
-                    logger.info("warm up url = " + esUrl + EsUrl.SUFFIX_MULTI_SEARCH + queryString);
-                    queryExecService.executeQuery(true, esUrl + EsUrl.SUFFIX_MULTI_SEARCH + queryString, queryPlanList);
-                    queryPlanList = new ArrayList<>();
-                }
+                logger.info("warm up url = " + esUrl + EsUrl.SUFFIX_MULTI_SEARCH + queryString);
+                queryExecService.executeQuery(true, esUrl + EsUrl.SUFFIX_MULTI_SEARCH + queryString, queryPlanList);
+                queryPlanList = new ArrayList<>();
             }
             logger.info("queryPlanList size = " + queryPlanList.size());
 
