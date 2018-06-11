@@ -53,13 +53,6 @@ public class ProfileService {
             }
             Map<String, Object> aggs = (Map<String, Object>) clonedQMap.get("aggs");
 
-            String key = indexName + JsonUtil.convertAsString(queryWithoutRange) + JsonUtil.convertAsString(aggs);
-
-//            logger.info("profile key =  " + key);
-
-            MurmurHash3.Hash128 hash = MurmurHash3.hash128(key.getBytes(), 0, key.getBytes().length, 0, new MurmurHash3.Hash128());
-            String id = String.valueOf(hash.h1) + String.valueOf(hash.h2);
-
             String iMapStr = JsonUtil.convertAsString(imap);
             String qMapStr = JsonUtil.convertAsString(clonedQMap);
             if (gte > 0) {
@@ -69,8 +62,17 @@ public class ProfileService {
                 qMapStr = qMapStr.replace(String.valueOf(lte), "$$lte$$");
             }
 
+            String key = indexName + iMapStr + qMapStr;
+
+            logger.info("profile key =  " + key);
+
+            MurmurHash3.Hash128 hash = MurmurHash3.hash128(key.getBytes(), 0, key.getBytes().length, 0, new MurmurHash3.Hash128());
+            String id = String.valueOf(hash.h1) + String.valueOf(hash.h2);
+
+
             IndexRequest ir = new IndexRequest(esProfileName, "info", id);
             Map<String, Object> source = new HashMap<>();
+            source.put("indexName", indexName);
             source.put("key", "key");
             source.put("value", iMapStr + "\n" + qMapStr + "\n");
             source.put("interval", interval);
