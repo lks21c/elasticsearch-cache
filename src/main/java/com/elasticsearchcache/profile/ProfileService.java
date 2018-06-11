@@ -64,7 +64,7 @@ public class ProfileService {
 
             String key = indexName + iMapStr + qMapStr;
 
-            logger.info("profile key =  " + key);
+            logger.debug("profile key =  " + key);
 
             MurmurHash3.Hash128 hash = MurmurHash3.hash128(key.getBytes(), 0, key.getBytes().length, 0, new MurmurHash3.Hash128());
             String id = String.valueOf(hash.h1) + String.valueOf(hash.h2);
