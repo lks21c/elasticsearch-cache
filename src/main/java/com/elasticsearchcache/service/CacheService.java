@@ -7,6 +7,7 @@ import com.elasticsearchcache.repository.CacheRepository;
 import com.elasticsearchcache.util.IndexNameUtil;
 import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.util.PeriodUtil;
+import com.elasticsearchcache.util.UrlUtil;
 import com.elasticsearchcache.vo.CachePlan;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.elasticsearchcache.vo.QueryPlan;
@@ -153,9 +154,10 @@ public class CacheService {
         queryPlan.setAggs(JsonUtil.convertAsString(aggs));
         queryPlan.setAggsType(aggsType);
         queryPlan.setAggsKey(aggsKey);
+        queryPlan.setQueryString(UrlUtil.getQueryString(targetUrl));
 
         DateTime beforeCacheMills = new DateTime();
-        List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, indexSize, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
+        List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, UrlUtil.getQueryString(targetUrl), indexSize, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
         long afterCacheMills = new DateTime().getMillis() - beforeCacheMills.getMillis();
 
 //        logger.mReqBody("dhbList = " + JsonUtil.convertAsString(dhbList));
@@ -238,10 +240,7 @@ public class CacheService {
 
         logger.info("convertedQMap = " + JsonUtil.convertAsString(convertedQMap));
 
-        String queryString = "";
-        if (targetUrl.contains("?")) {
-            queryString = targetUrl.substring(targetUrl.indexOf("?"), targetUrl.length());
-        }
+        String queryString = UrlUtil.getQueryString(targetUrl);
 
         // Put Query Profile
         if (isMultiSearch) {
@@ -354,7 +353,7 @@ public class CacheService {
                 }
                 try {
                     if (cacheDhbList.size() > 0) {
-                        cacheRepository.putCache(queryPlan.getIndexName(), queryPlan.getIndexSize(), queryPlan.getQueryWithoutRange(), queryPlan.getAggs(), cacheDhbList);
+                        cacheRepository.putCache(queryPlan.getIndexName(), queryPlan.getQueryString(), queryPlan.getIndexSize(), queryPlan.getQueryWithoutRange(), queryPlan.getAggs(), cacheDhbList);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();

@@ -42,7 +42,7 @@ public class InMemoryCacheRepositoryImpl implements CacheRepository {
     }
 
     @Override
-    public List<DateHistogramBucket> getCache(String indexName, long indexSize, String query, String agg, DateTime startDt, DateTime endDt) throws IOException {
+    public List<DateHistogramBucket> getCache(String indexName, String queryString, long indexSize, String query, String agg, DateTime startDt, DateTime endDt) throws IOException {
         String key = indexName + agg;
         logger.info("get cache " + key);
 
@@ -52,7 +52,7 @@ public class InMemoryCacheRepositoryImpl implements CacheRepository {
     }
 
     @Override
-    public void putCache(String indexName, long indexSize, String query, String agg, List<DateHistogramBucket> dhbList) throws IOException {
+    public void putCache(String indexName, String queryString, long indexSize, String query, String agg, List<DateHistogramBucket> dhbList) throws IOException {
         logger.info("cache list = " + JsonUtil.convertAsString(dhbList));
     }
 }

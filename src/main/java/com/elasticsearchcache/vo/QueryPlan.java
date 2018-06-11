@@ -30,6 +30,8 @@ public class QueryPlan implements Serializable {
 
     private boolean isMultiSearch;
 
+    private String queryString;
+
     public String getPreQuery() {
         return preQuery;
     }
@@ -132,5 +134,13 @@ public class QueryPlan implements Serializable {
 
     public void setMultiSearch(boolean multiSearch) {
         isMultiSearch = multiSearch;
+    }
+
+    public String getQueryString() {
+        return queryString;
+    }
+
+    public void setQueryString(String queryString) {
+        this.queryString = queryString;
     }
 }

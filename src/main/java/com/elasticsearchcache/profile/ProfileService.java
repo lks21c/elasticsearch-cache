@@ -62,10 +62,9 @@ public class ProfileService {
                 qMapStr = qMapStr.replace(String.valueOf(lte), "$$lte$$");
             }
 
-            String key = indexName + queryString + iMapStr + qMapStr;
+            String key = indexName + "\n" + queryString + "\n" + iMapStr + qMapStr;
 
-            logger.debug("profile key =  " + key);
-            logger.info("queryString =  " + queryString);
+            logger.info("profile key =  " + key);
 
             MurmurHash3.Hash128 hash = MurmurHash3.hash128(key.getBytes(), 0, key.getBytes().length, 0, new MurmurHash3.Hash128());
             String id = String.valueOf(hash.h1) + String.valueOf(hash.h2);
@@ -73,8 +72,7 @@ public class ProfileService {
             IndexRequest ir = new IndexRequest(esProfileName, "info", id);
             Map<String, Object> source = new HashMap<>();
             source.put("indexName", indexName);
-            source.put("key", "key");
-            source.put("value", iMapStr + "\n" + qMapStr + "\n");
+            source.put("value", key);
             source.put("interval", interval);
             source.put("ts", System.currentTimeMillis());
             ir.source(source);
