@@ -132,6 +132,8 @@ public class WarmUpService {
                 String value = (String) hit.getSourceAsMap().get("value");
                 String queryString = value.split("\n")[1];
 
+                logger.info("value = " + value);
+
                 if (value.contains("date_histogram")
                         || (escTerms && value.contains("terms") && !value.contains("cardinality"))) {
                     logger.info("warmup startdt = " + startDt + " " + endDt);
@@ -139,7 +141,7 @@ public class WarmUpService {
                     value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
 
                     try {
-                        QueryPlan qp = cacheService.manipulateQuery(true, null, value.split("\n")[2] + value.split("\n")[3]);
+                        QueryPlan qp = cacheService.manipulateQuery(true, queryString, value.split("\n")[2] + "\n" + value.split("\n")[3]);
                         queryPlanList.add(qp);
                     } catch (IOException e) {
                         e.printStackTrace();

@@ -83,7 +83,7 @@ public class CacheService {
     private Boolean esSearchCache;
 
     public QueryPlan manipulateQuery(boolean isMultiSearch, String targetUrl, String mReqBody) throws IOException {
-//        logger.debug("mReqBody = " + mReqBody);
+//        logger.info("mReqBody = " + mReqBody);
 
         Map<String, Object> qMap = null;
 
