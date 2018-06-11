@@ -130,7 +130,7 @@ public class WarmUpService {
             logger.info("warm candiate size = " + resp.getHits().getHits().length);
             for (SearchHit hit : resp.getHits().getHits()) {
                 String value = (String) hit.getSourceAsMap().get("value");
-                String queryString = (String) hit.getSourceAsMap().get("queryString");
+                String queryString = value.split("\n")[1];
 
                 if (value.contains("date_histogram")
                         || (escTerms && value.contains("terms") && !value.contains("cardinality"))) {
@@ -139,7 +139,7 @@ public class WarmUpService {
                     value = value.replace("$$lte$$", String.valueOf(endDt.getMillis()));
 
                     try {
-                        QueryPlan qp = cacheService.manipulateQuery(true, null, value);
+                        QueryPlan qp = cacheService.manipulateQuery(true, null, value.split("\n")[2] + value.split("\n")[3]);
                         queryPlanList.add(qp);
                     } catch (IOException e) {
                         e.printStackTrace();

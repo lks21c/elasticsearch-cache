@@ -1,6 +1,7 @@
 package com.elasticsearchcache.repository;
 
 import com.elasticsearchcache.util.JsonUtil;
+import com.elasticsearchcache.util.KeyGenerator;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
@@ -50,7 +51,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
 
     @Override
     public List<DateHistogramBucket> getCache(String indexName, String queryString, long indexSize, String query, String agg, DateTime startDt, DateTime endDt) throws IOException {
-        String key = indexName + queryString + indexSize + query + agg;
+        String key = KeyGenerator.generateCacheKey(indexName, queryString, indexSize, query, agg);
         logger.debug("get cache " + key);
 
         List<QueryBuilder> qbList = new ArrayList<>();
@@ -90,7 +91,7 @@ public class EsCacheRepositoryImpl implements CacheRepository {
 
     @Override
     public void putCache(String indexName, String queryString, long indexSize, String query, String agg, List<DateHistogramBucket> dhbList) throws JsonProcessingException {
-        String key = indexName + queryString + indexSize + query + agg;
+        String key = KeyGenerator.generateCacheKey(indexName, queryString, indexSize, query, agg);
         BulkRequest br = new BulkRequest();
         for (DateHistogramBucket dhb : dhbList) {
             Map<String, Object> bucket = dhb.getBucket();

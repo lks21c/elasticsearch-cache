@@ -1,6 +1,7 @@
 package com.elasticsearchcache.profile;
 
 import com.elasticsearchcache.util.JsonUtil;
+import com.elasticsearchcache.util.KeyGenerator;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,7 +63,7 @@ public class ProfileService {
                 qMapStr = qMapStr.replace(String.valueOf(lte), "$$lte$$");
             }
 
-            String key = indexName + "\n" + queryString + "\n" + iMapStr + qMapStr;
+            String key = KeyGenerator.generateProfileKey(indexName, queryString, iMapStr, qMapStr);
 
             logger.info("profile key =  " + key);
 
