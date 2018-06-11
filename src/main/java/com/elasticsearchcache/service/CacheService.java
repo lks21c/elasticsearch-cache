@@ -131,9 +131,9 @@ public class CacheService {
 
         if (isMultiSearch) {
             Map<String, Object> iMap = getIMap(mReqBody);
-            logger.info("manipulated curl -X POST -L '" + targetUrl + "' " + " --data '" + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n" + "'");
+            logger.info("manipulated curl -X POST --header \"Content-Type: application/json\" -L '" + targetUrl + "' " + " --data '" + JsonUtil.convertAsString(iMap) + "\n" + JsonUtil.convertAsString(qMap) + "\n" + "'");
         } else {
-            logger.info("manipulated curl -X POST -L '" + targetUrl + "' " + " --data '" + JsonUtil.convertAsString(qMap) + "'");
+            logger.info("manipulated curl -X POST --header \"Content-Type: application/json\" -L '" + targetUrl + "' " + " --data '" + JsonUtil.convertAsString(qMap) + "'");
         }
 
         CachePlan plan = cachePlanService.checkCachePlan(interval, startDt, endDt);
