@@ -30,7 +30,7 @@ public class ProfileService {
     @Value("${esc.profile.enabled}")
     private boolean enableProfile;
 
-    public void putQueryProfile(String indexName, String interval, Map<String, Object> imap, Map<String, Object> qMap, Map<String, Object> queryWithoutRange, String queryString  ) {
+    public void putQueryProfile(String indexName, String interval, Map<String, Object> imap, Map<String, Object> qMap, Map<String, Object> queryWithoutRange, String queryString) {
         if (enableProfile) {
             logger.debug("putQueryProfile");
             HashMap<String, Object> clonedQMap = (HashMap<String, Object>) SerializationUtils.clone(new HashMap<>(qMap));
@@ -62,7 +62,7 @@ public class ProfileService {
                 qMapStr = qMapStr.replace(String.valueOf(lte), "$$lte$$");
             }
 
-            String key = indexName + iMapStr + qMapStr;
+            String key = indexName + queryString + iMapStr + qMapStr;
 
             logger.debug("profile key =  " + key);
             logger.info("queryString =  " + queryString);
@@ -74,7 +74,6 @@ public class ProfileService {
             Map<String, Object> source = new HashMap<>();
             source.put("indexName", indexName);
             source.put("key", "key");
-            source.put("queryString", queryString);
             source.put("value", iMapStr + "\n" + qMapStr + "\n");
             source.put("interval", interval);
             source.put("ts", System.currentTimeMillis());
