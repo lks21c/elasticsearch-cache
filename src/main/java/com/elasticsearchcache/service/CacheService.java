@@ -229,23 +229,28 @@ public class CacheService {
                 }
             }
         }
-        insertProfile(isMultiSearch, mReqBody, indexName, interval, qMap, queryWithoutRange);
+        insertProfile(isMultiSearch, targetUrl, mReqBody, indexName, interval, qMap, queryWithoutRange);
         return queryPlan;
     }
 
-    private void insertProfile(boolean isMultiSearch, String mReqBody, String indexName, String interval, Map<String, Object> qMap, Map<String, Object> queryWithoutRange) {
+    private void insertProfile(boolean isMultiSearch, String targetUrl, String mReqBody, String indexName, String interval, Map<String, Object> qMap, Map<String, Object> queryWithoutRange) {
         Map<String, Object> convertedQMap = getManipulateQuery(qMap, new DateTime(), new DateTime().plus(1));
 
         logger.info("convertedQMap = " + JsonUtil.convertAsString(convertedQMap));
 
+        String queryString = "";
+        if (targetUrl.contains("?")) {
+            queryString = targetUrl.substring(targetUrl.indexOf("?"), targetUrl.length());
+        }
+
         // Put Query Profile
         if (isMultiSearch) {
             Map<String, Object> iMap = getIMap(mReqBody);
-            profileService.putQueryProfile(indexName, interval, iMap, convertedQMap, queryWithoutRange);
+            profileService.putQueryProfile(indexName, interval, iMap, convertedQMap, queryWithoutRange, queryString);
         } else {
             Map<String, Object> iMap = new HashMap<>();
             iMap.put("index", indexName);
-            profileService.putQueryProfile(indexName, interval, iMap, convertedQMap, queryWithoutRange);
+            profileService.putQueryProfile(indexName, interval, iMap, convertedQMap, queryWithoutRange, queryString);
         }
     }
 

@@ -66,7 +66,7 @@ public class WarmUpService {
         }
     }
 
-//    @Scheduled(fixedDelay = 1000 * 60 * 60)
+    //    @Scheduled(fixedDelay = 1000 * 60 * 60)
     public void warmUpHourQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
@@ -84,7 +84,7 @@ public class WarmUpService {
         }
     }
 
-//    @Scheduled(fixedDelay = 1000 * 60 * 120)
+    //    @Scheduled(fixedDelay = 1000 * 60 * 120)
     public void warmUpDayQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
@@ -130,6 +130,7 @@ public class WarmUpService {
             logger.info("warm candiate size = " + resp.getHits().getHits().length);
             for (SearchHit hit : resp.getHits().getHits()) {
                 String value = (String) hit.getSourceAsMap().get("value");
+                String queryString = (String) hit.getSourceAsMap().get("queryString");
 
                 if (value.contains("date_histogram")
                         || (escTerms && value.contains("terms") && !value.contains("cardinality"))) {
@@ -147,14 +148,12 @@ public class WarmUpService {
                 logger.info("value = " + value);
 
                 if (queryPlanList.size() == esWarmUpSize) {
-                    queryExecService.executeQuery(true, esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
+                    logger.info("warm up url = " + esUrl + EsUrl.SUFFIX_MULTI_SEARCH + queryString);
+                    queryExecService.executeQuery(true, esUrl + EsUrl.SUFFIX_MULTI_SEARCH + queryString, queryPlanList);
                     queryPlanList = new ArrayList<>();
                 }
             }
             logger.info("queryPlanList size = " + queryPlanList.size());
-            if (queryPlanList.size() > 0) {
-                queryExecService.executeQuery(true, esUrl + EsUrl.SUFFIX_MULTI_SEARCH, queryPlanList);
-            }
 
             long endWarmUpTs = System.currentTimeMillis() - startWarmUpTs;
             logger.info("endWarmUpTs = " + endWarmUpTs);
