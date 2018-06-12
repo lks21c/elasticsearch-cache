@@ -17,9 +17,10 @@ public class WarmUpServiceTest {
     WarmUpService warmUpService;
 
     @Test
-    public void testWarmUpMinuteQueries() {
+    public void testWarmUpMinuteQueries() throws InterruptedException {
         // minute
         warmUpService.warmUpMinuteQueries();
+        Thread.sleep(3000);
     }
 
     @Test
