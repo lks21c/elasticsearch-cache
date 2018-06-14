@@ -54,14 +54,18 @@ public class WarmUpService {
     @Value("${esc.cache.warmup.size}")
     private int esWarmUpSize;
 
+    @Value("${esc.cache.lastendtime.ts}")
+    private long lastEndTimeTs;
+
     @Scheduled(fixedDelay = 1000 * 60 * 2)
     public void warmUpMinuteQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
             startDt = startDt.withSecondOfMinute(0);
             startDt = startDt.withMillisOfSecond(0);
-            startDt = startDt.minusMinutes(20);
+            startDt = startDt.minusMinutes(Integer.parseInt(String.valueOf(lastEndTimeTs)) + 20);
             DateTime endDt = new DateTime();
+            endDt.minus(lastEndTimeTs);
             warmUp("1m", startDt, endDt);
         }
     }
