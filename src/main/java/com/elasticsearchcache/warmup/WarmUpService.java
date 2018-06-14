@@ -63,7 +63,7 @@ public class WarmUpService {
             DateTime startDt = new DateTime();
             startDt = startDt.withSecondOfMinute(0);
             startDt = startDt.withMillisOfSecond(0);
-            startDt = startDt.minusMinutes(Integer.parseInt(String.valueOf(lastEndTimeTs)) + 20);
+            startDt = startDt.minus(lastEndTimeTs + 20 * 60 * 1000);
             DateTime endDt = new DateTime();
             endDt.minus(lastEndTimeTs);
             warmUp("1m", startDt, endDt);
