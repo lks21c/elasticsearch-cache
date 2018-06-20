@@ -106,7 +106,7 @@ public class WarmUpService {
         }
     }
 
-    private void warmUp(String interval, DateTime startDt, DateTime endDt) {
+    public void warmUp(String interval, DateTime startDt, DateTime endDt) {
 
         logger.info("warmup invoked");
 

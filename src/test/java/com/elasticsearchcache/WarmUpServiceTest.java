@@ -34,4 +34,16 @@ public class WarmUpServiceTest {
         //Hour
         warmUpService.warmUpHourQueries();
     }
+
+    @Test
+    public void warmup7days() {
+        DateTime startDt = new DateTime();
+        startDt = startDt.withSecondOfMinute(0);
+        startDt = startDt.withMillisOfSecond(0);
+        startDt = startDt.minusDays(7);
+        DateTime endDt = new DateTime();
+        warmUpService.warmUp("1m", startDt, endDt);
+        warmUpService.warmUp("1h", startDt, endDt);
+        warmUpService.warmUp("1d", startDt, endDt);
+    }
 }
