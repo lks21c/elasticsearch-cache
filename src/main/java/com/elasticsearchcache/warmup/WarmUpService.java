@@ -70,7 +70,7 @@ public class WarmUpService {
         }
     }
 
-    //    @Scheduled(fixedDelay = 1000 * 60 * 60)
+    @Scheduled(fixedDelay = 1000 * 60 * 60)
     public void warmUpHourQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
@@ -88,7 +88,7 @@ public class WarmUpService {
         }
     }
 
-    //    @Scheduled(fixedDelay = 1000 * 60 * 120)
+    @Scheduled(fixedDelay = 1000 * 60 * 120)
     public void warmUpDayQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
