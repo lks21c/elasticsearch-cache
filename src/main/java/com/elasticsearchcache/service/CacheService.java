@@ -363,10 +363,10 @@ public class CacheService {
     }
 
     private String getIntervalTerms(String indexName, DateTime startDt, DateTime endDt) {
-        if (indexName.contains("realtime")) {
-            return "1m";
-        } else if (Days.daysBetween(startDt, endDt).getDays() > 7) {
+        if (Days.daysBetween(startDt, endDt).getDays() > 2) {
             return "1d";
+        } else if (indexName.contains("realtime")) {
+            return "1m";
         } else {
             return "1h";
         }
