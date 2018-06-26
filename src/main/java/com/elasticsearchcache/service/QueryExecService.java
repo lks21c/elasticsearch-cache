@@ -44,29 +44,36 @@ public class QueryExecService {
         StringBuilder sb = new StringBuilder();
         StringBuilder qb = new StringBuilder();
 
+        int queryCnt = 0;
         if (isMultiSearch) {
             for (QueryPlan qp : queryPlanList) {
                 if (!StringUtils.isEmpty(qp.getPreQuery())) {
+                    queryCnt++;
                     qb.append(qp.getPreQuery());
                 }
                 if (!StringUtils.isEmpty(qp.getQuery())) {
+                    queryCnt++;
                     qb.append(qp.getQuery());
                 }
                 if (!StringUtils.isEmpty(qp.getPostQuery())) {
+                    queryCnt++;
                     qb.append(qp.getPostQuery());
                 }
             }
         } else {
             for (QueryPlan qp : queryPlanList) {
                 if (!StringUtils.isEmpty(qp.getPreQuery())) {
+                    queryCnt++;
                     qb.append("{}" + "\n");
                     qb.append(qp.getPreQuery() + "\n");
                 }
                 if (!StringUtils.isEmpty(qp.getQuery())) {
+                    queryCnt++;
                     qb.append("{}" + "\n");
                     qb.append(qp.getQuery() + "\n");
                 }
                 if (!StringUtils.isEmpty(qp.getPostQuery())) {
+                    queryCnt++;
                     qb.append("{}" + "\n");
                     qb.append(qp.getPostQuery() + "\n");
                 }
@@ -78,11 +85,11 @@ public class QueryExecService {
             long beforeManipulateBulkQuery = System.currentTimeMillis();
             HttpResponse res = null;
             try {
-                if(isMultiSearch) {
+                if (!isMultiSearch && queryCnt > 1) {
+                    targetUrl = targetUrl.replace("_search", "_msearch");
                     logger.info("executeQuery curl -X POST -H 'Content-Type: application/json' -L '" + targetUrl + "' " + " --data '" + qb.toString() + "'");
                     res = esService.executeQuery(targetUrl, qb.toString());
-                }else {
-                    targetUrl = targetUrl.replace("_search", "_msearch");
+                } else {
                     logger.info("executeQuery curl -X POST -H 'Content-Type: application/json' -L '" + targetUrl + "' " + " --data '" + qb.toString() + "'");
                     res = esService.executeQuery(targetUrl, qb.toString());
                 }
