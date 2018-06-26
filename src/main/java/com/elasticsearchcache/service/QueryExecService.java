@@ -40,49 +40,79 @@ public class QueryExecService {
     ResponseBuildService responseBuildService;
 
     public String executeQuery(boolean isMultiSearch, String targetUrl, List<QueryPlan> queryPlanList) {
-        logger.info("isMultiSearch = " + isMultiSearch);
+        logger.info("isMultiSearch = " + isMultiSearch + " " + queryPlanList.size());
+
+        if (queryPlanList.size() == 1 && !isMultiSearch) {
+            if (CacheMode.NOCACHE.equals(queryPlanList.get(0).getCachePlan().getCacheMode())) {
+                HttpResponse res = null;
+                try {
+                    res = esService.executeQuery(targetUrl, queryPlanList.get(0).getQuery());
+                    if (res.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                        logger.error("it's not ok code.");
+                        return null;
+                    }
+                    return EntityUtils.toString(res.getEntity());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                } catch (MethodNotSupportedException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        }
+
         StringBuilder sb = new StringBuilder();
         StringBuilder qb = new StringBuilder();
 
+        int queryCnt = 0;
         if (isMultiSearch) {
             for (QueryPlan qp : queryPlanList) {
                 if (!StringUtils.isEmpty(qp.getPreQuery())) {
-                    qb.append(qp.getPreQuery());
+                    queryCnt++;
+                    qb.append(qp.getPreQuery().replace("\n", ""));
                 }
                 if (!StringUtils.isEmpty(qp.getQuery())) {
-                    qb.append(qp.getQuery());
+                    queryCnt++;
+                    qb.append(qp.getQuery().replace("\n", ""));
                 }
                 if (!StringUtils.isEmpty(qp.getPostQuery())) {
-                    qb.append(qp.getPostQuery());
+                    queryCnt++;
+                    qb.append(qp.getPostQuery().replace("\n", ""));
                 }
             }
         } else {
             for (QueryPlan qp : queryPlanList) {
                 if (!StringUtils.isEmpty(qp.getPreQuery())) {
+                    queryCnt++;
                     qb.append("{}" + "\n");
                     qb.append(qp.getPreQuery() + "\n");
                 }
                 if (!StringUtils.isEmpty(qp.getQuery())) {
+                    queryCnt++;
                     qb.append("{}" + "\n");
                     qb.append(qp.getQuery() + "\n");
                 }
                 if (!StringUtils.isEmpty(qp.getPostQuery())) {
+                    queryCnt++;
                     qb.append("{}" + "\n");
                     qb.append(qp.getPostQuery() + "\n");
                 }
             }
         }
 
+        logger.info("queryCnt = " + queryCnt);
+
         List<Map<String, Object>> respes = null;
         if (!StringUtils.isEmpty(qb.toString())) {
             long beforeManipulateBulkQuery = System.currentTimeMillis();
             HttpResponse res = null;
             try {
-                if (isMultiSearch) {
+                if (queryCnt > 1) {
+                    targetUrl = targetUrl.replace("_search", "_msearch");
                     logger.info("executeQuery curl -X POST -H 'Content-Type: application/json' -L '" + targetUrl + "' " + " --data '" + qb.toString() + "'");
                     res = esService.executeQuery(targetUrl, qb.toString());
                 } else {
-                    targetUrl = targetUrl.replace("_search", "_msearch");
                     logger.info("executeQuery curl -X POST -H 'Content-Type: application/json' -L '" + targetUrl + "' " + " --data '" + qb.toString() + "'");
                     res = esService.executeQuery(targetUrl, qb.toString());
                 }
@@ -194,7 +224,7 @@ public class QueryExecService {
             mergedRes.append("}");
         }
 
-        logger.debug("merged res = " + mergedRes.toString());
+        logger.info("merged res = " + mergedRes.toString());
 
 //                        res = esService.executeQuery(targetUrl, reqBody);
         sb.append(mergedRes.toString());
