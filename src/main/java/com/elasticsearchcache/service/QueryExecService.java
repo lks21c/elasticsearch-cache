@@ -78,11 +78,11 @@ public class QueryExecService {
             long beforeManipulateBulkQuery = System.currentTimeMillis();
             HttpResponse res = null;
             try {
-                if (!isMultiSearch) {
-                    targetUrl = targetUrl.replace("_search", "_msearch");
+                if (isMultiSearch) {
                     logger.info("executeQuery curl -X POST -H 'Content-Type: application/json' -L '" + targetUrl + "' " + " --data '" + qb.toString() + "'");
                     res = esService.executeQuery(targetUrl, qb.toString());
                 } else {
+                    targetUrl = targetUrl.replace("_search", "_msearch");
                     logger.info("executeQuery curl -X POST -H 'Content-Type: application/json' -L '" + targetUrl + "' " + " --data '" + qb.toString() + "'");
                     res = esService.executeQuery(targetUrl, qb.toString());
                 }
