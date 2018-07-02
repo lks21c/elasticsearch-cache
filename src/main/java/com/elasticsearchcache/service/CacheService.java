@@ -396,13 +396,13 @@ public class CacheService {
                 logger.info("esc cancelled.");
                 long afterQueries = System.currentTimeMillis() - beforeQueries;
                 logger.info("cache afterQueries = " + afterQueries);
-                performanceService.putPerformance(reqBody, (int) afterQueries);
+                performanceService.putPerformance(null, reqBody, (int) afterQueries);
                 return null;
             }
             sb.append(body);
             long afterQueries = System.currentTimeMillis() - beforeQueries;
             logger.info("cache afterQueries = " + afterQueries);
-            performanceService.putPerformance(reqBody, (int) afterQueries);
+            performanceService.putPerformance(null, reqBody, (int) afterQueries);
         } else {
             long beforeQueries = System.currentTimeMillis();
             HttpResponse res = esService.executeQuery(targetUrl, reqBody);
@@ -416,7 +416,7 @@ public class CacheService {
             sb.append(resBody);
             long afterQueries = System.currentTimeMillis() - beforeQueries;
             logger.info("nocache afterQueries = " + afterQueries);
-            performanceService.putPerformance(reqBody, (int) afterQueries);
+            performanceService.putPerformance(null, reqBody, (int) afterQueries);
         }
         return sb;
     }
@@ -440,7 +440,7 @@ public class CacheService {
             sb.append(body);
             long afterQueries = System.currentTimeMillis() - beforeQueries;
             logger.info("cache afterQueries = " + afterQueries);
-            performanceService.putPerformance(reqBody, (int) afterQueries);
+            performanceService.putPerformance(targetUrl, reqBody, (int) afterQueries);
         } else {
             long beforeQueries = System.currentTimeMillis();
             HttpResponse res = null;
@@ -466,7 +466,7 @@ public class CacheService {
             sb.append(resBody);
             long afterQueries = System.currentTimeMillis() - beforeQueries;
             logger.info("nocache afterQueries = " + afterQueries);
-            performanceService.putPerformance(reqBody, (int) afterQueries);
+            performanceService.putPerformance(targetUrl, reqBody, (int) afterQueries);
         }
         return sb;
     }

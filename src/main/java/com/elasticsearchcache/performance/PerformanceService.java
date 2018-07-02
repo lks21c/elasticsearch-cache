@@ -5,6 +5,7 @@ import com.elasticsearchcache.service.ElasticSearchService;
 import com.elasticsearchcache.service.ParsingService;
 import com.elasticsearchcache.util.IndexNameUtil;
 import com.elasticsearchcache.util.JsonUtil;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.http.util.EntityUtils;
@@ -54,23 +55,13 @@ public class PerformanceService {
     @Autowired
     private ElasticSearchService esService;
 
-    public void putPerformance(String reqBody, int took) {
+    public void putPerformance(String targetUrl, String reqBody, int took) {
         if (enablePerformance && !reqBody.contains(".kibana")
                 && !reqBody.contains(esPerformanceName)
                 && !reqBody.contains(esProfileName)
                 && !reqBody.contains(esCacheName)) {
 
             logger.info("putPerformance " + reqBody);
-
-            String[] arr = reqBody.split("\n");
-            Map<String, Object> iMap = parsingService.parseXContent(arr[0]);
-
-            List<String> idl = (List<String>) iMap.get("index");
-
-            logger.info("idl = " + JsonUtil.convertAsString(idl));
-            String indexName = IndexNameUtil.getIndexName(idl);
-
-            logger.info("indexName = " + indexName);
 
             IndexRequest ir = new IndexRequest(esPerformanceName, "info");
 
@@ -79,7 +70,22 @@ public class PerformanceService {
             source.put("query", reqBody);
             source.put("latency", took);
             source.put("ts", System.currentTimeMillis());
-            source.put("indexName", indexName);
+
+            if (StringUtils.isEmpty(targetUrl)) {
+                String[] arr = reqBody.split("\n");
+                Map<String, Object> iMap = parsingService.parseXContent(arr[0]);
+
+                List<String> idl = (List<String>) iMap.get("index");
+
+                logger.info("idl = " + JsonUtil.convertAsString(idl));
+                String indexName = IndexNameUtil.getIndexName(idl);
+
+                logger.info("indexName = " + indexName);
+                source.put("indexName", indexName);
+            } else {
+                source.put("indexName", targetUrl);
+            }
+
             ir.source(source);
 
             logger.info("before putPerformance = " + ir.toString());
