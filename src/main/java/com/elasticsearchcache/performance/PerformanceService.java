@@ -83,12 +83,13 @@ public class PerformanceService {
                 logger.info("indexName = " + indexName);
                 source.put("indexName", indexName);
             } else {
-                source.put("indexName", targetUrl);
+                String indexName = targetUrl.split("/")[3];
+                source.put("indexName", indexName);
             }
 
             ir.source(source);
 
-            logger.info("before putPerformance = " + ir.toString());
+//            logger.info("before putPerformance = " + ir.toString());
 
             restClient.indexAsync(ir, new ActionListener<IndexResponse>() {
                 @Override
