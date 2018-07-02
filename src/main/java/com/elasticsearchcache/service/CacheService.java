@@ -440,6 +440,7 @@ public class CacheService {
             sb.append(body);
             long afterQueries = System.currentTimeMillis() - beforeQueries;
             logger.info("cache afterQueries = " + afterQueries);
+            performanceService.putPerformance(reqBody, (int) afterQueries);
         } else {
             long beforeQueries = System.currentTimeMillis();
             HttpResponse res = null;
@@ -465,6 +466,7 @@ public class CacheService {
             sb.append(resBody);
             long afterQueries = System.currentTimeMillis() - beforeQueries;
             logger.info("nocache afterQueries = " + afterQueries);
+            performanceService.putPerformance(reqBody, (int) afterQueries);
         }
         return sb;
     }
