@@ -61,7 +61,7 @@ public class PerformanceService {
                 && !reqBody.contains(esProfileName)
                 && !reqBody.contains(esCacheName)) {
 
-            logger.info("putPerformance " + reqBody);
+//            logger.info("putPerformance " + reqBody);
 
             IndexRequest ir = new IndexRequest(esPerformanceName, "info");
 
