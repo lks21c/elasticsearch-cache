@@ -80,6 +80,8 @@ public class PerformanceService {
             source.put("indexName", indexName);
             ir.source(source);
 
+            logger.info("before putPerformance = " + ir.toString());
+
             restClient.indexAsync(ir, new ActionListener<IndexResponse>() {
                 @Override
                 public void onResponse(IndexResponse indexResponse) {
