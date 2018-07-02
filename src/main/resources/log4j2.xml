@@ -20,6 +20,19 @@
             <DefaultRolloverStrategy max="5"/>
         </RollingFile>
 
+        <!-- Rolling File Appender -->
+        <RollingFile name="RollingFile2">
+            <FileName>logs/logfile-error.log</FileName>
+            <FilePattern>logs/%d{yyyy-MM-dd}-error.log.zip</FilePattern>
+            <PatternLayout>
+                <Pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+
     </Appenders>
     <Loggers>
         <Logger name="com" level="info" additivity="false">
@@ -28,6 +41,7 @@
         </Logger>
         <Root level="error">
             <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingFile2"/>
         </Root>
     </Loggers>
 </Configuration>
