@@ -135,8 +135,12 @@ public class QueryExecService {
                     cacheService.putCache(postResBody, queryPlanList.get(i));
                     postDhbList = parsingService.getDhbList(postResBody);
                     mergedDhbList.addAll(postDhbList);
+
+                    logger.info("after post query executed");
                 }
                 String resBody = responseBuildService.generateRes(!isMultiSearch, mergedDhbList, queryPlanList.get(i).getAggsKey());
+
+                logger.info("after generateRes");
 
                 if (i != 0) {
                     mergedRes.append(",");
