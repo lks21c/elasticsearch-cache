@@ -2,6 +2,8 @@ package com.elasticsearchcache.service;
 
 import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.vo.DateHistogramBucket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -11,7 +13,10 @@ import java.util.Map;
 @Service
 public class ResponseBuildService {
 
+    private static Logger logger = LoggerFactory.getLogger(ResponseBuildService.class);
+
     public String generateRes(boolean typedKeys, List<DateHistogramBucket> dhbList, String aggsKey) {
+        logger.info("typedKeys = " + typedKeys);
         //TODO: manipulates took and so on.
         String res = "" +
                 "    {\n" +
