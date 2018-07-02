@@ -59,6 +59,7 @@ public class PerformanceService {
                 && !reqBody.contains(esPerformanceName)
                 && !reqBody.contains(esProfileName)
                 && !reqBody.contains(esCacheName)) {
+            logger.info("putPerformance");
 
             String[] arr = reqBody.split("\n");
             Map<String, Object> iMap = parsingService.parseXContent(arr[0]);
