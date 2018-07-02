@@ -199,7 +199,7 @@ public class QueryExecService {
             mergedRes.append("}");
         }
 
-        logger.info("merged res = " + mergedRes.toString());
+        logger.debug("merged res = " + mergedRes.toString());
 
 //                        res = esService.executeQuery(targetUrl, reqBody);
         sb.append(mergedRes.toString());
