@@ -75,12 +75,18 @@ public class PerformanceService {
                 String[] arr = reqBody.split("\n");
                 Map<String, Object> iMap = parsingService.parseXContent(arr[0]);
 
-                List<String> idl = (List<String>) iMap.get("index");
+                logger.info("arr[0] = " + arr[0]);
 
-                logger.info("idl = " + JsonUtil.convertAsString(idl));
-                String indexName = IndexNameUtil.getIndexName(idl);
+                String indexName;
+                try {
+                    List<String> idl = (List<String>) iMap.get("index");
 
-                logger.info("indexName = " + indexName);
+                    logger.info("idl = " + JsonUtil.convertAsString(idl));
+                    indexName = IndexNameUtil.getIndexName(idl);
+
+                } catch (Exception e) {
+                    indexName = (String) iMap.get("index");
+                }
                 source.put("indexName", indexName);
             } else {
                 String indexName = targetUrl.split("/")[3];

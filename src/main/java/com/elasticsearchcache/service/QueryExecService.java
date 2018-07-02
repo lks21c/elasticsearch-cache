@@ -42,15 +42,36 @@ public class QueryExecService {
     public String executeQuery(boolean isMultiSearch, String targetUrl, List<QueryPlan> queryPlanList) {
         StringBuilder sb = new StringBuilder();
         StringBuilder qb = new StringBuilder();
-        for (QueryPlan qp : queryPlanList) {
-            if (!StringUtils.isEmpty(qp.getPreQuery())) {
-                qb.append(qp.getPreQuery());
+
+        logger.info("isMultiSearch = " + isMultiSearch);
+
+        if (isMultiSearch) {
+            for (QueryPlan qp : queryPlanList) {
+                if (!StringUtils.isEmpty(qp.getPreQuery())) {
+                    qb.append(qp.getPreQuery());
+                }
+                if (!StringUtils.isEmpty(qp.getQuery())) {
+                    qb.append(qp.getQuery());
+                }
+                if (!StringUtils.isEmpty(qp.getPostQuery())) {
+                    qb.append(qp.getPostQuery());
+                }
             }
-            if (!StringUtils.isEmpty(qp.getQuery())) {
-                qb.append(qp.getQuery());
-            }
-            if (!StringUtils.isEmpty(qp.getPostQuery())) {
-                qb.append(qp.getPostQuery());
+        } else {
+            targetUrl = targetUrl.replace("_search", "_msearch");
+            for (QueryPlan qp : queryPlanList) {
+                if (!StringUtils.isEmpty(qp.getPreQuery())) {
+                    qb.append("{}" + "\n");
+                    qb.append(qp.getPreQuery() + "\n");
+                }
+                if (!StringUtils.isEmpty(qp.getQuery())) {
+                    qb.append("{}" + "\n");
+                    qb.append(qp.getQuery() + "\n");
+                }
+                if (!StringUtils.isEmpty(qp.getPostQuery())) {
+                    qb.append("{}" + "\n");
+                    qb.append(qp.getPostQuery() + "\n");
+                }
             }
         }
 
@@ -82,7 +103,7 @@ public class QueryExecService {
                 e.printStackTrace();
             }
 
-            logger.debug("bulkRes res = " + bulkRes);
+            logger.info("bulkRes res = " + bulkRes);
 
             respes = parsingService.parseResponses(bulkRes);
         }
@@ -135,6 +156,7 @@ public class QueryExecService {
                         postDhbList = parsingService.getDhbList(postResBody);
                         mergedDhbList.addAll(postDhbList);
                     } catch (Exception e) {
+                        e.printStackTrace();
                         logger.error(e.getMessage());
                     }
                     logger.info("after convertAsString");
