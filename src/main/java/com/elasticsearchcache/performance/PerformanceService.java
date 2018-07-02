@@ -83,12 +83,12 @@ public class PerformanceService {
             restClient.indexAsync(ir, new ActionListener<IndexResponse>() {
                 @Override
                 public void onResponse(IndexResponse indexResponse) {
-
+                    logger.info("after performance = " + indexResponse.toString());
                 }
 
                 @Override
                 public void onFailure(Exception e) {
-
+                    e.printStackTrace();
                 }
             });
         }
