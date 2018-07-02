@@ -131,7 +131,7 @@ public class QueryExecService {
                     logger.info("post query executed");
                     String postResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
                     // put cache
-                    logger.debug("try post put cache");
+                    logger.info("try post put cache");
                     cacheService.putCache(postResBody, queryPlanList.get(i));
                     postDhbList = parsingService.getDhbList(postResBody);
                     mergedDhbList.addAll(postDhbList);
