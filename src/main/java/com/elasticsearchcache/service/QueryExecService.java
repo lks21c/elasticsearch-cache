@@ -129,13 +129,18 @@ public class QueryExecService {
                 List<DateHistogramBucket> postDhbList = null;
                 if (!StringUtils.isEmpty(queryPlanList.get(i).getPostQuery())) {
                     logger.info("post query executed");
-                    String postResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
+                    try {
+                        String postResBody = JsonUtil.convertAsString(respes.get(responseCnt++));
+                        cacheService.putCache(postResBody, queryPlanList.get(i));
+                        postDhbList = parsingService.getDhbList(postResBody);
+                        mergedDhbList.addAll(postDhbList);
+                    } catch (Exception e) {
+                        logger.error(e.getMessage());
+                    }
+                    logger.info("after convertAsString");
+
                     // put cache
                     logger.info("try post put cache");
-                    cacheService.putCache(postResBody, queryPlanList.get(i));
-                    postDhbList = parsingService.getDhbList(postResBody);
-                    mergedDhbList.addAll(postDhbList);
-
                     logger.info("after post query executed");
                 }
                 String resBody = responseBuildService.generateRes(!isMultiSearch, mergedDhbList, queryPlanList.get(i).getAggsKey());
