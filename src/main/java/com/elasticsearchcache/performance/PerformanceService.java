@@ -65,10 +65,11 @@ public class PerformanceService {
             Map<String, Object> iMap = parsingService.parseXContent(arr[0]);
 
             List<String> idl = (List<String>) iMap.get("index");
-//            logger.info("idl = " + JsonUtil.convertAsString(idl));
+
+            logger.info("idl = " + JsonUtil.convertAsString(idl));
             String indexName = IndexNameUtil.getIndexName(idl);
 
-//            logger.info("indexName = " + indexName);
+            logger.info("indexName = " + indexName);
 
             IndexRequest ir = new IndexRequest(esPerformanceName, "info");
 
