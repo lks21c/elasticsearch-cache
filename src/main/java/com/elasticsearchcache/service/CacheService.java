@@ -231,7 +231,9 @@ public class CacheService {
                 }
             }
         }
-        insertProfile(isMultiSearch, targetUrl, mReqBody, indexName, interval, qMap, queryWithoutRange);
+        if (CacheMode.ALL.equals(plan.getCacheMode()) || CacheMode.PARTIAL.equals(plan.getCacheMode())) {
+            insertProfile(isMultiSearch, targetUrl, mReqBody, indexName, interval, qMap, queryWithoutRange);
+        }
         return queryPlan;
     }
 
