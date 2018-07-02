@@ -62,15 +62,15 @@ public class QueryExecService {
             for (QueryPlan qp : queryPlanList) {
                 if (!StringUtils.isEmpty(qp.getPreQuery())) {
                     qb.append("{}" + "\n");
-                    qb.append(qp.getPreQuery() + "\n");
+                    qb.append(qp.getPreQuery().replace("\n","") + "\n");
                 }
                 if (!StringUtils.isEmpty(qp.getQuery())) {
                     qb.append("{}" + "\n");
-                    qb.append(qp.getQuery() + "\n");
+                    qb.append(qp.getQuery().replace("\n","") + "\n");
                 }
                 if (!StringUtils.isEmpty(qp.getPostQuery())) {
                     qb.append("{}" + "\n");
-                    qb.append(qp.getPostQuery() + "\n");
+                    qb.append(qp.getPostQuery().replace("\n","") + "\n");
                 }
             }
         }
