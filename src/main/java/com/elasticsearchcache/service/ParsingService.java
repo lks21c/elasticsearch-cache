@@ -352,7 +352,7 @@ public class ParsingService {
                         includeUpper = (boolean) ((Map<String, Object>) range.get(rangeKey)).get("include_upper");
                     }
 
-                    String datePattern = "yyyyMMdd'T'HHmmss.SSSZ";
+                    String datePattern = "yyyy-MM-dd'T'HH:mm:ss.SSS";
                     DateTimeFormatter dateFormatter = DateTimeFormat.forPattern(datePattern);
 
                     DateTime startDt = null;
