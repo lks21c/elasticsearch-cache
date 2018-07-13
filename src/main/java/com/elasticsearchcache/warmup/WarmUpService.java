@@ -64,6 +64,7 @@ public class WarmUpService {
     public void warmUpMinuteQueries() {
         if (escCache && escWarmUp && escWarmUpMinute) {
             DateTime startDt = new DateTime();
+            startDt = startDt.withMillisOfSecond(0);
             startDt = startDt.withSecondOfMinute(0);
             startDt = startDt.withMillisOfSecond(0);
             startDt = startDt.minus(lastEndTimeTs + 20 * 60 * 1000);
@@ -77,16 +78,13 @@ public class WarmUpService {
     public void warmUpHourQueries() {
         if (escCache && escWarmUp) {
             DateTime startDt = new DateTime();
+            startDt = startDt.withMillisOfSecond(0);
             startDt = startDt.withSecondOfMinute(0);
             startDt = startDt.withMillisOfSecond(0);
-            startDt = startDt.withMinuteOfHour(0);
-            startDt = startDt.withHourOfDay(0);
-            DateTime endDt = startDt.plusDays(1).minus(1);
-            startDt = startDt.minusDays(1);
-            warmUp("1h", startDt, endDt);
+            startDt = startDt.minusHours(2);
+            DateTime endDt = new DateTime();
+            endDt.minus(lastEndTimeTs);
 
-            startDt = startDt.minusDays(2);
-            endDt = endDt.minusDays(2);
             warmUp("1h", startDt, endDt);
         }
     }
@@ -94,17 +92,8 @@ public class WarmUpService {
     @Scheduled(fixedDelay = 1000 * 60 * 10)
     public void warmUpDayQueries() {
         if (escCache && escWarmUp) {
-            DateTime startDt = new DateTime();
-            startDt = startDt.withSecondOfMinute(0);
-            startDt = startDt.withMillisOfSecond(0);
-            startDt = startDt.withMinuteOfHour(0);
-            startDt = startDt.withHourOfDay(0);
-            DateTime endDt = startDt.plusDays(1).minus(1);
-            startDt = startDt.minusDays(3);
-            warmUp("1d", startDt, endDt);
-
-            startDt = startDt.minusDays(4);
-            endDt = endDt.minusDays(4);
+            DateTime endDt = new DateTime().withMillisOfDay(0).minusMillis(1);
+            DateTime startDt = new DateTime().withMillisOfDay(0).minusDays(7);
             warmUp("1d", startDt, endDt);
         }
     }
