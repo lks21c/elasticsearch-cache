@@ -23,13 +23,24 @@ public class CachePlanService {
     @Value("${esc.cache.lastendtime.ts}")
     private long lastEndTimeTs;
 
+    @Value("${esc.cache.lastendtime.day}")
+    private int lastEndTimeDay;
+
     public boolean checkCacheable(String interval, DateTime targetDt, DateTime startDt, DateTime endDt) {
         CachePlan plan = checkCachePlan(interval, startDt, endDt);
         if (interval != null) {
             if (targetDt.getMillis() >= plan.getStartDt().getMillis()
-                    && targetDt.getMillis() < plan.getEndDt().getMillis()
-                    && targetDt.getMillis() <= new DateTime().minus(lastEndTimeTs).getMillis()) {
-                return true;
+                    && targetDt.getMillis() < plan.getEndDt().getMillis()) {
+                if (interval.contains("d")) {
+                    if (lastEndTimeDay > 0
+                            && targetDt.getMillis() <= new DateTime().withMillisOfDay(0).minusDays(lastEndTimeDay - 1).minusMillis(1).getMillis()) {
+                        return true;
+                    }
+                } else {
+                    if (targetDt.getMillis() <= new DateTime().minus(lastEndTimeTs).getMillis()) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
