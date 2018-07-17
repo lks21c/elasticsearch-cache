@@ -119,7 +119,7 @@ public class CacheService {
         Map<String, Object> aggs = parsingService.getAggs(qMap);
 
         // Parse Interval
-        Map<String, Object> rtnMap = parsingService.parseIntervalAndAggsType(aggs, getIntervalTerms(indexName, startDt, endDt));
+        Map<String, Object> rtnMap = parsingService.parseIntervalAndAggsType(aggs, getIntervalTerms(startDt, endDt));
         String interval = (String) rtnMap.get("interval");
         String aggsType = (String) rtnMap.get("aggsType");
         String aggsKey = (String) rtnMap.get("aggsKey");
@@ -129,7 +129,7 @@ public class CacheService {
         List<Integer> termsSizeList = new ArrayList<>();
         if (enableTermsCache && "terms".equals(aggsType)) {
             getTermsSizes(aggs, termsSizeList);
-            aggs = appendDateHistogramForTermsAggr(aggs, getIntervalTerms(indexName, startDt, endDt));
+            aggs = appendDateHistogramForTermsAggr(aggs, getIntervalTerms(startDt, endDt));
             qMap.put("aggs", aggs);
         }
 
@@ -384,11 +384,11 @@ public class CacheService {
         }
     }
 
-    private String getIntervalTerms(String indexName, DateTime startDt, DateTime endDt) {
+    private String getIntervalTerms(DateTime startDt, DateTime endDt) {
         if (Days.daysBetween(startDt, endDt).getDays() > 7) {
             return "1d";
-        } else if (Days.daysBetween(startDt, endDt).getDays() > 2) {
-            return "1h";
+        } else if (Days.daysBetween(startDt, endDt).getDays() > 1) {
+            return "1d";
         } else {
             return "1m";
         }
