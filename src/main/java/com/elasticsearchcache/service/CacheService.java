@@ -19,6 +19,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.search.aggregations.AggregatorFactories;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,7 +126,9 @@ public class CacheService {
         logger.debug("aggsType = " + aggsType);
 
         // handle terms
+        List<Integer> termsSizeList = new ArrayList<>();
         if (enableTermsCache && "terms".equals(aggsType)) {
+            getTermsSizes(aggs, termsSizeList);
             aggs = appendDateHistogramForTermsAggr(aggs, getIntervalTerms(indexName, startDt, endDt));
             qMap.put("aggs", aggs);
         }
@@ -155,6 +158,9 @@ public class CacheService {
         queryPlan.setAggsType(aggsType);
         queryPlan.setAggsKey(aggsKey);
         queryPlan.setQueryString(UrlUtil.getQueryString(targetUrl));
+        if (enableTermsCache && "terms".equals(aggsType)) {
+            queryPlan.setTermsSizeList(termsSizeList);
+        }
 
         DateTime beforeCacheMills = new DateTime();
         List<DateHistogramBucket> dhbList = cacheRepository.getCache(indexName, UrlUtil.getQueryString(targetUrl), indexSize, JsonUtil.convertAsString(queryWithoutRange), JsonUtil.convertAsString(aggs), plan.getStartDt(), plan.getEndDt());
@@ -235,6 +241,20 @@ public class CacheService {
             insertProfile(isMultiSearch, targetUrl, mReqBody, indexName, interval, qMap, queryWithoutRange);
         }
         return queryPlan;
+    }
+
+    private void getTermsSizes(Map<String, Object> aggs, List<Integer> termsSizeList) {
+        for (String key : aggs.keySet()) {
+            Map<String, Object> firstDepthAggs = (Map<String, Object>) aggs.get(key);
+            if (firstDepthAggs.containsKey("terms")) {
+                Map<String, Object> terms = (Map<String, Object>) firstDepthAggs.get("terms");
+                int termsSize1 = Integer.parseInt(terms.get("size").toString());
+                termsSizeList.add(termsSize1);
+            }
+            if (firstDepthAggs.containsKey("aggregations")) {
+                getTermsSizes((Map<String, Object>) firstDepthAggs.get("aggregations"), termsSizeList);
+            }
+        }
     }
 
     private void insertProfile(boolean isMultiSearch, String targetUrl, String mReqBody, String indexName, String interval, Map<String, Object> qMap, Map<String, Object> queryWithoutRange) {

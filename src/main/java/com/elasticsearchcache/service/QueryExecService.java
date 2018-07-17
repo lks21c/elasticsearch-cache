@@ -61,15 +61,15 @@ public class QueryExecService {
             for (QueryPlan qp : queryPlanList) {
                 if (!StringUtils.isEmpty(qp.getPreQuery())) {
                     qb.append("{}" + "\n");
-                    qb.append(qp.getPreQuery().replace("\n","") + "\n");
+                    qb.append(qp.getPreQuery().replace("\n", "") + "\n");
                 }
                 if (!StringUtils.isEmpty(qp.getQuery())) {
                     qb.append("{}" + "\n");
-                    qb.append(qp.getQuery().replace("\n","") + "\n");
+                    qb.append(qp.getQuery().replace("\n", "") + "\n");
                 }
                 if (!StringUtils.isEmpty(qp.getPostQuery())) {
                     qb.append("{}" + "\n");
-                    qb.append(qp.getPostQuery().replace("\n","") + "\n");
+                    qb.append(qp.getPostQuery().replace("\n", "") + "\n");
                 }
             }
         }
@@ -106,8 +106,8 @@ public class QueryExecService {
 
             respes = parsingService.parseResponses(bulkRes);
 
-            if(!isMultiSearch) {
-                for(int i = 0; i < respes.size();i++) {
+            if (!isMultiSearch) {
+                for (int i = 0; i < respes.size(); i++) {
                     respes.get(i).remove("status");
                 }
             }
@@ -133,7 +133,7 @@ public class QueryExecService {
                     mergedRes.append(",");
                 }
                 if ("terms".equals(queryPlanList.get(i).getAggsType())) {
-                    resBody = parsingService.generateTermsRes(resBody);
+                    resBody = parsingService.generateTermsRes(resBody, queryPlanList.get(i).getTermsSizeList());
                 }
                 mergedRes.append(resBody);
             } else if (CacheMode.PARTIAL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
@@ -179,7 +179,7 @@ public class QueryExecService {
                 }
 
                 if ("terms".equals(queryPlanList.get(i).getAggsType())) {
-                    resBody = parsingService.generateTermsRes(resBody);
+                    resBody = parsingService.generateTermsRes(resBody, queryPlanList.get(i).getTermsSizeList());
                 }
                 mergedRes.append(resBody);
             } else {
@@ -193,7 +193,7 @@ public class QueryExecService {
                     cacheService.putCache(resBody, queryPlanList.get(i));
                     if ("terms".equals(queryPlanList.get(i).getAggsType())) {
                         logger.info("terms nocache");
-                        resBody = parsingService.generateTermsRes(resBody);
+                        resBody = parsingService.generateTermsRes(resBody, queryPlanList.get(i).getTermsSizeList());
                     }
                     mergedRes.append(resBody);
                 }

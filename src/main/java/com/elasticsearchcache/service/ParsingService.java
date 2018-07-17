@@ -1,6 +1,7 @@
 package com.elasticsearchcache.service;
 
 import com.elasticsearchcache.util.JsonUtil;
+import com.elasticsearchcache.vo.BucketCompare;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang.StringUtils;
@@ -144,10 +145,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ParsingService {
@@ -421,7 +419,7 @@ public class ParsingService {
                     aggType = "date_histogram";
                     logger.info("interval = " + interval);
 
-                    if(!rtn.containsKey("aggsKey")) {
+                    if (!rtn.containsKey("aggsKey")) {
                         rtn.put("aggsKey", aggsKey);
                     }
                 }
@@ -434,6 +432,10 @@ public class ParsingService {
                     } else {
                         aggType = "cardinality";
                     }
+
+                    if (!rtn.containsKey("aggsKey")) {
+                        rtn.put("aggsKey", aggsKey);
+                    }
                 }
             }
         }
@@ -442,7 +444,7 @@ public class ParsingService {
         return rtn;
     }
 
-    public String generateTermsRes(String resBody) {
+    public String generateTermsRes(String resBody, List<Integer> termsSizeList) {
 //        logger.info("generateTermsRes = " + resBody);
         Map<String, Object> resp = parseXContent(resBody);
 
@@ -481,9 +483,26 @@ public class ParsingService {
             }
         }
 
-//        logger.info("mergedMap = " + JsonUtil.convertAsString(mergedMap) + " " + mergedMap.size());
+//        logger.info("mergedMap = " + JsonUtil.convertAsString(mergedMap));
+        ArrayList<HashMap<String, Object>> buckets = (ArrayList<HashMap<String, Object>>) mergedMap.get("buckets");
 
-        if (mergedMap.size() == 0) {
+        Collections.sort(buckets, new BucketCompare());
+
+        if (termsSizeList.size() >= 1) {
+            while (buckets.size() > termsSizeList.get(0)) {
+                buckets.remove(buckets.size() - 1);
+            }
+        }
+
+        cutBucketSize(buckets, termsSizeList, 2);
+
+        mergedMap.put("buckets", buckets);
+
+        logger.info("mergedMap() = " + JsonUtil.convertAsString(mergedMap) + " " + mergedMap.size());
+
+        if (mergedMap.size() == 0)
+
+        {
             return resBody;
         }
 
@@ -494,6 +513,26 @@ public class ParsingService {
 //        String rtnBody = JsonUtil.convertAsString(resp);
 //        logger.info("rtnBody = " + rtnBody);
         return JsonUtil.convertAsString(resp);
+    }
+
+    private void cutBucketSize(ArrayList<HashMap<String, Object>> buckets, List<Integer> termsSizeList, int index) {
+        for (int i = 0; i < buckets.size(); i++) {
+            HashMap<String, Object> bucketItem = buckets.get(i);
+            for (String key : bucketItem.keySet()) {
+                if (bucketItem.get(key) instanceof HashMap) {
+                    HashMap<String, Object> map = (HashMap<String, Object>) bucketItem.get(key);
+                    if (map.containsKey("buckets")) {
+                        ArrayList<HashMap<String, Object>> innerBucket = (ArrayList<HashMap<String, Object>>) map.get("buckets");
+                        while (innerBucket.size() > termsSizeList.get(index - 1)) {
+                            innerBucket.remove(innerBucket.size() - 1);
+                        }
+                        if (termsSizeList.size() > index) {
+                            cutBucketSize(innerBucket, termsSizeList, index + 1);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void calculateRecursively(Map<String, Object> mergedMap, Map<String, Object> termsMap) {

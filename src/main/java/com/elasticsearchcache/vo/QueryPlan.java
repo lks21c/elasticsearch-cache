@@ -32,6 +32,8 @@ public class QueryPlan implements Serializable {
 
     private String queryString;
 
+    private List<Integer> termsSizeList;
+
     public String getPreQuery() {
         return preQuery;
     }
@@ -142,5 +144,13 @@ public class QueryPlan implements Serializable {
 
     public void setQueryString(String queryString) {
         this.queryString = queryString;
+    }
+
+    public List<Integer> getTermsSizeList() {
+        return termsSizeList;
+    }
+
+    public void setTermsSizeList(List<Integer> termsSizeList) {
+        this.termsSizeList = termsSizeList;
     }
 }
