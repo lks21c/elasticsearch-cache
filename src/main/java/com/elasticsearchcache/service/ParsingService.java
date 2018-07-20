@@ -494,7 +494,9 @@ public class ParsingService {
             }
         }
 
-        cutBucketSize(buckets, termsSizeList, 2);
+        if(termsSizeList.size() > 1) {
+            cutBucketSize(buckets, termsSizeList, 2);
+        }
 
         mergedMap.put("buckets", buckets);
 
@@ -516,6 +518,7 @@ public class ParsingService {
     }
 
     private void cutBucketSize(ArrayList<HashMap<String, Object>> buckets, List<Integer> termsSizeList, int index) {
+
         for (int i = 0; i < buckets.size(); i++) {
             HashMap<String, Object> bucketItem = buckets.get(i);
             for (String key : bucketItem.keySet()) {
