@@ -486,7 +486,7 @@ public class ParsingService {
 //        logger.info("mergedMap = " + JsonUtil.convertAsString(mergedMap));
         ArrayList<HashMap<String, Object>> buckets = (ArrayList<HashMap<String, Object>>) mergedMap.get("buckets");
 
-        Collections.sort(buckets, new BucketCompare());
+        Collections.sort(buckets, new BucketCompare(1, termsSizeList.size()));
 
         if (termsSizeList.size() >= 1) {
             while (buckets.size() > termsSizeList.get(0)) {

@@ -13,6 +13,14 @@ import java.util.HashMap;
 public class BucketCompare implements Comparator<HashMap<String, Object>> {
     private static final Logger logger = LogManager.getLogger(BucketCompare.class);
 
+    int index;
+    int termsListSize;
+
+    public BucketCompare(int i, int size) {
+        index = i;
+        termsListSize = size;
+    }
+
     @Override
     public int compare(HashMap<String, Object> o1, HashMap<String, Object> o2) {
         boolean isMetric = false;
@@ -33,7 +41,9 @@ public class BucketCompare implements Comparator<HashMap<String, Object>> {
                     HashMap<String, Object> item2 = (HashMap<String, Object>) o2.get(key);
                     if (item2.containsKey("buckets")) {
                         ArrayList<HashMap<String, Object>> bucket = (ArrayList<HashMap<String, Object>>) item2.get("buckets");
-                        Collections.sort(bucket, new BucketCompare());
+                        if(index < termsListSize) {
+                            Collections.sort(bucket, new BucketCompare(index + 1, termsListSize));
+                        }
 //                    logger.info("super compare #2 " + o2.get("key") + " " + JsonUtil.convertAsString(bucket));
                     }
                 }
