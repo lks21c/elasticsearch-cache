@@ -216,7 +216,7 @@ public class PerformanceService {
             maxSize = Minutes.minutesBetween(startDt, endDt).getMinutes() + 1;
         }
 
-        double coverage = (double)queryPlan.getDhbList().size() / (double)maxSize * 100;
+        double coverage = (double) queryPlan.getDhbList().size() / (double) maxSize * 100;
         logger.info("coverage = " + coverage);
 
         logger.info("yes " + esCacheCoverageName);
@@ -230,8 +230,9 @@ public class PerformanceService {
         source.put("coverage", coverage);
         source.put("interval", queryPlan.getInterval());
         source.put("aggsType", queryPlan.getAggsType());
-        if (queryPlan.getDhbList().size() > 0)
-        source.put("savedBytes", JsonUtil.convertAsString(queryPlan.getDhbList()));
+        if (queryPlan.getDhbList().size() > 0) {
+            source.put("savedBytes", JsonUtil.convertAsString(queryPlan.getDhbList()));
+        }
         source.put("isMultiSearch", queryPlan.isMultiSearch());
         source.put("ts", System.currentTimeMillis());
         ir.source(source);
