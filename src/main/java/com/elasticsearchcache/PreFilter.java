@@ -74,11 +74,11 @@ public class PreFilter extends ZuulFilter {
 
         try {
             String targetUrl = getTargetUrl(request);
-//            logger.info("request = " + targetUrl);
+            logger.info("request = " + targetUrl);
             if (HttpMethod.POST.equals(request.getMethod())) {
                 if (request.getRequestURI().contains(EsUrl.SUFFIX_MULTI_SEARCH)) {
                     String reqBody = getRequestBody(request);
-                    logger.debug("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
+                    logger.info("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
                     StringBuilder sb = cacheService.executeMultiSearch(targetUrl, reqBody);
                     if (sb.length() > 0) {
                         logger.info("sc ok ");
@@ -88,7 +88,7 @@ public class PreFilter extends ZuulFilter {
                     }
                 } else if (request.getRequestURI().contains(EsUrl.SUFFIX_SEARCH)) {
                     String reqBody = getRequestBody(request);
-                    logger.debug("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
+                    logger.info("original curl -X POST -L '" + targetUrl + "' " + " --data '" + reqBody + "'");
                     StringBuilder sb = cacheService.executeSearch(targetUrl, reqBody);
                     if (sb.length() > 0) {
                         logger.info("sc ok ");
@@ -155,7 +155,8 @@ public class PreFilter extends ZuulFilter {
                 request.getRequestURI().equals("/") ||
                 request.getRequestURI().equals("/_mapping") ||
                 request.getRequestURI().equals("/_aliases") ||
-                request.getRequestURI().equals("/_cluster/health/.kibana")) {
+                request.getRequestURI().equals("/_cluster/health/.kibana") ||
+                request.getRequestURI().contains(".kibana_search")) {
             return true;
         }
         return false;
