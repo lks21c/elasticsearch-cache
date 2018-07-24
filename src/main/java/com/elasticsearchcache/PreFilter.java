@@ -156,7 +156,7 @@ public class PreFilter extends ZuulFilter {
                 request.getRequestURI().equals("/_mapping") ||
                 request.getRequestURI().equals("/_aliases") ||
                 request.getRequestURI().equals("/_cluster/health/.kibana") ||
-                request.getRequestURI().contains(".kibana")) {
+                request.getRequestURI().contains("\\.kibana")) {
             return true;
         }
         return false;
