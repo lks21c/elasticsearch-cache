@@ -231,7 +231,7 @@ public class PerformanceService {
         source.put("interval", queryPlan.getInterval());
         source.put("aggsType", queryPlan.getAggsType());
         if (queryPlan.getDhbList().size() > 0) {
-            source.put("savedBytes", JsonUtil.convertAsString(queryPlan.getDhbList()));
+            source.put("savedBytes", JsonUtil.convertAsString(queryPlan.getDhbList()).length());
         }
         source.put("isMultiSearch", queryPlan.isMultiSearch());
         source.put("ts", System.currentTimeMillis());
