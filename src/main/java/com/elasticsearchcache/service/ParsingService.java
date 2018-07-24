@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.io.stream.NamedWriteableRegistry;
 import org.elasticsearch.common.io.stream.Writeable;
+import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.ParseFieldRegistry;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -218,7 +219,17 @@ public class ParsingService {
 
         NamedXContentRegistry registry = new NamedXContentRegistry(namedXContents);
 
-        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, query);
+        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, new DeprecationHandler() {
+            @Override
+            public void usedDeprecatedName(String usedName, String modernName) {
+
+            }
+
+            @Override
+            public void usedDeprecatedField(String usedName, String replacedWith) {
+
+            }
+        }, query);
         QueryBuilder qb = AbstractQueryBuilder.parseInnerQueryBuilder(parser);
         return qb;
     }
@@ -308,7 +319,17 @@ public class ParsingService {
                 CompositeAggregationBuilder::parse).addResultReader(InternalComposite::new)));
         NamedXContentRegistry registry = new NamedXContentRegistry(namedXContents);
 
-        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, aggs);
+        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, new DeprecationHandler() {
+            @Override
+            public void usedDeprecatedName(String usedName, String modernName) {
+
+            }
+
+            @Override
+            public void usedDeprecatedField(String usedName, String replacedWith) {
+
+            }
+        }, aggs);
         parser.nextToken();
 
         AggregatorFactories.Builder ab = AggregatorFactories.parseAggregators(parser);
@@ -494,7 +515,7 @@ public class ParsingService {
             }
         }
 
-        if(termsSizeList.size() > 1) {
+        if (termsSizeList.size() > 1) {
             cutBucketSize(buckets, termsSizeList, 2);
         }
 

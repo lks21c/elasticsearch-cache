@@ -2,6 +2,7 @@ package com.elasticsearchcache;
 
 import org.elasticsearch.cluster.ClusterModule;
 import org.elasticsearch.common.io.stream.NamedWriteableRegistry;
+import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.ParseFieldRegistry;
 import org.elasticsearch.common.xcontent.XContentParser;
@@ -77,7 +78,17 @@ public class UnitTest {
 
         NamedXContentRegistry registry = new NamedXContentRegistry(ClusterModule.getNamedXWriteables());
 
-        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, term);
+        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, new DeprecationHandler() {
+            @Override
+            public void usedDeprecatedName(String usedName, String modernName) {
+
+            }
+
+            @Override
+            public void usedDeprecatedField(String usedName, String replacedWith) {
+
+            }
+        }, term);
         XContentParser.Token tk = parser.nextToken();
         System.out.println(tk);
 
@@ -96,7 +107,17 @@ public class UnitTest {
         registerQuery(new SearchPlugin.QuerySpec<>(TermQueryBuilder.NAME, TermQueryBuilder::new, TermQueryBuilder::fromXContent));
         NamedXContentRegistry registry = new NamedXContentRegistry(namedXContents);
 
-        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, term);
+        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, new DeprecationHandler() {
+            @Override
+            public void usedDeprecatedName(String usedName, String modernName) {
+
+            }
+
+            @Override
+            public void usedDeprecatedField(String usedName, String replacedWith) {
+
+            }
+        }, term);
         QueryBuilder qb = AbstractQueryBuilder.parseInnerQueryBuilder(parser);
         System.out.println("qb = " + qb.toString());
     }
@@ -139,7 +160,17 @@ public class UnitTest {
 
 
         NamedXContentRegistry registry = new NamedXContentRegistry(namedXContents);
-        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, res);
+        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, new DeprecationHandler() {
+            @Override
+            public void usedDeprecatedName(String usedName, String modernName) {
+
+            }
+
+            @Override
+            public void usedDeprecatedField(String usedName, String replacedWith) {
+
+            }
+        }, res);
         ParsedDateHistogram pdh = ParsedDateHistogram.fromXContent(parser, "3");
         System.out.println("pdh = " + pdh.toString());
     }
@@ -159,7 +190,17 @@ public class UnitTest {
         registerQuery(new SearchPlugin.QuerySpec<>(RangeQueryBuilder.NAME, RangeQueryBuilder::new, RangeQueryBuilder::fromXContent));
         NamedXContentRegistry registry = new NamedXContentRegistry(namedXContents);
 
-        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, range);
+        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, new DeprecationHandler() {
+            @Override
+            public void usedDeprecatedName(String usedName, String modernName) {
+
+            }
+
+            @Override
+            public void usedDeprecatedField(String usedName, String replacedWith) {
+
+            }
+        }, range);
         QueryBuilder qb = AbstractQueryBuilder.parseInnerQueryBuilder(parser);
         System.out.println("qb = " + qb.toString());
     }
@@ -198,7 +239,17 @@ public class UnitTest {
         System.out.println(aggs);
 
         NamedXContentRegistry registry = new NamedXContentRegistry(namedXContents);
-        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, aggs);
+        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, new DeprecationHandler() {
+            @Override
+            public void usedDeprecatedName(String usedName, String modernName) {
+
+            }
+
+            @Override
+            public void usedDeprecatedField(String usedName, String replacedWith) {
+
+            }
+        }, aggs);
         AggregatorFactories.Builder ab = AggregatorFactories.parseAggregators(parser);
 
         System.out.println("ab = " + ab.toString());
@@ -261,7 +312,17 @@ public class UnitTest {
 
         NamedXContentRegistry registry = new NamedXContentRegistry(namedXContents);
 
-        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, q);
+        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, new DeprecationHandler() {
+            @Override
+            public void usedDeprecatedName(String usedName, String modernName) {
+
+            }
+
+            @Override
+            public void usedDeprecatedField(String usedName, String replacedWith) {
+
+            }
+        }, q);
         QueryBuilder qb = AbstractQueryBuilder.parseInnerQueryBuilder(parser);
         System.out.println("qb = " + qb.toString());
     }
