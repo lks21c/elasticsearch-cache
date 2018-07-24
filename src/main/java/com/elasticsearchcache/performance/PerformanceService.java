@@ -184,7 +184,9 @@ public class PerformanceService {
         logger.info("[performance]");
         logger.info(queryPlan.getIndexName());
         logger.info(queryPlan.getCachePlan().getCacheMode());
-        logger.info(queryPlan.getDhbList().size());
+        if (queryPlan.getDhbList() != null) {
+            logger.info(queryPlan.getDhbList().size());
+        }
         logger.info(queryPlan.getInterval());
         logger.info(queryPlan.getAggsType());
         logger.info(queryPlan.isMultiSearch());
@@ -216,7 +218,10 @@ public class PerformanceService {
             maxSize = Minutes.minutesBetween(startDt, endDt).getMinutes() + 1;
         }
 
-        double coverage = (double) queryPlan.getDhbList().size() / (double) maxSize * 100;
+        double coverage = 0;
+        if (queryPlan.getDhbList() != null) {
+            coverage = (double) queryPlan.getDhbList().size() / (double) maxSize * 100;
+        }
         logger.info("coverage = " + coverage);
 
         logger.info("yes " + esCacheCoverageName);
@@ -225,12 +230,17 @@ public class PerformanceService {
         Map<String, Object> source = new HashMap<>();
         source.put("indexName", queryPlan.getIndexName());
         source.put("cacheMode", queryPlan.getCachePlan().getCacheMode());
-        source.put("cacheSize", queryPlan.getDhbList().size());
+        if (queryPlan.getDhbList() != null) {
+            source.put("cacheSize", queryPlan.getDhbList().size());
+        } else {
+            source.put("cacheSize", 0);
+        }
+
         source.put("maxSize", maxSize);
         source.put("coverage", coverage);
         source.put("interval", queryPlan.getInterval());
         source.put("aggsType", queryPlan.getAggsType());
-        if (queryPlan.getDhbList().size() > 0) {
+        if (queryPlan.getDhbList() != null && queryPlan.getDhbList().size() > 0) {
             source.put("savedBytes", JsonUtil.convertAsString(queryPlan.getDhbList()).length());
         }
         source.put("isMultiSearch", queryPlan.isMultiSearch());
