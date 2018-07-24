@@ -5,6 +5,7 @@ import com.elasticsearchcache.service.ElasticSearchService;
 import com.elasticsearchcache.service.ParsingService;
 import com.elasticsearchcache.util.IndexNameUtil;
 import com.elasticsearchcache.util.JsonUtil;
+import com.elasticsearchcache.vo.QueryPlan;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.MethodNotSupportedException;
@@ -15,8 +16,13 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.joda.time.DateTime;
+import org.joda.time.Days;
+import org.joda.time.Hours;
+import org.joda.time.Minutes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -36,6 +42,9 @@ public class PerformanceService {
 
     @Value("${esc.performance.index.name}")
     private String esPerformanceName;
+
+    @Value("${esc.cache_coverage.index.name}")
+    private String esCacheCoverageName;
 
     @Value("${esc.profile.index.name}")
     private String esProfileName;
@@ -168,5 +177,73 @@ public class PerformanceService {
             return resBody;
         }
         return null;
+    }
+
+    @Async
+    public void putCacheCoverage(QueryPlan queryPlan) {
+        logger.info("[performance]");
+        logger.info(queryPlan.getIndexName());
+        logger.info(queryPlan.getCachePlan().getCacheMode());
+        logger.info(queryPlan.getDhbList().size());
+        logger.info(queryPlan.getInterval());
+        logger.info(queryPlan.getAggsType());
+        logger.info(queryPlan.isMultiSearch());
+
+        DateTime startDt = new DateTime();
+        DateTime endDt = new DateTime();
+        if (queryPlan.getCachePlan().getStartDt() != null) {
+            startDt = queryPlan.getCachePlan().getStartDt();
+        }
+        if (queryPlan.getCachePlan().getPreStartDt() != null) {
+            startDt = queryPlan.getCachePlan().getPreStartDt();
+        }
+        if (queryPlan.getCachePlan().getEndDt() != null) {
+            endDt = queryPlan.getCachePlan().getEndDt();
+        }
+        if (queryPlan.getCachePlan().getPostEndDt() != null) {
+            endDt = queryPlan.getCachePlan().getPostEndDt();
+        }
+
+        int maxSize = 0;
+        if ("1d".equals(queryPlan.getInterval().toLowerCase())) {
+            logger.info(Days.daysBetween(startDt, endDt).getDays() + 1);
+            maxSize = Days.daysBetween(startDt, endDt).getDays() + 1;
+        } else if ("1h".equals(queryPlan.getInterval().toLowerCase())) {
+            logger.info(Hours.hoursBetween(startDt, endDt).getHours() + 1);
+            maxSize = Hours.hoursBetween(startDt, endDt).getHours() + 1;
+        } else if ("1m".equals(queryPlan.getInterval().toLowerCase())) {
+            logger.info(Minutes.minutesBetween(startDt, endDt).getMinutes() + 1);
+            maxSize = Minutes.minutesBetween(startDt, endDt).getMinutes() + 1;
+        }
+
+        double coverage = (double)queryPlan.getDhbList().size() / (double)maxSize * 100;
+        logger.info("coverage = " + coverage);
+
+        logger.info("yes " + esCacheCoverageName);
+        IndexRequest ir = new IndexRequest(esCacheCoverageName, "info");
+
+        Map<String, Object> source = new HashMap<>();
+        source.put("indexName", queryPlan.getIndexName());
+        source.put("cacheMode", queryPlan.getCachePlan().getCacheMode());
+        source.put("cacheSize", queryPlan.getDhbList().size());
+        source.put("maxSize", maxSize);
+        source.put("coverage", coverage);
+        source.put("interval", queryPlan.getInterval());
+        source.put("aggsType", queryPlan.getAggsType());
+        source.put("isMultiSearch", queryPlan.isMultiSearch());
+        source.put("ts", System.currentTimeMillis());
+        ir.source(source);
+
+        restClient.indexAsync(ir, new ActionListener<IndexResponse>() {
+            @Override
+            public void onResponse(IndexResponse indexResponse) {
+
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+
+            }
+        });
     }
 }

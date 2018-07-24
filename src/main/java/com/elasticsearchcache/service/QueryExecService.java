@@ -1,6 +1,7 @@
 package com.elasticsearchcache.service;
 
 import com.elasticsearchcache.conts.CacheMode;
+import com.elasticsearchcache.performance.PerformanceService;
 import com.elasticsearchcache.util.JsonUtil;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import com.elasticsearchcache.vo.QueryPlan;
@@ -37,6 +38,9 @@ public class QueryExecService {
 
     @Autowired
     ResponseBuildService responseBuildService;
+
+    @Autowired
+    PerformanceService performanceService;
 
     public String executeQuery(boolean isMultiSearch, String targetUrl, List<QueryPlan> queryPlanList) {
         StringBuilder sb = new StringBuilder();
@@ -121,6 +125,7 @@ public class QueryExecService {
         }
         int responseCnt = 0;
         for (int i = 0; i < queryPlanList.size(); i++) {
+            performanceService.putCacheCoverage(queryPlanList.get(i));
             String log = "query plan cache mode(" + i + ") = " + queryPlanList.get(i).getCachePlan().getCacheMode();
             if (CacheMode.PARTIAL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
                 log += "(" + queryPlanList.get(i).getDhbList().size() + ")";
@@ -133,7 +138,7 @@ public class QueryExecService {
                     mergedRes.append(",");
                 }
                 if ("terms".equals(queryPlanList.get(i).getAggsType())) {
-                    resBody = parsingService.generateTermsRes(resBody, queryPlanList.get(i).getTermsSizeList());
+                    resBody = responseBuildService.generateTermsRes(resBody, queryPlanList.get(i).getTermsSizeList());
                 }
                 mergedRes.append(resBody);
             } else if (CacheMode.PARTIAL.equals(queryPlanList.get(i).getCachePlan().getCacheMode())) {
@@ -179,7 +184,7 @@ public class QueryExecService {
                 }
 
                 if ("terms".equals(queryPlanList.get(i).getAggsType())) {
-                    resBody = parsingService.generateTermsRes(resBody, queryPlanList.get(i).getTermsSizeList());
+                    resBody = responseBuildService.generateTermsRes(resBody, queryPlanList.get(i).getTermsSizeList());
                 }
                 mergedRes.append(resBody);
             } else {
@@ -193,7 +198,7 @@ public class QueryExecService {
                     cacheService.putCache(resBody, queryPlanList.get(i));
                     if ("terms".equals(queryPlanList.get(i).getAggsType())) {
                         logger.info("terms nocache");
-                        resBody = parsingService.generateTermsRes(resBody, queryPlanList.get(i).getTermsSizeList());
+                        resBody = responseBuildService.generateTermsRes(resBody, queryPlanList.get(i).getTermsSizeList());
                     }
                     mergedRes.append(resBody);
                 }
