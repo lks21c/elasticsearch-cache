@@ -245,7 +245,7 @@ public class PerformanceService {
 
             @Override
             public void onFailure(Exception e) {
-
+                e.printStackTrace();
             }
         });
     }
