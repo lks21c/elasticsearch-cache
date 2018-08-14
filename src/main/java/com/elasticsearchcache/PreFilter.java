@@ -159,6 +159,7 @@ public class PreFilter extends ZuulFilter {
                 request.getRequestURI().contains("\\.kibana")||
                 request.getRequestURI().contains("/.kibana") ||
                 request.getRequestURI().contains("/.reporting") ||
+                request.getRequestURI().contains("/_xpack") ||
                 request.getRequestURI().contains("/_mget")) {
             return true;
         }
