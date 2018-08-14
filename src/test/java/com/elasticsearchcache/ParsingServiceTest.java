@@ -1,6 +1,7 @@
 package com.elasticsearchcache;
 
 import com.elasticsearchcache.service.ParsingService;
+import com.elasticsearchcache.util.JsonUtil;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,6 +11,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -64,5 +66,50 @@ public class ParsingServiceTest {
         QueryBuilder qb = parsingService.parseQuery(q);
 
         System.out.println("name = " + qb.getName());
+    }
+
+    @Test
+    public void name2() throws IOException {
+        String query = "{\"bool\":{\"must\":[{\"range\":{\"ts\":{\"from\":\"2018-07-17T00:00:00.000\",\"to\":\"2018-07-23T23:59:59.999\",\"include_lower\":true,\"include_upper\":true,\"time_zone\":\"+09:00\",\"boost\":1.0}}}],\"adjust_pure_negative\":true,\"boost\":1.0}}";
+
+        Map<String, Object> qMap = parsingService.parseXContent(query);
+
+        Map<String, Object> map = parsingService.parseStartEndDt(qMap);
+        System.out.println(JsonUtil.convertAsString(map));
+    }
+
+    @Test
+    public void name3() throws IOException {
+        String query = "{\"bool\":{\"must\":[{\"range\":{\"ts\":{\"gte\":\"2018-07-17T00:00:00.000\",\"lte\":\"2018-07-23T23:59:59.999\",\"include_lower\":true,\"include_upper\":true,\"time_zone\":\"+09:00\",\"boost\":1.0}}}],\"adjust_pure_negative\":true,\"boost\":1.0}}";
+        System.out.println(query);
+        Map<String, Object> qMap = parsingService.parseXContent(query);
+
+        Map<String, Object> map = parsingService.parseStartEndDt(qMap);
+        System.out.println(JsonUtil.convertAsString(map));
+    }
+
+    @Test
+    public void name4() throws IOException {
+        String query = "{\"bool\":{\"must\":[{\"range\":{\"ts\":{\"gte\":\"2018-07-17T00:00:00.000\",\"lte\":\"2018-07-23T23:59:59.999\",\"time_zone\":\"+09:00\",\"boost\":1.0}}}],\"adjust_pure_negative\":true,\"boost\":1.0}}";
+        System.out.println(query);
+        Map<String, Object> qMap = parsingService.parseXContent(query);
+
+        Map<String, Object> map = parsingService.parseStartEndDt(qMap);
+        System.out.println(JsonUtil.convertAsString(map));
+    }
+
+    @Test
+    public void name5() throws IOException {
+        String q = "{\"bool\":{\"must\":[{\"range\":{\"ts\":{\"from\":\"2018-07-17T00:00:00.000\",\"to\":\"2018-07-23T23:59:59.999\",\"include_lower\":true,\"include_upper\":true,\"time_zone\":\"+09:00\",\"boost\":1.0}}}],\"adjust_pure_negative\":true,\"boost\":1.0}}";
+        Map<String, Object> qMap = parsingService.parseXContent(q);
+        Map<String, Object> map = parsingService.getQueryWithoutRange(qMap);
+        System.out.println(JsonUtil.convertAsString(map));
+    }
+
+    @Test
+    public void name7() throws IOException {
+        String q = "{\"time\":{\"date_histogram\":{\"field\":\"ts\",\"time_zone\":\"+09:00\",\"interval\":\"1h\",\"offset\":0,\"order\":{\"_key\":\"asc\"},\"keyed\":false,\"min_doc_count\":0},\"aggregations\":{\"datapoint\":{\"sum\":{\"field\":\"datapoint\"}}}}}";
+        Map<String, Object> aggs = parsingService.parseXContent(q);
+        parsingService.parseIntervalAndAggsType(aggs, "1d");
     }
 }

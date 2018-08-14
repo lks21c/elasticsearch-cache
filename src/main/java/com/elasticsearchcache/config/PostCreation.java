@@ -30,6 +30,9 @@ public class PostCreation {
     @Value("${esc.performance.index.name}")
     private String esPerformanceName;
 
+    @Value("${esc.cache_coverage.index.name}")
+    private String esCacheCoverage;
+
     @Bean
     @PostConstruct
     public String createProfileIndex() {
@@ -258,6 +261,96 @@ public class PostCreation {
                 "}";
         try {
             esService.executeHttpRequest(HttpMethod.PUT, esUrl + "/" + esPerformanceName, new ByteArrayEntity(body.getBytes()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (MethodNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return "ok";
+    }
+
+    @Bean
+    @PostConstruct
+    public String createCacheCoverageIndex() {
+        String body = "{\n" +
+                "  \"settings\": {\n" +
+                "    \"number_of_shards\": 3,\n" +
+                "    \"number_of_replicas\": 1,\n" +
+                "    \"refresh_interval\": \"10s\"\n" +
+                "  },\n" +
+                "  \"mappings\": {\n" +
+                "    \"info\": {\n" +
+                "      \"_all\": {\n" +
+                "        \"enabled\": false\n" +
+                "      },\n" +
+                "      \"_source\": {\n" +
+                "        \"enabled\": true\n" +
+                "      },\n" +
+                "      \"properties\": {\n" +
+                "        \"indexName\": {\n" +
+                "          \"type\": \"keyword\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": true\n" +
+                "        },\n" +
+                "        \"cacheMode\": {\n" +
+                "          \"type\": \"keyword\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": true\n" +
+                "        },\n" +
+                "        \"interval\": {\n" +
+                "          \"type\": \"keyword\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": true\n" +
+                "        },\n" +
+                "        \"isMultiSearch\": {\n" +
+                "          \"type\": \"keyword\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": true\n" +
+                "        },\n" +
+                "        \"aggsType\": {\n" +
+                "          \"type\": \"keyword\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": true\n" +
+                "        },\n" +
+                "        \"cacheSize\": {\n" +
+                "          \"type\": \"integer\",\n" +
+                "          \"store\": false,\n" +
+                "          \"doc_values\": true\n" +
+                "        },\n" +
+                "        \"ts\": {\n" +
+                "          \"type\": \"date\",\n" +
+                "          \"store\": false\n" +
+                "        }\n" +
+                "      },\n" +
+                "      \"dynamic_templates\": [\n" +
+                "        {\n" +
+                "          \"unindexed_text\": {\n" +
+                "            \"match_mapping_type\": \"text\",\n" +
+                "            \"mapping\": {\n" +
+                "              \"type\": \"keyword\",\n" +
+                "              \"index\": true,\n" +
+                "              \"doc_values\": true,\n" +
+                "              \"store\": false\n" +
+                "            }\n" +
+                "          }\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"unindexed_text\": {\n" +
+                "            \"match_mapping_type\": \"string\",\n" +
+                "            \"mapping\": {\n" +
+                "              \"type\": \"keyword\",\n" +
+                "              \"index\": true,\n" +
+                "              \"doc_values\": true,\n" +
+                "              \"store\": false\n" +
+                "            }\n" +
+                "          }\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+        try {
+            esService.executeHttpRequest(HttpMethod.PUT, esUrl + "/" + esCacheCoverage, new ByteArrayEntity(body.getBytes()));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (MethodNotSupportedException e) {

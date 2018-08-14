@@ -1,7 +1,6 @@
 package com.elasticsearchcache.service;
 
 import com.elasticsearchcache.util.JsonUtil;
-import com.elasticsearchcache.vo.BucketCompare;
 import com.elasticsearchcache.vo.DateHistogramBucket;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang.StringUtils;
@@ -142,10 +141,13 @@ import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggreg
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.net.CookieHandler;
 import java.util.*;
 
 @Service
@@ -155,17 +157,19 @@ public class ParsingService {
     @Value("${esc.cache.terms}")
     private boolean enableTermsCache;
 
+    @Autowired
+    VersionService versionService;
+
     private final List<NamedWriteableRegistry.Entry> namedWriteables = new ArrayList<>();
     private final List<NamedXContentRegistry.Entry> namedXContents = new ArrayList<>();
 
     private final ParseFieldRegistry<SignificanceHeuristicParser> significanceHeuristicParserRegistry = new ParseFieldRegistry<>(
             "significance_heuristic");
 
-    public Map<String, Object> parseXContent(String str) {
-        return XContentHelper.convertToMap(XContentType.JSON.xContent(), str, true);
-    }
+    NamedXContentRegistry registry;
 
-    public QueryBuilder parseQuery(String query) throws IOException {
+    @PostConstruct
+    public void init() {
         registerQuery(new SearchPlugin.QuerySpec<>(MatchQueryBuilder.NAME, MatchQueryBuilder::new, MatchQueryBuilder::fromXContent));
         registerQuery(new SearchPlugin.QuerySpec<>(MatchPhraseQueryBuilder.NAME, MatchPhraseQueryBuilder::new, MatchPhraseQueryBuilder::fromXContent));
         registerQuery(new SearchPlugin.QuerySpec<>(MatchPhrasePrefixQueryBuilder.NAME, MatchPhrasePrefixQueryBuilder::new,
@@ -217,24 +221,6 @@ public class ParsingService {
         registerQuery(new SearchPlugin.QuerySpec<>(MatchNoneQueryBuilder.NAME, MatchNoneQueryBuilder::new, MatchNoneQueryBuilder::fromXContent));
         registerQuery(new SearchPlugin.QuerySpec<>(TermsSetQueryBuilder.NAME, TermsSetQueryBuilder::new, TermsSetQueryBuilder::fromXContent));
 
-        NamedXContentRegistry registry = new NamedXContentRegistry(namedXContents);
-
-        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, new DeprecationHandler() {
-            @Override
-            public void usedDeprecatedName(String usedName, String modernName) {
-
-            }
-
-            @Override
-            public void usedDeprecatedField(String usedName, String replacedWith) {
-
-            }
-        }, query);
-        QueryBuilder qb = AbstractQueryBuilder.parseInnerQueryBuilder(parser);
-        return qb;
-    }
-
-    public AggregatorFactories.Builder parseAggs(String aggs) throws IOException {
         registerAggregation(new SearchPlugin.AggregationSpec(AvgAggregationBuilder.NAME, AvgAggregationBuilder::new, AvgAggregationBuilder::parse)
                 .addResultReader(InternalAvg::new));
         registerAggregation(new SearchPlugin.AggregationSpec(SumAggregationBuilder.NAME, SumAggregationBuilder::new, SumAggregationBuilder::parse)
@@ -317,6 +303,31 @@ public class ParsingService {
                 ScriptedMetricAggregationBuilder::parse).addResultReader(InternalScriptedMetric::new));
         registerAggregation((new SearchPlugin.AggregationSpec(CompositeAggregationBuilder.NAME, CompositeAggregationBuilder::new,
                 CompositeAggregationBuilder::parse).addResultReader(InternalComposite::new)));
+
+        registry = new NamedXContentRegistry(namedXContents);
+    }
+
+    public Map<String, Object> parseXContent(String str) {
+        return XContentHelper.convertToMap(XContentType.JSON.xContent(), str, true);
+    }
+
+    public QueryBuilder parseQuery(String query) throws IOException {
+        XContentParser parser = JsonXContent.jsonXContent.createParser(registry, new DeprecationHandler() {
+            @Override
+            public void usedDeprecatedName(String usedName, String modernName) {
+
+            }
+
+            @Override
+            public void usedDeprecatedField(String usedName, String replacedWith) {
+
+            }
+        }, query);
+        QueryBuilder qb = AbstractQueryBuilder.parseInnerQueryBuilder(parser);
+        return qb;
+    }
+
+    public AggregatorFactories.Builder parseAggs(String aggs) throws IOException {
         NamedXContentRegistry registry = new NamedXContentRegistry(namedXContents);
 
         XContentParser parser = JsonXContent.jsonXContent.createParser(registry, new DeprecationHandler() {
@@ -336,70 +347,131 @@ public class ParsingService {
         return ab;
     }
 
-    public Map<String, Object> getQueryWithoutRange(Map<String, Object> query) {
+    public Map<String, Object> getQueryWithoutRange(Map<String, Object> query) throws IOException {
         Map<String, Object> queryWithoutRange = (Map<String, Object>) SerializationUtils.clone((HashMap<String, Object>) query);
-        Map<String, Object> clonedBool = (Map<String, Object>) queryWithoutRange.get("bool");
-        List<Map<String, Object>> clonedMust = (List<Map<String, Object>>) clonedBool.get("must");
-        for (Map<String, Object> obj : clonedMust) {
-            obj.remove("range");
+        if (versionService.getMajorVersion() >= 6) {
+            QueryBuilder qb = parseQuery(JsonUtil.convertAsString(queryWithoutRange));
+            if (qb instanceof BoolQueryBuilder) {
+                RangeQueryBuilder rqb = null;
+                for (QueryBuilder q : ((BoolQueryBuilder) qb).must()) {
+                    if (q instanceof RangeQueryBuilder) {
+                        rqb = (RangeQueryBuilder) q;
+                    }
+                }
+                if (rqb != null) {
+                    ((BoolQueryBuilder) qb).must().remove(rqb);
+                }
+            } else if (qb instanceof RangeQueryBuilder) {
+                return new HashMap();
+            }
+            Map<String, Object> map = parseXContent(qb.toString());
+            return map;
+        } else {
+            Map<String, Object> clonedBool = (Map<String, Object>) queryWithoutRange.get("bool");
+            List<Map<String, Object>> clonedMust = (List<Map<String, Object>>) clonedBool.get("must");
+            for (Map<String, Object> obj : clonedMust) {
+                obj.remove("range");
+            }
+            logger.debug("queryWithoutRange = " + JsonUtil.convertAsString(queryWithoutRange));
         }
-        logger.debug("queryWithoutRange = " + JsonUtil.convertAsString(queryWithoutRange));
         return queryWithoutRange;
     }
 
-    public Map<String, Object> parseStartEndDt(Map<String, Object> query) {
+    public Map<String, Object> parseStartEndDt(Map<String, Object> query) throws IOException {
         Map<String, Object> rtnMap = new HashMap<>();
-        Map<String, Object> bool = (Map<String, Object>) query.get("bool");
-        List<Map<String, Object>> must = (List<Map<String, Object>>) bool.get("must");
-
-        for (Map<String, Object> obj : must) {
-            Map<String, Object> range = (Map<String, Object>) obj.get("range");
-            if (range != null) {
-                for (String rangeKey : range.keySet()) {
-                    Long gte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("gte");
-                    Long lte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("lte");
-
-                    String from = (String) ((Map<String, Object>) range.get(rangeKey)).get("from");
-                    String to = (String) ((Map<String, Object>) range.get(rangeKey)).get("to");
-
-                    boolean includeLower = true;
-                    if (((Map<String, Object>) range.get(rangeKey)).containsKey("include_lower")) {
-                        includeLower = (boolean) ((Map<String, Object>) range.get(rangeKey)).get("include_lower");
+        if (versionService.getMajorVersion() >= 6) {
+            QueryBuilder qb = parseQuery(JsonUtil.convertAsString(query));
+            if (qb instanceof BoolQueryBuilder) {
+                BoolQueryBuilder bool = (BoolQueryBuilder) qb;
+                for (QueryBuilder q : bool.must()) {
+                    if (q instanceof RangeQueryBuilder) {
+                        RangeQueryBuilder range = (RangeQueryBuilder) q;
+                        rtnMap = parseRangeQuery(range);
                     }
-                    boolean includeUpper = true;
-                    if (((Map<String, Object>) range.get(rangeKey)).containsKey("include_upper")) {
-                        includeUpper = (boolean) ((Map<String, Object>) range.get(rangeKey)).get("include_upper");
+                }
+            } else if (qb instanceof RangeQueryBuilder) {
+                RangeQueryBuilder range = (RangeQueryBuilder) qb;
+                rtnMap = parseRangeQuery(range);
+            }
+
+        } else {
+            Map<String, Object> bool = (Map<String, Object>) query.get("bool");
+            List<Map<String, Object>> must = (List<Map<String, Object>>) bool.get("must");
+
+            for (Map<String, Object> obj : must) {
+                Map<String, Object> range = (Map<String, Object>) obj.get("range");
+                if (range != null) {
+                    for (String rangeKey : range.keySet()) {
+                        Long gte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("gte");
+                        Long lte = (Long) ((Map<String, Object>) range.get(rangeKey)).get("lte");
+
+                        String from = (String) ((Map<String, Object>) range.get(rangeKey)).get("from");
+                        String to = (String) ((Map<String, Object>) range.get(rangeKey)).get("to");
+
+                        boolean includeLower = true;
+                        if (((Map<String, Object>) range.get(rangeKey)).containsKey("include_lower")) {
+                            includeLower = (boolean) ((Map<String, Object>) range.get(rangeKey)).get("include_lower");
+                        }
+                        boolean includeUpper = true;
+                        if (((Map<String, Object>) range.get(rangeKey)).containsKey("include_upper")) {
+                            includeUpper = (boolean) ((Map<String, Object>) range.get(rangeKey)).get("include_upper");
+                        }
+
+                        String datePattern = "yyyy-MM-dd'T'HH:mm:ss.SSS";
+                        DateTimeFormatter dateFormatter = DateTimeFormat.forPattern(datePattern);
+
+                        DateTime startDt = null;
+                        DateTime endDt = null;
+
+                        if (!StringUtils.isEmpty(from) && !StringUtils.isEmpty(to)) {
+                            startDt = dateFormatter.parseDateTime(from);
+                            endDt = dateFormatter.parseDateTime(to);
+                        } else if (gte != null && lte != null) {
+                            startDt = new DateTime(gte);
+                            endDt = new DateTime(lte);
+                        }
+
+                        if (!includeLower) {
+                            startDt = startDt.plus(1);
+                        }
+                        if (!includeUpper) {
+                            endDt = endDt.minus(1);
+                        }
+
+                        rtnMap.put("startDt", startDt);
+                        rtnMap.put("endDt", endDt);
+
+                        logger.info("startDt = " + startDt);
+                        logger.info("endDt = " + endDt);
                     }
-
-                    String datePattern = "yyyy-MM-dd'T'HH:mm:ss.SSS";
-                    DateTimeFormatter dateFormatter = DateTimeFormat.forPattern(datePattern);
-
-                    DateTime startDt = null;
-                    DateTime endDt = null;
-
-                    if (!StringUtils.isEmpty(from) && !StringUtils.isEmpty(to)) {
-                        startDt = dateFormatter.parseDateTime(from);
-                        endDt = dateFormatter.parseDateTime(to);
-                    } else if (gte != null && lte != null) {
-                        startDt = new DateTime(gte);
-                        endDt = new DateTime(lte);
-                    }
-
-                    if (!includeLower) {
-                        startDt = startDt.plus(1);
-                    }
-                    if (!includeUpper) {
-                        endDt = endDt.minus(1);
-                    }
-
-                    rtnMap.put("startDt", startDt);
-                    rtnMap.put("endDt", endDt);
-
-                    logger.info("startDt = " + startDt);
-                    logger.info("endDt = " + endDt);
                 }
             }
         }
+        return rtnMap;
+    }
+
+    private Map<String, Object> parseRangeQuery(RangeQueryBuilder range) {
+        DateTime startDt = null;
+        DateTime endDt = null;
+
+        if (range.from() != null && range.to() != null) {
+            startDt = new DateTime(range.from());
+            endDt = new DateTime(range.to());
+        }
+
+        if (!range.includeLower()) {
+            startDt = startDt.plus(1);
+        }
+        if (!range.includeUpper()) {
+            endDt = endDt.minus(1);
+        }
+
+        HashMap<String, Object> rtnMap = new HashMap<>();
+        rtnMap.put("startDt", startDt);
+        rtnMap.put("endDt", endDt);
+
+        logger.info("startDt = " + startDt);
+        logger.info("endDt = " + endDt);
         return rtnMap;
     }
 
@@ -429,6 +501,7 @@ public class ParsingService {
         Map<String, Object> rtn = new HashMap<>();
         String interval = null;
         String aggType = null;
+
         if (aggs.size() == 1) {
             for (String aggsKey : aggs.keySet()) {
                 Map<String, Object> firstDepthAggs = (Map<String, Object>) aggs.get(aggsKey);
@@ -463,160 +536,6 @@ public class ParsingService {
         rtn.put("interval", interval);
         rtn.put("aggsType", aggType);
         return rtn;
-    }
-
-    public String generateTermsRes(String resBody, List<Integer> termsSizeList) {
-//        logger.info("generateTermsRes = " + resBody);
-        Map<String, Object> resp = parseXContent(resBody);
-
-        Map<String, Object> aggrs = (Map<String, Object>) resp.get("aggregations");
-
-        if (aggrs == null) {
-            return resBody;
-        }
-
-        Map<String, Object> mergedMap = new HashMap<>();
-        String termsBucketKey = null;
-        for (String aggKey : aggrs.keySet()) {
-//            logger.info("aggKey = " + aggKey);
-
-            HashMap<String, Object> buckets = (HashMap<String, Object>) aggrs.get(aggKey);
-
-            for (String bucketsKey : buckets.keySet()) {
-//                logger.info("bucketsKey = " + bucketsKey);
-                if ("buckets".equals(bucketsKey)) {
-                    List<Map<String, Object>> bucketList = (List<Map<String, Object>>) buckets.get(bucketsKey);
-                    for (Map<String, Object> dhBucket : bucketList) {
-                        Map<String, Object> termsMap = null;
-                        for (String dhBucketKey : dhBucket.keySet()) {
-                            if (!"doc_count".equals(dhBucketKey) && !"key_as_string".equals(dhBucketKey) && !"key".equals(dhBucketKey)) {
-                                termsBucketKey = dhBucketKey;
-                                logger.debug("termsBucketKey = " + termsBucketKey);
-                                termsMap = (Map<String, Object>) dhBucket.get(dhBucketKey);
-                                break;
-                            }
-                        }
-
-                        calculateRecursively(mergedMap, termsMap);
-//                    logger.info("mergedMap = " + JsonUtil.convertAsString(mergedMap));
-                    }
-                }
-            }
-        }
-
-//        logger.info("mergedMap = " + JsonUtil.convertAsString(mergedMap));
-        ArrayList<HashMap<String, Object>> buckets = (ArrayList<HashMap<String, Object>>) mergedMap.get("buckets");
-
-        Collections.sort(buckets, new BucketCompare(1, termsSizeList.size()));
-
-        if (termsSizeList.size() >= 1) {
-            while (buckets.size() > termsSizeList.get(0)) {
-                buckets.remove(buckets.size() - 1);
-            }
-        }
-
-        if (termsSizeList.size() > 1) {
-            cutBucketSize(buckets, termsSizeList, 2);
-        }
-
-        mergedMap.put("buckets", buckets);
-
-        logger.info("mergedMap() = " + JsonUtil.convertAsString(mergedMap) + " " + mergedMap.size());
-
-        if (mergedMap.size() == 0)
-
-        {
-            return resBody;
-        }
-
-        aggrs = new HashMap<>();
-        aggrs.put(termsBucketKey, mergedMap);
-        resp.remove("aggregations");
-        resp.put("aggregations", aggrs);
-//        String rtnBody = JsonUtil.convertAsString(resp);
-//        logger.info("rtnBody = " + rtnBody);
-        return JsonUtil.convertAsString(resp);
-    }
-
-    private void cutBucketSize(ArrayList<HashMap<String, Object>> buckets, List<Integer> termsSizeList, int index) {
-
-        for (int i = 0; i < buckets.size(); i++) {
-            HashMap<String, Object> bucketItem = buckets.get(i);
-            for (String key : bucketItem.keySet()) {
-                if (bucketItem.get(key) instanceof HashMap) {
-                    HashMap<String, Object> map = (HashMap<String, Object>) bucketItem.get(key);
-                    if (map.containsKey("buckets")) {
-                        ArrayList<HashMap<String, Object>> innerBucket = (ArrayList<HashMap<String, Object>>) map.get("buckets");
-                        while (innerBucket.size() > termsSizeList.get(index - 1)) {
-                            innerBucket.remove(innerBucket.size() - 1);
-                        }
-                        if (termsSizeList.size() > index) {
-                            cutBucketSize(innerBucket, termsSizeList, index + 1);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void calculateRecursively(Map<String, Object> mergedMap, Map<String, Object> termsMap) {
-//        logger.debug("mergedMap = " + JsonUtil.convertAsString(mergedMap));
-//        logger.debug("termsMap = " + JsonUtil.convertAsString(termsMap));
-        for (String key : termsMap.keySet()) {
-//            logger.info("candidate key = " + mergedMap.get(key) + " " + termsMap.get(key));
-            if (!mergedMap.containsKey(key)) {
-//                logger.info("put key = " + key + " " + termsMap.get(key));
-                mergedMap.put(key, termsMap.get(key));
-            } else if (termsMap.get(key) instanceof Map) {
-                if (!mergedMap.containsKey(key)) {
-                    mergedMap.put(key, new HashMap<String, Object>());
-                }
-                calculateRecursively((Map<String, Object>) mergedMap.get(key), (Map<String, Object>) termsMap.get(key));
-            } else {
-                if (!"key".equals(key)) {
-                    if (mergedMap.get(key) instanceof Long || termsMap.get(key) instanceof Long) {
-                        long newVal = Long.parseLong(mergedMap.get(key).toString()) + Long.parseLong(termsMap.get(key).toString());
-                        mergedMap.put(key, newVal);
-                    } else if (mergedMap.get(key) instanceof Float || termsMap.get(key) instanceof Float) {
-                        float newVal = Float.parseFloat(mergedMap.get(key).toString()) + Float.parseFloat(termsMap.get(key).toString());
-                        mergedMap.put(key, newVal);
-                    } else if (mergedMap.get(key) instanceof Double || termsMap.get(key) instanceof Double) {
-                        double newVal = Double.parseDouble(mergedMap.get(key).toString()) + Double.parseDouble(termsMap.get(key).toString());
-                        mergedMap.put(key, newVal);
-                    } else if (mergedMap.get(key) instanceof Integer) {
-                        int newVal = Integer.parseInt(mergedMap.get(key).toString()) + Integer.parseInt(termsMap.get(key).toString());
-                        mergedMap.put(key, newVal);
-                    } else if (mergedMap.get(key) instanceof Short) {
-                        int newVal = Short.parseShort(mergedMap.get(key).toString()) + Short.parseShort(termsMap.get(key).toString());
-                        mergedMap.put(key, newVal);
-                    } else if (mergedMap.get(key) instanceof List) {
-                        List<Map<String, Object>> bucketList = (List<Map<String, Object>>) termsMap.get(key);
-                        List<Map<String, Object>> mergedBucketList = (List<Map<String, Object>>) mergedMap.get(key);
-                        calculateList(mergedBucketList, bucketList);
-                    }
-                }
-            }
-        }
-    }
-
-    private void calculateList(List<Map<String, Object>> mergedBucketList, List<Map<String, Object>> bucketList) {
-        for (Map<String, Object> bucket : bucketList) {
-            logger.debug(" comparison start");
-            boolean notExists = true;
-            for (Map<String, Object> mergedBucket : mergedBucketList) {
-                logger.debug("key comparison = " + bucket.get("key").toString() + " " + mergedBucket.get("key").toString());
-                if (bucket.get("key").toString().equals(mergedBucket.get("key").toString())) {
-                    logger.debug("key match = " + bucket.get("key").toString() + " " + mergedBucket.get("key").toString());
-                    notExists = false;
-                    calculateRecursively(mergedBucket, bucket);
-                }
-            }
-            if (notExists) {
-                logger.debug("key not match = " + JsonUtil.convertAsString(bucket) + "\n" + JsonUtil.convertAsString(mergedBucketList));
-                Map<String, Object> clonedBucket = (Map<String, Object>) SerializationUtils.clone(new HashMap<>(bucket));
-                mergedBucketList.add(clonedBucket);
-            }
-        }
     }
 
     public List<DateHistogramBucket> getDhbList(String resBody) {

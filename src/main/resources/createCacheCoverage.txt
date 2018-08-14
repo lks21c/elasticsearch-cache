@@ -1,0 +1,93 @@
+PUT /esc_cache_coverage_dev?master_timeout=5m
+{
+  "settings": {
+    "number_of_shards": 3,
+    "number_of_replicas": 1,
+    "refresh_interval": "10s"
+  },
+  "mappings": {
+    "info": {
+      "_all": {
+        "enabled": false
+      },
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "indexName": {
+          "type": "keyword",
+          "store": false,
+          "doc_values": true
+        },
+        "cacheMode": {
+          "type": "keyword",
+          "store": false,
+          "doc_values": true
+        },
+        "interval": {
+          "type": "keyword",
+          "store": false,
+          "doc_values": true
+        },
+        "isMultiSearch": {
+          "type": "keyword",
+          "store": false,
+          "doc_values": true
+        },
+        "aggsType": {
+          "type": "keyword",
+          "store": false,
+          "doc_values": true
+        },
+        "cacheSize": {
+          "type": "integer",
+          "store": false,
+          "doc_values": true
+        },
+        "maxSize": {
+          "type": "integer",
+          "store": false,
+          "doc_values": true
+        },
+        "savedBytes": {
+          "type": "long",
+          "store": false,
+          "doc_values": true
+        },
+        "coverage": {
+          "type": "double",
+          "store": false,
+          "doc_values": true
+        },
+        "ts": {
+          "type": "date",
+          "store": false
+        }
+      },
+      "dynamic_templates": [
+        {
+          "unindexed_text": {
+            "match_mapping_type": "text",
+            "mapping": {
+              "type": "keyword",
+              "index": true,
+              "doc_values": true,
+              "store": false
+            }
+          }
+        },
+        {
+          "unindexed_text": {
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "keyword",
+              "index": true,
+              "doc_values": true,
+              "store": false
+            }
+          }
+        }
+      ]
+    }
+  }
+}

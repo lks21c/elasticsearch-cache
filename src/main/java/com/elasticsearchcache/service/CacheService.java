@@ -19,6 +19,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.AggregatorFactories;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
@@ -105,15 +106,19 @@ public class CacheService {
 
         // Get Query
         Map<String, Object> query = (Map<String, Object>) qMap.get("query");
-        logger.debug("query = " + JsonUtil.convertAsString(query));
+        logger.info("query = " + JsonUtil.convertAsString(query));
 
         // getQueryWithoutRange
         Map<String, Object> queryWithoutRange = parsingService.getQueryWithoutRange(query);
+        logger.info("queryWithoutRange = " + JsonUtil.convertAsString(queryWithoutRange));
 
         // parse startDt, endDt
         Map<String, Object> dateMap = parsingService.parseStartEndDt(query);
         DateTime startDt = (DateTime) dateMap.get("startDt");
         DateTime endDt = (DateTime) dateMap.get("endDt");
+
+        Assert.notNull(startDt);
+        Assert.notNull(endDt);
 
         // Get aggs
         Map<String, Object> aggs = parsingService.getAggs(qMap);
