@@ -42,17 +42,6 @@ PUT /esc_performance?master_timeout=5m
       "dynamic_templates": [
         {
           "unindexed_text": {
-            "match_mapping_type": "text",
-            "mapping": {
-              "type": "keyword",
-              "index": true,
-              "doc_values": true,
-              "store": false
-            }
-          }
-        },
-        {
-          "unindexed_text": {
             "match_mapping_type": "string",
             "mapping": {
               "type": "keyword",
