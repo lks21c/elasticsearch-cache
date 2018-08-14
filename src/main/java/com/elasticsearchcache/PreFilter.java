@@ -158,6 +158,7 @@ public class PreFilter extends ZuulFilter {
                 request.getRequestURI().equals("/_cluster/health/.kibana") ||
                 request.getRequestURI().contains("\\.kibana")||
                 request.getRequestURI().contains("/.kibana") ||
+                request.getRequestURI().contains("/.reporting") ||
                 request.getRequestURI().contains("/_mget")) {
             return true;
         }
