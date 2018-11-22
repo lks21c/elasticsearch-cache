@@ -146,12 +146,12 @@ public class CacheService {
         }
 
         CachePlan plan = cachePlanService.checkCachePlan(interval, startDt, endDt);
-        logger.debug("before cachePlan getPreStartDt = " + plan.getPreStartDt());
-        logger.debug("before cachePlan getPreEndDt = " + plan.getPreEndDt());
-        logger.debug("before cachePlan getStartDt = " + plan.getStartDt());
-        logger.debug("before cachePlan getEndDt = " + plan.getEndDt());
-        logger.debug("before cachePlan getPostStartDt = " + plan.getPostStartDt());
-        logger.debug("before cachePlan getPostEndDt = " + plan.getPostEndDt());
+        logger.info("before cachePlan getPreStartDt = " + plan.getPreStartDt());
+        logger.info("before cachePlan getPreEndDt = " + plan.getPreEndDt());
+        logger.info("before cachePlan getStartDt = " + plan.getStartDt());
+        logger.info("before cachePlan getEndDt = " + plan.getEndDt());
+        logger.info("before cachePlan getPostStartDt = " + plan.getPostStartDt());
+        logger.info("before cachePlan getPostEndDt = " + plan.getPostEndDt());
 
         QueryPlan queryPlan = new QueryPlan();
         queryPlan.setCachePlan((CachePlan) SerializationUtils.clone(plan));

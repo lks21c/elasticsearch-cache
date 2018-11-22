@@ -47,6 +47,7 @@ public class CachePlanService {
     }
 
     public CachePlan checkCachePlan(String interval, DateTime startDt, DateTime endDt) {
+        logger.info("cache plan " + startDt.toString() + " " + endDt.toString());
         CachePlan cachePlan = new CachePlan();
         if (interval != null) {
             int periodUnit = PeriodUtil.getPeriodUnit(interval);
@@ -64,6 +65,8 @@ public class CachePlanService {
                 }
 
                 if (PeriodUtil.getRestMills(endDt, periodUnit) == periodUnit - 1) { //end range doesn't exist
+                    cachePlan.setEndDt(endDt);
+                } else if (PeriodUtil.getRestMills(endDt, periodUnit) < periodUnit - 1) {
                     cachePlan.setEndDt(endDt);
                 } else { //end range exists
                     DateTime postEndDt = endDt;
