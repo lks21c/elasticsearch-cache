@@ -106,7 +106,7 @@ public class QueryExecService {
                 e.printStackTrace();
             }
 
-            logger.info("bulkRes res = " + bulkRes);
+//            logger.info("bulkRes res = " + bulkRes);
 
             respes = parsingService.parseResponses(bulkRes);
 
