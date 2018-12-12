@@ -208,16 +208,16 @@ public class PerformanceService {
         }
 
         int maxSize = 0;
-        if ("1M".equals(queryPlan.getInterval())) {
+        if (queryPlan.getInterval().contains("M")) {
             logger.info(Days.daysBetween(startDt, endDt).getDays() + 1);
             maxSize = Months.monthsBetween(startDt, endDt).getMonths() + 1;
-        } else if ("1d".equals(queryPlan.getInterval().toLowerCase())) {
+        } else if (queryPlan.getInterval().contains("d")) {
             logger.info(Days.daysBetween(startDt, endDt).getDays() + 1);
             maxSize = Days.daysBetween(startDt, endDt).getDays() + 1;
-        } else if ("1h".equals(queryPlan.getInterval().toLowerCase())) {
+        } else if (queryPlan.getInterval().contains("h")) {
             logger.info(Hours.hoursBetween(startDt, endDt).getHours() + 1);
             maxSize = Hours.hoursBetween(startDt, endDt).getHours() + 1;
-        } else if ("1m".equals(queryPlan.getInterval().toLowerCase())) {
+        } else if (queryPlan.getInterval().contains("m")) {
             logger.info(Minutes.minutesBetween(startDt, endDt).getMinutes() + 1);
             maxSize = Minutes.minutesBetween(startDt, endDt).getMinutes() + 1;
         }
