@@ -20,6 +20,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.Hours;
 import org.joda.time.Minutes;
+import org.joda.time.Months;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -207,7 +208,10 @@ public class PerformanceService {
         }
 
         int maxSize = 0;
-        if ("1d".equals(queryPlan.getInterval().toLowerCase())) {
+        if ("1M".equals(queryPlan.getInterval())) {
+            logger.info(Days.daysBetween(startDt, endDt).getDays() + 1);
+            maxSize = Months.monthsBetween(startDt, endDt).getMonths() + 1;
+        } else if ("1d".equals(queryPlan.getInterval().toLowerCase())) {
             logger.info(Days.daysBetween(startDt, endDt).getDays() + 1);
             maxSize = Days.daysBetween(startDt, endDt).getDays() + 1;
         } else if ("1h".equals(queryPlan.getInterval().toLowerCase())) {
